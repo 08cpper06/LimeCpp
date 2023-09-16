@@ -35,6 +35,7 @@ public:
 			std::cout << CONSOLE_COLOR(255, 0, 0)
 				<< "[Line : " << InLine << "] "
 				<< InMessage
+				<< " [File : " << InSrcFilePath << "]"
 				<< DEFAULT_COLOR << std::endl;
 			IsSuccess = false;
 		}
@@ -46,6 +47,7 @@ public:
 			std::cout << CONSOLE_COLOR(255, 0, 0)
 				<< "[Line : " << InLine << "] "
 				<< InMessage
+				<< " [File : " << InSrcFilePath << "]"
 				<< DEFAULT_COLOR << std::endl;
 			IsSuccess = false;
 		}
@@ -160,12 +162,10 @@ public:
 			std::cout << DEFAULT_COLOR << InTestName << " is not found" << std::endl;
 			return;
 		}
-		// std::cout << DEFAULT_COLOR << "=== " << "Test " << InTestName << " ===" << std::endl;
 		if (!Itr->second->RunTest() || !Itr->second->IsSuccess)
 		{
 			std::cout << CONSOLE_COLOR(255, 128, 255) << "Test " << InTestName << " is failed" << DEFAULT_COLOR << std::endl;
 		}
-		// std::cout << DEFAULT_COLOR << "=== " << "Test " << InTestName << " End ===" << std::endl;
 	}
 
 	std::list<std::string> GatherTest()
