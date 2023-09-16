@@ -13,6 +13,7 @@ add_executable(${PROJECT_NAME}
 	src/Main.cpp
 	src/TestFramework.cpp
 	src/Utf32StringTest.cpp
+	src/Utf8StringTest.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)

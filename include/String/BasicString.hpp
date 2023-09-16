@@ -49,19 +49,34 @@ public:
 
 	constexpr void Set(const char8_t* InChar, Lime::size_t InLength) noexcept
 	{
-		switch (InLength) {
-			case 4:
-				MyData[3] = InChar[3];
-			case 3:
-				MyData[2] = InChar[2];
-			case 2:
-				MyData[1] = InChar[1];
-			case 1:
-				MyData[0] = InChar[0];
-				break;
-			default:
-				MyData[3] = MyData[2] = MyData[1] = MyData[0] = u8'\0';
-				break;
+		if (InLength == 4)
+		{
+			MyData[3] = InChar[3];
+			MyData[2] = InChar[2];
+			MyData[1] = InChar[1];
+			MyData[0] = InChar[0];
+		}
+		else if (InLength == 3)
+		{
+			MyData[2] = InChar[2];
+			MyData[1] = InChar[1];
+			MyData[0] = InChar[0];
+			MyData[3] = 0;
+		}
+		else if (InLength == 2)
+		{
+			MyData[1] = InChar[1];
+			MyData[0] = InChar[0];
+			MyData[2] = MyData[3] = 0;
+		}
+		else if (InLength == 1)
+		{
+			MyData[0] = InChar[0];
+			MyData[1] = MyData[2] = MyData[3] = 0;
+		}
+		else
+		{
+			MyData[0] = MyData[1] = MyData[2] = MyData[3] = u8'\0';
 		}
 	}
 
@@ -69,6 +84,11 @@ public:
 	constexpr TChar() noexcept
 	{
 		MyData[0] = MyData[1] = MyData[2] = MyData[3] = 0;
+	}
+	constexpr TChar(const char8_t InChar) noexcept
+	{
+		MyData[0] = InChar;
+		MyData[1] = MyData[2] = MyData[3] = 0;
 	}
 	constexpr TChar(const char8_t* InChar) noexcept
 	{
