@@ -15,4 +15,4 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)
 
-# add_subdirectory(unittest)
+add_subdirectory(unittest)

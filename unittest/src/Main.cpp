@@ -11,5 +11,7 @@ int main(int Argc, const char** Argv)
 		}
 		return 0;
 	}
+
+	TestFramework::Get().RunTest(Argv[1]);
 	return 0;
 }
