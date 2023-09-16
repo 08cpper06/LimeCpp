@@ -2,7 +2,6 @@
 
 
 #include "BasicString.hpp"
-#include "String.hpp"
 
 
 class TUtf32StringView : public TBasicStringView {

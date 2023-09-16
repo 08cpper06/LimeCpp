@@ -2,7 +2,7 @@
 
 
 #include "BasicString.hpp"
-#include "String.hpp"
+#include "Utf32StringView.hpp"
 
 
 class TUtf32String : public TBasicString {
@@ -378,7 +378,7 @@ public:
 		{
 			MyData.push_back(Char);
 		}
-		MyData.push_back('\0');
+		MyData.push_back(U'\0');
 		return *this;
 	}
 
