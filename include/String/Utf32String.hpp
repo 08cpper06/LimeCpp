@@ -23,7 +23,7 @@ public:
 
 		constexpr ~TConstIterator() noexcept = default;
 
-		constexpr char32_t operator*()
+		constexpr char32_t& operator*()
 		{
 			return *MyCurrent;
 		}
@@ -131,7 +131,7 @@ public:
 
 		constexpr ~TIterator() noexcept = default;
 
-		constexpr char32_t operator*()
+		constexpr char32_t& operator*()
 		{
 			return *MyCurrent;
 		}
