@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <vector>
 #include <span>
+#include <map>
 
 /* non-override */
 #include <initializer_list>
@@ -32,6 +33,9 @@ namespace Lime {
 
 	template <class Type, Lime::size_t Extent = std::dynamic_extent>
 	using TSpan = std::span<Type, Extent>;
+
+	template <class Key, class Value>
+	using TMap = std::map<Key, Value>;
 
 	template <class... TArgs>
 	void LimeLog(LimeLogType InLogType, const char8_t* InMessage, TArgs&&... InArgs)

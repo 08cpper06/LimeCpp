@@ -425,7 +425,10 @@ public:
 			MyData.pop_back();
 		}
 		Lime::size_t CharSize = TChar::CharSize(InChar.MyData[0]);
-		Reserve(BufferSize() + CharSize + 1);
+		if (BufferSize() + CharSize + 1 > MyData.capacity())
+		{
+			Reserve(BufferSize() + CharSize + 1);
+		}
 		++MyCodePointCount;
 		for (size_t Index = 0; Index < CharSize; ++Index)
 		{
@@ -441,7 +444,10 @@ public:
 		{
 			MyData.pop_back();
 		}
-		Reserve(MyData.size() + InStr.CharCount());
+		if (MyData.size() + InStr.CharCount() > MyData.capacity())
+		{
+			Reserve(MyData.size() + InStr.CharCount());
+		}
 		for (TChar Char : InStr)
 		{
 			for (Lime::size_t Index = 0; Char.MyData[Index] && Index < 4; ++Index)

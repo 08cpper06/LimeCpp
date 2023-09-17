@@ -18,7 +18,12 @@ public:
 		TUtf8String Str;
 		for (const char* Itr = InStr; *Itr; ++Itr)
 		{
-			Str += ConvertTo8From32(*reinterpret_cast<const char32_t*>(Itr));
+			TOption<char32_t, ConvertEncodingError> Char = ConvertCharToUtf32(*reinterpret_cast<const char32_t*>(Itr));
+			if (!Char)
+			{
+				return ConvertEncodingError::InValidChar;
+			}
+			Str += *Char;
 		}
 		return Str;
 	}
@@ -28,7 +33,7 @@ public:
 		TUtf8String Str;
 		for (const char32_t* Itr = InStr; *Itr; ++Itr)
 		{
-			TChar Char = ConvertTo8From32(*Itr);
+			TChar Char = ConvertCharToUtf8(*Itr);
 			Str += Char;
 		}
 		return Str;
@@ -43,7 +48,7 @@ public:
 			{
 				break;
 			}
-			Str += ConvertTo8From32(Char);
+			Str += ConvertCharToUtf8(Char);
 		}
 		return Str;
 	}
@@ -54,7 +59,7 @@ public:
 		TOption<char32_t, ConvertEncodingError> Char;
 		for (const char* Itr = InStr; *Itr; ++Itr)
 		{
-			Char = ConvertTo32From8(TChar(reinterpret_cast<const char8_t*>(Itr)));
+			Char = ConvertCharToUtf32(TChar(reinterpret_cast<const char8_t*>(Itr)));
 			if (!Char)
 			{
 				return Char.GetStatus();
@@ -70,7 +75,7 @@ public:
 		TOption<char32_t, ConvertEncodingError> Char;
 		for (const char8_t* Itr = InStr; *Itr; ++Itr)
 		{
-			Char = ConvertTo32From8(TChar(Itr));
+			Char = ConvertCharToUtf32(TChar(Itr));
 			if (!Char)
 			{
 				return Char.GetStatus();
@@ -90,7 +95,7 @@ public:
 			{
 				break;
 			}
-			OutChar = ConvertTo32From8(Char);
+			OutChar = ConvertCharToUtf32(Char);
 			if (!OutChar)
 			{
 				return OutChar.GetStatus();
@@ -100,7 +105,7 @@ public:
 		return Str;
 	}
 
-	static constexpr TOption<char32_t, ConvertEncodingError> ConvertTo32From8(TChar InChar)
+	static constexpr TOption<char32_t, ConvertEncodingError> ConvertCharToUtf32(TChar InChar)
 	{
 		char32_t Char = 0;
 		size_t Length = TChar::CharSize(InChar.MyData[0]);
@@ -134,7 +139,7 @@ public:
 		return Char;
 	}
 
-	static constexpr TChar ConvertTo8From32(char32_t InChar)
+	static constexpr TChar ConvertCharToUtf8(char32_t InChar)
 	{
 		TChar Char;
 		if (InChar <= 0x7F)

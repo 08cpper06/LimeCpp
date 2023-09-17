@@ -51,6 +51,7 @@ public:
 	{
 		if (InLength == 4)
 		{
+			MyData[4] = u8'\0';
 			MyData[3] = InChar[3];
 			MyData[2] = InChar[2];
 			MyData[1] = InChar[1];
@@ -58,37 +59,37 @@ public:
 		}
 		else if (InLength == 3)
 		{
+			MyData[4] = MyData[3] = u8'\0';
 			MyData[2] = InChar[2];
 			MyData[1] = InChar[1];
 			MyData[0] = InChar[0];
-			MyData[3] = 0;
 		}
 		else if (InLength == 2)
 		{
+			MyData[4] = MyData[3] = MyData[2] = u8'\0';
 			MyData[1] = InChar[1];
 			MyData[0] = InChar[0];
-			MyData[2] = MyData[3] = 0;
 		}
 		else if (InLength == 1)
 		{
+			MyData[4] = MyData[3] = MyData[2] = MyData[1] = u8'\0';
 			MyData[0] = InChar[0];
-			MyData[1] = MyData[2] = MyData[3] = 0;
 		}
 		else
 		{
-			MyData[0] = MyData[1] = MyData[2] = MyData[3] = u8'\0';
+			MyData[4] = MyData[3] = MyData[2] = MyData[1] = MyData[0] = u8'\0';
 		}
 	}
 
 public:
 	constexpr TChar() noexcept
 	{
-		MyData[0] = MyData[1] = MyData[2] = MyData[3] = 0;
+		MyData[4] = MyData[3] = MyData[2] = MyData[1] = MyData[0] = u8'\0';
 	}
 	constexpr TChar(const char8_t InChar) noexcept
 	{
 		MyData[0] = InChar;
-		MyData[1] = MyData[2] = MyData[3] = 0;
+		MyData[4] = MyData[3] = MyData[2] = MyData[1] = u8'\0';
 	}
 	constexpr TChar(const char8_t* InChar) noexcept
 	{
@@ -156,5 +157,5 @@ public:
 	}
 
 public:
-	char8_t MyData[4];
+	char8_t MyData[5];
 };

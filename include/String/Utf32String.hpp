@@ -362,7 +362,10 @@ public:
 		{
 			MyData.pop_back();
 		}
-		Reserve(BufferSize() + 1);
+		if (BufferSize() + 2 > MyData.capacity())
+		{
+			Reserve(BufferSize() + 2);
+		}
 		MyData.push_back(InChar);
 		MyData.push_back(U'\0');
 		return *this;
@@ -374,7 +377,10 @@ public:
 		{
 			MyData.pop_back();
 		}
-		Reserve(MyData.size() + InStr.CharCount());
+		if (MyData.size() + InStr.CharCount() > MyData.capacity())
+		{
+			Reserve(MyData.size() + InStr.CharCount());
+		}
 		for (char32_t Char : InStr)
 		{
 			MyData.push_back(Char);
