@@ -91,7 +91,7 @@ public:
 			return *this;
 		}
 
-		constexpr TConstIterator& operator+(Lime::size_t InOffset)
+		constexpr TConstIterator& operator+(Lime::size_t InOffset) const
 		{
 			TConstIterator Ret = *this;
 			for (Lime::size_t Index = 0; Index < InOffset; ++Index)
@@ -99,6 +99,14 @@ public:
 				++Ret;
 			}
 			return Ret;
+		}
+		constexpr TConstIterator& operator+=(Lime::size_t InOffset)
+		{
+			for (Lime::size_t Index = 0; Index < InOffset; ++Index)
+			{
+				++(*this);
+			}
+			return *this;
 		}
 
 		constexpr bool operator==(const TConstIterator& InRhs) const noexcept
@@ -124,6 +132,30 @@ public:
 		constexpr bool operator<=(const TConstIterator& InRhs) const noexcept
 		{
 			return MyCurrent <= InRhs.MyCurrent;
+		}
+
+		constexpr bool StartWith(const char8_t InChar) const noexcept
+		{
+			if ((MyCurrent - MyEnd) >= 1)
+			{
+				TChar First(MyCurrent);
+				return First == TChar(InChar);
+			}
+			return false;
+		}
+
+		constexpr bool StartWith(const TUtf8StringView InStr) const noexcept
+		{
+			TConstIterator Itr = *this;
+			for (TChar Char : InStr)
+			{
+				if (!Itr || *Itr != Char)
+				{
+					return false;
+				}
+				++Itr;
+			}
+			return true;
 		}
 
 	CLASS_PRIVATE:
@@ -225,6 +257,14 @@ public:
 			}
 			return Ret;
 		}
+		constexpr TIterator& operator+=(Lime::size_t InOffset) noexcept
+		{
+			for (Lime::size_t Index = 0; Index < InOffset; ++Index)
+			{
+				++(*this);
+			}
+			return *this;
+		}
 
 		constexpr bool operator==(const TIterator& InRhs) const noexcept
 		{
@@ -249,6 +289,30 @@ public:
 		constexpr bool operator<=(const TIterator& InRhs) const noexcept
 		{
 			return MyCurrent <= InRhs.MyCurrent;
+		}
+
+		constexpr bool StartWith(const char8_t InChar) const noexcept
+		{
+			if ((MyCurrent - MyEnd) >= 1)
+			{
+				TChar First(MyCurrent);
+				return First == TChar(InChar);
+			}
+			return false;
+		}
+
+		constexpr bool StartWith(const TUtf8StringView InStr) const noexcept
+		{
+			TIterator Itr = *this;
+			for (TChar Char : InStr)
+			{
+				if (!Itr || *Itr != Char)
+				{
+					return false;
+				}
+				++Itr;
+			}
+			return true;
 		}
 
 	CLASS_PRIVATE:

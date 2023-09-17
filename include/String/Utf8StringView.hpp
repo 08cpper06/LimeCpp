@@ -38,7 +38,7 @@ public:
 
 		constexpr TConstIterator& operator++()
 		{
-			++MyCurrent;
+			MyCurrent += TChar::CharSize(*MyCurrent);
 			return *this;
 		}
 		constexpr TConstIterator operator++(int)
@@ -50,37 +50,63 @@ public:
 
 		constexpr TConstIterator& operator--()
 		{
-			--MyCurrent;
+			while (MyCurrent > MyHead && (*MyCurrent & 0b11110000))
+			{
+				--MyCurrent;
+			}
 			return *this;
 		}
 		constexpr TConstIterator operator--(int)
 		{
 			TConstIterator Ret = *this;
-			--*this;
+			--(*this);
 			return Ret;
 		}
 
 		constexpr Lime::ptrdiff_t operator-(const TConstIterator& InRhs) const noexcept
 		{
-			return MyCurrent - InRhs.MyCurrent;
+			Lime::size_t Count = 0;
+			for (TConstIterator Itr = InRhs; Itr != *this; ++Itr)
+			{
+				++Count;
+			}
+			return Count;
 		}
 		constexpr TConstIterator& operator-(Lime::size_t InOffset) const noexcept
 		{
 			TConstIterator Ret = *this;
-			Ret.MyCurrent -= InOffset;
+			while (InOffset--)
+			{
+				--Ret;
+			}
 			return Ret;
 		}
 		constexpr TConstIterator& operator-=(Lime::size_t InOffset)
 		{
 			MyCurrent -= InOffset;
+			while (InOffset--)
+			{
+				--(*this);
+			}
 			return *this;
 		}
 
-		constexpr TConstIterator& operator+(Lime::size_t InOffset)
+		constexpr TConstIterator& operator+(Lime::size_t InOffset) const
 		{
 			TConstIterator Ret = *this;
-			Ret.MyCurrent += InOffset;
+			while (InOffset--)
+			{
+				++Ret;
+			}
 			return Ret;
+		}
+		constexpr TConstIterator& operator+=(Lime::size_t InOffset)
+		{
+			while (InOffset--)
+			{
+				++(*this);
+			}
+			return *this;
 		}
 
 		constexpr bool operator==(const TConstIterator& InRhs) const noexcept
@@ -106,6 +132,30 @@ public:
 		constexpr bool operator<=(const TConstIterator& InRhs) const noexcept
 		{
 			return MyCurrent <= InRhs.MyCurrent;
+		}
+
+		constexpr bool StartWith(const char8_t InChar) const noexcept
+		{
+			if ((MyCurrent - MyEnd) >= 1)
+			{
+				TChar First(MyCurrent);
+				return First == TChar(InChar);
+			}
+			return false;
+		}
+
+		constexpr bool StartWith(const TUtf8StringView InStr) const noexcept
+		{
+			TConstIterator Itr = *this;
+			for (TChar Char : InStr)
+			{
+				if (!Itr || *Itr != Char)
+				{
+					return false;
+				}
+				++Itr;
+			}
+			return true;
 		}
 
 	CLASS_PRIVATE:
@@ -146,49 +196,74 @@ public:
 
 		constexpr TIterator& operator++()
 		{
-			++MyCurrent;
+			MyCurrent += TChar::CharSize(*MyCurrent);
 			return *this;
 		}
 		constexpr TIterator operator++(int)
 		{
 			TIterator Ret = *this;
-			++*this;
+			++(*this);
 			return Ret;
 		}
 
 		constexpr TIterator& operator--()
 		{
-			--MyCurrent;
+			while (MyCurrent > MyHead && (*MyCurrent & 0b11110000))
+			{
+				--MyCurrent;
+			}
 			return *this;
 		}
 		constexpr TIterator operator--(int)
 		{
 			TIterator Ret = *this;
-			--*this;
+			--(*this);
 			return Ret;
 		}
 
 		constexpr Lime::ptrdiff_t operator-(const TIterator& InRhs) const noexcept
 		{
-			return MyCurrent - InRhs.MyCurrent;
+			Lime::size_t Count = 0;
+			for (TIterator Itr = InRhs; Itr != *this; ++Itr)
+			{
+				++Count;
+			}
+			return Count;
 		}
 		constexpr TIterator& operator-(Lime::size_t InOffset) const noexcept
 		{
 			TIterator Ret = *this;
-			Ret.MyCurrent -= InOffset;
+			while (InOffset--)
+			{
+				--Ret;
+			}
 			return Ret;
 		}
 		constexpr TIterator& operator-=(Lime::size_t InOffset)
 		{
-			MyCurrent -= InOffset;
+			while (InOffset--)
+			{
+				--(*this);
+			}
 			return *this;
 		}
 
-		constexpr TIterator& operator+(Lime::size_t InOffset)
+		constexpr TIterator& operator+(Lime::size_t InOffset) const
 		{
 			TIterator Ret = *this;
-			Ret.MyCurrent += InOffset;
-			return Ret; ;
+			while (InOffset--)
+			{
+				++Ret;
+			}
+			return Ret;
+		}
+		constexpr TIterator& operator+=(Lime::size_t InOffset)
+		{
+			while (InOffset--)
+			{
+				++(*this);
+			}
+			return *this;
 		}
 
 		constexpr bool operator==(const TIterator& InRhs) const noexcept
@@ -214,6 +289,30 @@ public:
 		constexpr bool operator<=(const TIterator& InRhs) const noexcept
 		{
 			return MyCurrent <= InRhs.MyCurrent;
+		}
+
+		constexpr bool StartWith(const char8_t InChar) const noexcept
+		{
+			if ((MyCurrent - MyEnd) >= 1)
+			{
+				TChar First(MyCurrent);
+				return First == TChar(InChar);
+			}
+			return false;
+		}
+
+		constexpr bool StartWith(const TUtf8StringView InStr) const noexcept
+		{
+			TIterator Itr = *this;
+			for (TChar Char : InStr)
+			{
+				if (!Itr || *Itr != Char)
+				{
+					return false;
+				}
+				++Itr;
+			}
+			return true;
 		}
 
 	CLASS_PRIVATE:
@@ -277,6 +376,11 @@ public:
 	constexpr void Reset() override
 	{
 		std::exchange(MyData, {});
+	}
+
+	constexpr const char8_t* Bytes() const noexcept
+	{
+		return MyData.data();
 	}
 
 	constexpr TIterator begin() noexcept

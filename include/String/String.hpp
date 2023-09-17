@@ -7,7 +7,6 @@
 #include "Utf8String.hpp"
 #include "Utf8StringView.hpp"
 
-#include "HashString.hpp"
 #include "EncodingConverter.hpp"
 
 

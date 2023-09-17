@@ -77,11 +77,16 @@ public:
 			return *this;
 		}
 
-		constexpr TConstIterator& operator+(Lime::size_t InOffset)
+		constexpr TConstIterator& operator+(Lime::size_t InOffset) const
 		{
 			TConstIterator Ret = *this;
 			Ret.MyCurrent += InOffset;
-			return Ret;	;
+			return Ret;
+		}
+		constexpr TConstIterator& operator+=(Lime::size_t InOffset)
+		{
+			MyCurrent += InOffset;
+			return *this;
 		}
 
 		constexpr bool operator==(const TConstIterator& InRhs) const noexcept
@@ -107,6 +112,24 @@ public:
 		constexpr bool operator<=(const TConstIterator& InRhs) const noexcept
 		{
 			return MyCurrent <= InRhs.MyCurrent;
+		}
+
+		constexpr bool StartWith(const char32_t InChar) const noexcept
+		{
+			return (MyEnd - MyCurrent) >= 1 && *MyCurrent == InChar;
+		}
+		constexpr bool StartWith(TUtf32StringView InStr) const noexcept
+		{
+			TConstIterator Itr = *this;
+			for (char32_t Char : InStr)
+			{
+				if (!Itr || *Itr != Char)
+				{
+					return false;
+				}
+				++Itr;
+			}
+			return true;
 		}
 
 	CLASS_PRIVATE:
@@ -185,11 +208,16 @@ public:
 			return *this;
 		}
 
-		constexpr TIterator& operator+(Lime::size_t InOffset)
+		constexpr TIterator& operator+(Lime::size_t InOffset) const
 		{
 			TIterator Ret = *this;
 			Ret.MyCurrent += InOffset;
-			return Ret; ;
+			return Ret;
+		}
+		constexpr TIterator& operator+=(Lime::size_t InOffset)
+		{
+			MyCurrent += InOffset;
+			return *this;
 		}
 
 		constexpr bool operator==(const TIterator& InRhs) const noexcept
@@ -215,6 +243,24 @@ public:
 		constexpr bool operator<=(const TIterator& InRhs) const noexcept
 		{
 			return MyCurrent <= InRhs.MyCurrent;
+		}
+
+		constexpr bool StartWith(const char32_t InChar) const noexcept
+		{
+			return (MyEnd - MyCurrent) >= 1 && *MyCurrent == InChar;
+		}
+		constexpr bool StartWith(TUtf32StringView InStr) const noexcept
+		{
+			TIterator Itr = *this;
+			for (char32_t Char : InStr)
+			{
+				if (!Itr || *Itr != Char)
+				{
+					return false;
+				}
+				++Itr;
+			}
+			return true;
 		}
 
 	CLASS_PRIVATE:
