@@ -6,6 +6,7 @@
 #include "../String/String.hpp"
 
 #include <string>
+#include <fstream>
 
 
 enum class FileIOError {
@@ -17,7 +18,15 @@ enum class FileIOError {
 
 class FileIO {
 public:
-	template <class T>
+	static void WriteFile(const char* InPath, TUtf8StringView Buffer)
+	{
+		std::ofstream FileStream(InPath);
+		if (!FileStream.fail())
+		{
+			FileStream << Buffer;
+		}
+	}
+
 	static TOption<TUtf32String, FileIOError> ReadFile(const char* InPath)
 	{
 		TOption<std::string, FileIOError> Data = _ReadFile(InPath);
@@ -38,7 +47,7 @@ public:
 private:
 	static TOption<std::string, FileIOError> _ReadFile(const char* InPath)
 	{
-		std::iostream FileStream(InPath);
+		std::ifstream FileStream(InPath);
 		if (FileStream.fail())
 		{
 			return FileIOError::NoExist;

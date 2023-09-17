@@ -57,7 +57,7 @@ public:
 	{
 		TUtf32String Str;
 		TOption<char32_t, ConvertEncodingError> Char;
-		for (const char* Itr = InStr; *Itr; ++Itr)
+		for (const char* Itr = InStr; *Itr;)
 		{
 			Char = ConvertCharToUtf32(TChar(reinterpret_cast<const char8_t*>(Itr)));
 			if (!Char)
@@ -65,6 +65,7 @@ public:
 				return Char.GetStatus();
 			}
 			Str += *Char;
+			Itr += TChar::CharSize(*Itr);
 		}
 		return Str;
 	}
@@ -73,7 +74,7 @@ public:
 	{
 		TUtf32String Str;
 		TOption<char32_t, ConvertEncodingError> Char;
-		for (const char8_t* Itr = InStr; *Itr; ++Itr)
+		for (const char8_t* Itr = InStr; *Itr;)
 		{
 			Char = ConvertCharToUtf32(TChar(Itr));
 			if (!Char)
@@ -81,6 +82,7 @@ public:
 				return Char.GetStatus();
 			}
 			Str += *Char;
+			Itr += TChar::CharSize(*Itr);
 		}
 		return Str;
 	}

@@ -335,6 +335,7 @@ public:
 		Lime::size_t Length = 0;
 		Lime::size_t CharSize = 0;
 		const char8_t* Itr = InStr;
+		MyCodePointCount = 0;
 		for (size_t Idx = 0; Idx < InLength; ++Idx)
 		{
 			CharSize = TChar::CharSize(*Itr);
