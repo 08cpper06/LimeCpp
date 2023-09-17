@@ -16,9 +16,9 @@ add_executable(${PROJECT_NAME}
 	src/Utf8StringTest.cpp
 	src/EncodingConvertTest.cpp
 	src/HashStringTest.cpp
+	src/TokenizeTest.cpp
+	../src/Tokenize/Tokenize.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)
 target_include_directories(${PROJECT_NAME} PUBLIC ../include)
-
-# add_subdirectory(unittest)

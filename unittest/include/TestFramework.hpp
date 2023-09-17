@@ -6,6 +6,7 @@
 #include <memory>
 #include <map>
 #include <iostream>
+#include <source_location>
 
 
 #if !defined(_DEBUG)
@@ -15,10 +16,6 @@
 #define CONSOLE_COLOR(R, G, B) "\x1b[38;2;" #R ";" #G ";" #B "m"
 #define DEFAULT_COLOR CONSOLE_COLOR(200, 200, 200)
 
-#define ASSERT_TRUE(Trigger, Message) AssertTrue(Trigger, Message, __LINE__, __FILE__)
-#define ASSERT_FALSE(Trigger, Message) AssertFalse(Trigger, Message, __LINE__, __FILE__)
-#define ASSERT_EQUAL(Lhs, Rhs, Message) AssertEqual(Lhs, Rhs, Message, __LINE__, __FILE__)
-#define ASSERT_NOT_EQUAL(Lhs, Rhs, Message) AssertNotEqual(Lhs, Rhs, Message, __LINE__, __FILE__)
 
 class TestBaseClass {
 public:
@@ -28,116 +25,116 @@ public:
 	virtual std::string GetTestName() const noexcept = 0;
 	virtual bool RunTest() const = 0;
 
-	void AssertTrue(bool InTrigger, std::string_view InMessage, int InLine, const char* InSrcFilePath) const
+	void AssertTrue(bool InTrigger, std::string_view InMessage, std::source_location InCodeLocation = std::source_location::current()) const
 	{
 		if (!InTrigger)
 		{
 			std::cout << CONSOLE_COLOR(255, 0, 0)
-				<< "[Line : " << InLine << "] "
+				<< "[Line : " << InCodeLocation.line() << "] "
 				<< InMessage
-				<< " [File : " << InSrcFilePath << "]"
+				<< " [File : " << InCodeLocation.file_name() << "]"
 				<< DEFAULT_COLOR << std::endl;
 			IsSuccess = false;
 		}
 	}
-	void AssertFalse(bool InTrigger, std::string_view InMessage, int InLine, const char* InSrcFilePath) const
+	void AssertFalse(bool InTrigger, std::string_view InMessage, std::source_location InCodeLocation = std::source_location::current()) const
 	{
 		if (InTrigger)
 		{
 			std::cout << CONSOLE_COLOR(255, 0, 0)
-				<< "[Line : " << InLine << "] "
+				<< "[Line : " << InCodeLocation.line() << "] "
 				<< InMessage
-				<< " [File : " << InSrcFilePath << "]"
+				<< " [File : " << InCodeLocation.file_name() << "]"
 				<< DEFAULT_COLOR << std::endl;
 			IsSuccess = false;
 		}
 	}
 
 	template <class Type>
-	void AssertEqual(Type InLhs, Type InRhs, std::string_view InMessage, int InLine, const char* InSrcFilePath) const
+	void AssertEqual(Type InLhs, Type InRhs, std::string_view InMessage, std::source_location InCodeLocation = std::source_location::current()) const
 	{
 		if (InLhs != InRhs)
 		{
 			std::cout << CONSOLE_COLOR(255, 0, 0)
-				<< "[Line : " << InLine << "] "
+				<< "[Line : " << InCodeLocation.line() << "] "
 				<< InMessage
 				<< "(Lhs : " << InLhs << ", Rhs : " << InRhs << ") "
-				<< "[File : " << InSrcFilePath << "]"
+				<< "[File : " << InCodeLocation.file_name() << "]"
 				<< DEFAULT_COLOR << std::endl;
 			IsSuccess = false;
 		}
 	}
 
 	template <class Type, class UType>
-	void AssertEqual(Type InLhs, UType InRhs, std::string_view InMessage, int InLine, const char* InSrcFilePath) const
+	void AssertEqual(Type InLhs, UType InRhs, std::string_view InMessage, std::source_location InCodeLocation = std::source_location::current()) const
 	{
 		if (InLhs != InRhs)
 		{
 			std::cout << CONSOLE_COLOR(255, 0, 0)
-				<< "[Line : " << InLine << "] "
+				<< "[Line : " << InCodeLocation.line() << "] "
 				<< InMessage
 				<< "(Lhs : " << InLhs << ", Rhs : " << InRhs << ") "
-				<< "[File : " << InSrcFilePath << "]"
+				<< "[File : " << InCodeLocation.file_name() << "]"
 				<< DEFAULT_COLOR << std::endl;
 			IsSuccess = false;
 		}
 	}
 
 	template <class Type, class UType>
-	void AssertEqual(const Type* InLhs, const UType* InRhs, std::string_view InMessage, int InLine, const char* InSrcFilePath) const
+	void AssertEqual(const Type* InLhs, const UType* InRhs, std::string_view InMessage, std::source_location InCodeLocation = std::source_location::current()) const
 	{
 		if (InLhs != InRhs)
 		{
 			std::cout << CONSOLE_COLOR(255, 0, 0)
-				<< "[Line : " << InLine << "] "
+				<< "[Line : " << InCodeLocation.line() << "] "
 				<< InMessage
 				<< " (Lhs : " << std::hex << InLhs << ", Rhs : " << InRhs << ") "
-				<< "[File : " << InSrcFilePath << "]"
+				<< "[File : " << InCodeLocation.file_name() << "]"
 				<< std::dec << DEFAULT_COLOR << std::endl;
 			IsSuccess = false;
 		}
 	}
 
 	template <class Type>
-	void AssertNotEqual(Type InLhs, Type InRhs, std::string_view InMessage, int InLine, const char* InSrcFilePath) const
+	void AssertNotEqual(Type InLhs, Type InRhs, std::string_view InMessage, std::source_location InCodeLocation = std::source_location::current()) const
 	{
 		if (InLhs == InRhs)
 		{
 			std::cout << CONSOLE_COLOR(255, 0, 0)
-				<< "[Line : " << InLine << "] "
+				<< "[Line : " << InCodeLocation.line() << "] "
 				<< InMessage
 				<< "(Lhs : " << InLhs << ", Rhs : " << InRhs << ") "
-				<< "[File : " << InSrcFilePath << "]"
+				<< "[File : " << InCodeLocation.file_name() << "]"
 				<< DEFAULT_COLOR << std::endl;
 			IsSuccess = false;
 		}
 	}
 
 	template <class Type, class UType>
-	void AssertNotEqual(Type InLhs, UType InRhs, std::string_view InMessage, int InLine, const char* InSrcFilePath) const
+	void AssertNotEqual(Type InLhs, UType InRhs, std::string_view InMessage, std::source_location InCodeLocation = std::source_location::current()) const
 	{
 		if (InLhs == InRhs)
 		{
 			std::cout << CONSOLE_COLOR(255, 0, 0)
-				<< "[Line : " << InLine << "] "
+				<< "[Line : " << InCodeLocation.line() << "] "
 				<< InMessage
 				<< "(Lhs : " << InLhs << ", Rhs : " << InRhs << ") "
-				<< "[File : " << InSrcFilePath << "]"
+				<< "[File : " << InCodeLocation.file_name() << "]"
 				<< DEFAULT_COLOR << std::endl;
 			IsSuccess = false;
 		}
 	}
 
 	template <class Type, class UType>
-	void AssertNotEqual(const Type* InLhs, const UType* InRhs, std::string_view InMessage, int InLine, const char* InSrcFilePath) const
+	void AssertNotEqual(const Type* InLhs, const UType* InRhs, std::string_view InMessage, std::source_location InCodeLocation = std::source_location::current()) const
 	{
 		if (InLhs == InRhs)
 		{
 			std::cout << CONSOLE_COLOR(255, 0, 0)
-				<< "[Line : " << InLine << "] "
+				<< "[Line : " << InCodeLocation.line() << "] "
 				<< InMessage
 				<< " (Lhs : " << std::hex << InLhs << ", Rhs : " << InRhs << ") "
-				<< "[File : " << InSrcFilePath << "]"
+				<< "[File : " << InCodeLocation.file_name() << "]"
 				<< std::dec << DEFAULT_COLOR << std::endl;
 			IsSuccess = false;
 		}

@@ -40,40 +40,40 @@ IMPLEMENT_TEST_CLASS(Utf32String)
 bool Utf32StringTest::RunTest() const
 {
 	TUtf32String Str = U"HelloWorld";
-	ASSERT_EQUAL(Str.CharCount(), 10, "CharCount() is not matched");
+	AssertEqual(Str.CharCount(), 10, "CharCount() is not matched");
 
 	auto Itr = Str.begin();
 	const char32_t* TrueStr = U"HelloWorld";
 	for (size_t Index = 0; Index < Str.CharCount(); ++Index)
 	{
-		ASSERT_EQUAL(static_cast<char>(ConvertChar(*Itr++).MyData[0]), static_cast<char>(TrueStr[Index]), "Buffer is not match");
+		AssertEqual(static_cast<char>(ConvertChar(*Itr++).MyData[0]), static_cast<char>(TrueStr[Index]), "Buffer is not match");
 	}
 
-	ASSERT_FALSE(std::strcmp(reinterpret_cast<const char*>(Str.MyData.data()), reinterpret_cast<const char*>(TrueStr)), "Buffer is invalid state");
+	AssertFalse(std::strcmp(reinterpret_cast<const char*>(Str.MyData.data()), reinterpret_cast<const char*>(TrueStr)), "Buffer is invalid state");
 
-	ASSERT_FALSE(Str.IsEmpty(), "Expect IsEmpty() return false, but not");
+	AssertFalse(Str.IsEmpty(), "Expect IsEmpty() return false, but not");
 
-	ASSERT_TRUE(TUtf32String().IsEmpty(), "Expect IsEmpty() return true, but not");
+	AssertTrue(TUtf32String().IsEmpty(), "Expect IsEmpty() return true, but not");
 
-	ASSERT_TRUE(Str.StartWith(U'H'), "StartWith(char32_t) return true, but not");
-	ASSERT_TRUE(Str.StartWith(U"Hello"), "StartWith(const char32_t*) return true, but not");
+	AssertTrue(Str.StartWith(U'H'), "StartWith(char32_t) return true, but not");
+	AssertTrue(Str.StartWith(U"Hello"), "StartWith(const char32_t*) return true, but not");
 
 	Str += U"Hello";
 	Itr = Str.begin();
 	for (size_t Index = 0; Index < Str.CharCount(); ++Index)
 	{
-		ASSERT_EQUAL(static_cast<char>(ConvertChar(*Itr++).MyData[0]), "HelloWorldHello"[Index], "Buffer is not match");
+		AssertEqual(static_cast<char>(ConvertChar(*Itr++).MyData[0]), "HelloWorldHello"[Index], "Buffer is not match");
 	}
 
 	TUtf32String Str2 = Str + TUtf32StringView(U"World");
 	Itr = Str2.begin();
 	for (size_t Index = 0; Index < Str.CharCount(); ++Index)
 	{
-		ASSERT_EQUAL(static_cast<char>(ConvertChar(*Itr++).MyData[0]), "HelloWorldHelloWorld"[Index], "Buffer is not match");
+		AssertEqual(static_cast<char>(ConvertChar(*Itr++).MyData[0]), "HelloWorldHelloWorld"[Index], "Buffer is not match");
 	}
 
 	Str.Reset();
-	ASSERT_TRUE(Str.IsEmpty(), "Expect IsEmpty() return true, but not");
+	AssertTrue(Str.IsEmpty(), "Expect IsEmpty() return true, but not");
 	return true;
 }
 
@@ -81,23 +81,23 @@ IMPLEMENT_TEST_CLASS(Utf32StringView)
 bool Utf32StringViewTest::RunTest() const
 {
 	TUtf32StringView Str = U"HelloWorld";
-	ASSERT_EQUAL(Str.CharCount(), 10, "CharCount() is not matched");
+	AssertEqual(Str.CharCount(), 10, "CharCount() is not matched");
 
 	auto Itr = Str.begin();
 	const char32_t* TrueStr = U"HelloWorld";
 	for (size_t Index = 0; Index < Str.CharCount(); ++Index)
 	{
-		ASSERT_EQUAL(static_cast<char>(ConvertChar(*Itr++).MyData[0]), static_cast<char>(TrueStr[Index]), "Buffer is not match");
+		AssertEqual(static_cast<char>(ConvertChar(*Itr++).MyData[0]), static_cast<char>(TrueStr[Index]), "Buffer is not match");
 	}
 
-	ASSERT_FALSE(Str.IsEmpty(), "Expect IsEmpty() return false, but not");
+	AssertFalse(Str.IsEmpty(), "Expect IsEmpty() return false, but not");
 
-	ASSERT_TRUE(TUtf32StringView().IsEmpty(), "Expect IsEmpty() return true, but not");
+	AssertTrue(TUtf32StringView().IsEmpty(), "Expect IsEmpty() return true, but not");
 
-	ASSERT_TRUE(Str.StartWith(U'H'), "StartWith(char32_t) return true, but not");
-	ASSERT_TRUE(Str.StartWith(U"Hello"), "StartWith(const char32_t*) return true, but not");
+	AssertTrue(Str.StartWith(U'H'), "StartWith(char32_t) return true, but not");
+	AssertTrue(Str.StartWith(U"Hello"), "StartWith(const char32_t*) return true, but not");
 
 	Str.Reset();
-	ASSERT_TRUE(Str.IsEmpty(), "Expect IsEmpty() return true, but not");
+	AssertTrue(Str.IsEmpty(), "Expect IsEmpty() return true, but not");
 	return true;
 }
