@@ -365,6 +365,7 @@ public:
 		Reserve(BufferSize() + 1);
 		MyData.push_back(InChar);
 		MyData.push_back(U'\0');
+		return *this;
 	}
 
 	constexpr TUtf32String& operator+=(const TUtf32StringView InStr) noexcept
@@ -392,6 +393,29 @@ public:
 	{
 		TUtf32String Str = *this;
 		return Str += InChar;
+	}
+
+public:
+	constexpr bool operator==(const TUtf32StringView InStr) const noexcept
+	{
+		if (CharCount() != InStr.CharCount())
+		{
+			return false;
+		}
+		TConstIterator LhsItr = cbegin();
+		TUtf32StringView::TConstIterator RhsItr = InStr.cbegin();
+		for (;LhsItr && RhsItr;)
+		{
+			if (*LhsItr++ != *RhsItr++)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	constexpr bool operator!=(const TUtf32StringView InStr) const noexcept
+	{
+		return !(*this == InStr);
 	}
 
 CLASS_PRIVATE:

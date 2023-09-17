@@ -29,7 +29,7 @@ bool Utf8StringTest::RunTest() const
 	ASSERT_TRUE(Str.StartWith(u8'H'), "StartWith(char8_t) return true, but not");
 	ASSERT_TRUE(Str.StartWith(u8"Hello"), "StartWith(const char8_t*) return true, but not");
 
-	Str += u8"Hello";
+	Str += TUtf8StringView(u8"Hello");
 	Itr = Str.begin();
 	for (size_t Index = 0; Index < Str.CharCount(); ++Index)
 	{

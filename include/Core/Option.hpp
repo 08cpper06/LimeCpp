@@ -63,7 +63,7 @@ public:
 
 	constexpr const Type* operator->() const
 	{
-		if constexpr (size_t(MyErrorCode))
+		if (MyErrorCode == ErrorType(0))
 		{
 			return &MyValue;
 		}
@@ -71,7 +71,7 @@ public:
 	}
 	constexpr Type* operator->() noexcept
 	{
-		if constexpr (size_t(MyErrorCode))
+		if (MyErrorCode == ErrorType(0))
 		{
 			return &MyValue;
 		}

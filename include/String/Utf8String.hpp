@@ -294,7 +294,6 @@ public:
 		while (*Itr)
 		{
 			CharSize = TChar::CharSize(*Itr);
-			assert(CharSize > 0);
 			Itr += CharSize;
 			Length += CharSize;
 			++MyCodePointCount;
@@ -419,16 +418,21 @@ public:
 	}
 
 public:
-	TUtf8String& operator+=(const char8_t InChar) noexcept
+	constexpr TUtf8String& operator+=(const TChar InChar) noexcept
 	{
 		if (!MyData.empty() && TChar(MyData.back()) == TChar(u8'\0'))
 		{
 			MyData.pop_back();
 		}
-		Reserve(BufferSize() + 1);
+		Lime::size_t CharSize = TChar::CharSize(InChar.MyData[0]);
+		Reserve(BufferSize() + CharSize + 1);
 		++MyCodePointCount;
-		MyData.push_back(InChar);
+		for (size_t Index = 0; Index < CharSize; ++Index)
+		{
+			MyData.push_back(InChar.MyData[Index]);
+		}
 		MyData.push_back(u8'\0');
+		return *this;
 	}
 
 	constexpr TUtf8String& operator+=(const TUtf8StringView InStr) noexcept
@@ -460,6 +464,29 @@ public:
 	{
 		TUtf8String Str = *this;
 		return Str += InChar;
+	}
+
+public:
+	constexpr bool operator==(const TUtf8StringView InStr) const noexcept
+	{
+		if (CharCount() != InStr.CharCount())
+		{
+			return false;
+		}
+		TConstIterator LhsItr = cbegin();
+		TUtf8StringView::TConstIterator RhsItr = InStr.cbegin();
+		for (;LhsItr && RhsItr;)
+		{
+			if (*LhsItr++ != *RhsItr++)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	constexpr bool operator!=(const TUtf8StringView InStr) const noexcept
+	{
+		return !(*this == InStr);
 	}
 
 CLASS_PRIVATE:

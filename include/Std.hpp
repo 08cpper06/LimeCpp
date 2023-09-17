@@ -5,7 +5,6 @@
 #include <cstdio>
 #include <vector>
 #include <span>
-#include <cassert>
 
 /* non-override */
 #include <initializer_list>
