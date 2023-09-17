@@ -6,6 +6,7 @@
 #include <vector>
 #include <span>
 #include <map>
+#include <memory>
 
 /* non-override */
 #include <initializer_list>
@@ -36,6 +37,9 @@ namespace Lime {
 
 	template <class Key, class Value>
 	using TMap = std::map<Key, Value>;
+
+	template <class Type>
+	using SharedPtr = std::shared_ptr<Type>;
 
 	template <class... TArgs>
 	void LimeLog(LimeLogType InLogType, const char8_t* InMessage, TArgs&&... InArgs)
