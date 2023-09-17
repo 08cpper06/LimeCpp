@@ -65,7 +65,7 @@ bool Utf32StringTest::RunTest() const
 		ASSERT_EQUAL(static_cast<char>(ConvertChar(*Itr++).MyData[0]), "HelloWorldHello"[Index], "Buffer is not match");
 	}
 
-	TUtf32String Str2 = Str + U"World";
+	TUtf32String Str2 = Str + TUtf32StringView(U"World");
 	Itr = Str2.begin();
 	for (size_t Index = 0; Index < Str.CharCount(); ++Index)
 	{

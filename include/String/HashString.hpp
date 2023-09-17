@@ -4,6 +4,7 @@
 #include "../Std.hpp"
 
 #include "Utf32String.hpp"
+#include "Utf32StringView.hpp"
 #include "Utf8StringView.hpp"
 #include "EncodingConverter.hpp"
 
@@ -12,7 +13,7 @@ class THashString {
 public:
 	THashString() :
 		MyHashValue(0),
-		MyString(nullptr)
+		MyString()
 	{}
 	~THashString() = default;
 
@@ -26,26 +27,29 @@ public:
 		if (Itr == StringTable.end())
 		{
 			TOption<TUtf32String, ConvertEncodingError> ConvStr = String::ConvertToUtf32(InStr.Bytes());
-			StringTable.insert({ MyHashValue, std::move(*ConvStr) });
-			MyString = StringTable.find(MyHashValue)->second.Bytes();
+			StringTable.insert({ MyHashValue, LastIndex++ });
+			Pool.push_back(*ConvStr);
+			MyString = Pool.back().Bytes();
 		}
 		else
 		{
-			MyString = Itr->second.Bytes();
+			MyString = Pool[Itr->second].Bytes();
 		}
 	}
-	THashString(const TUtf8StringView& InStr)
+	THashString(TUtf8StringView InStr)
 	{
 		CalcHashValue(InStr.begin(), InStr.end());
 		auto Itr = StringTable.find(MyHashValue);
 		if (Itr == StringTable.end())
 		{
-			StringTable.insert({ MyHashValue, std::move(*String::ConvertToUtf32(InStr)) });
-			MyString = StringTable.find(MyHashValue)->second.Bytes();
+			TOption<TUtf32String, ConvertEncodingError> ConvStr = String::ConvertToUtf32(InStr);
+			StringTable.insert({ MyHashValue, LastIndex++ });
+			Pool.push_back(*ConvStr);
+			MyString = Pool.back().Bytes();
 		}
 		else
 		{
-			MyString = Itr->second.Bytes();
+			MyString = Pool[Itr->second].Bytes();
 		}
 	}
 	THashString(const TUtf32String& InStr)
@@ -60,15 +64,16 @@ public:
 		auto Itr = StringTable.find(MyHashValue);
 		if (Itr == StringTable.end())
 		{
-			StringTable.insert({ MyHashValue, std::move(Str) });
-			MyString = StringTable.find(MyHashValue)->second.Bytes();
+			StringTable.insert({ MyHashValue, LastIndex++ });
+			Pool.push_back(Str);
+			MyString = Pool.back().Bytes();
 		}
 		else
 		{
-			MyString = Itr->second.Bytes();
+			MyString = Pool[Itr->second].Bytes();
 		}
 	}
-	THashString(const TUtf32StringView& InStr)
+	THashString(TUtf32StringView InStr)
 	{
 		TUtf32String Str;
 		Str.Reserve(InStr.BufferSize());
@@ -80,12 +85,29 @@ public:
 		auto Itr = StringTable.find(MyHashValue);
 		if (Itr == StringTable.end())
 		{
-			StringTable.insert({ MyHashValue, std::move(Str) });
-			MyString = StringTable.find(MyHashValue)->second.Bytes();
+			StringTable.insert({ MyHashValue, LastIndex++ });
+			Pool.push_back(Str);
+			MyString = Pool.back().Bytes();
 		}
 		else
 		{
-			MyString = Itr->second.Bytes();
+			MyString = Pool[Itr->second].Bytes();
+		}
+	}
+	THashString(const char32_t* InStr)
+	{
+		TOption<TUtf8String, ConvertEncodingError> Str = String::ConvertToUtf8(InStr);
+		CalcHashValue(Str->Bytes());
+		auto Itr = StringTable.find(MyHashValue);
+		if (Itr == StringTable.end())
+		{
+			StringTable.insert({ MyHashValue, LastIndex++ });
+			Pool.push_back(InStr);
+			MyString = Pool.back().Bytes();
+		}
+		else
+		{
+			MyString = Pool[Itr->second].Bytes();
 		}
 	}
 	THashString(const char32_t InChar)
@@ -95,12 +117,13 @@ public:
 		auto Itr = StringTable.find(MyHashValue);
 		if (Itr == StringTable.end())
 		{
-			StringTable.insert({ MyHashValue, InChar });
-			MyString = StringTable.find(MyHashValue)->second.Bytes();
+			StringTable.insert({ MyHashValue, LastIndex++ });
+			Pool.push_back(TUtf32String(InChar));
+			MyString = Pool.back().Bytes();
 		}
 		else
 		{
-			MyString = Itr->second.Bytes();
+			MyString = Pool[Itr->second].Bytes();
 		}
 	}
 
@@ -137,10 +160,13 @@ public:
 public:
 	Lime::size_t MyHashValue;
 
-	mutable const char32_t* MyString;
+	TUtf32StringView MyString;
 
 private:
-	inline static Lime::TMap<Lime::size_t /* Hash Value */, TUtf32String> StringTable;
+	inline static Lime::TMap<Lime::size_t /* Hash Value */, Lime::size_t /* Index */> StringTable;
+
+	inline static Lime::size_t LastIndex = 0;
+	inline static Lime::TArray<TUtf32String> Pool;
 
 private:
 	static constexpr size_t RefTable(unsigned char Index)

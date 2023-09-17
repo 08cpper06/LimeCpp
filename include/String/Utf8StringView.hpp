@@ -158,7 +158,7 @@ public:
 			return true;
 		}
 
-	CLASS_PRIVATE:
+	public:
 		const char8_t* MyHead;
 		char8_t* MyCurrent;
 		const char8_t* MyEnd;
@@ -315,7 +315,7 @@ public:
 			return true;
 		}
 
-	CLASS_PRIVATE:
+	public:
 		const char8_t* MyHead;
 		char8_t* MyCurrent;
 		const char8_t* MyEnd;
@@ -326,8 +326,18 @@ public:
 	{}
 	constexpr TUtf8StringView(const char8_t* InStr, Lime::size_t InLength)
 	{
-		MyData = Lime::TSpan<char8_t>(const_cast<char8_t*>(InStr), InLength);
+		size_t BufferSize = 0;
+		TUtf8StringView::TConstIterator Itr(InStr, const_cast<char8_t*>(InStr), InStr + std::numeric_limits<Lime::size_t>::max());
+		while (InLength--)
+		{
+			++BufferSize;
+		}
+		MyData = Lime::TSpan<char8_t>(const_cast<char8_t*>(InStr), BufferSize);
 	}
+	template <class UIterator>
+	constexpr TUtf8StringView(UIterator InStart, UIterator InEnd) :
+		TUtf8StringView(InStart.MyCurrent, InEnd - InStart)
+	{}
 	constexpr TUtf8StringView(const char8_t* InStr)
 	{
 		Lime::size_t Count = 0;

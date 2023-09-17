@@ -7,6 +7,8 @@
 #include <span>
 #include <map>
 #include <memory>
+#include <list>
+#include <set>
 
 /* non-override */
 #include <initializer_list>
@@ -39,7 +41,13 @@ namespace Lime {
 	using TMap = std::map<Key, Value>;
 
 	template <class Type>
-	using SharedPtr = std::shared_ptr<Type>;
+	using TSharedPtr = std::shared_ptr<Type>;
+
+	template <class Type>
+	using TList = std::list<Type>;
+
+	template <class Type>
+	using TSet = std::set<Type>;
 
 	template <class... TArgs>
 	void LimeLog(LimeLogType InLogType, const char8_t* InMessage, TArgs&&... InArgs)
@@ -47,10 +55,10 @@ namespace Lime {
 		switch (InLogType) {
 		case LimeLogType::Error:
 			exit(1);
-			std::fprintf(stderr, InMessage, InArgs...);
+			std::fprintf(stderr, reinterpret_cast<const char*>(InMessage), InArgs...);
 			break;
 		case LimeLogType::Log:
-			std::printf(InMessage, InArgs...);
+			std::printf(reinterpret_cast<const char*>(InMessage), InArgs...);
 			break;
 		}
 	}
@@ -59,5 +67,5 @@ namespace Lime {
 
 #define LIME_ERROR(Message, ...) do { Lime::LimeLog(LimeLogType::Error, u8"[Line:%d]", __LINE__); \
 	Lime::LimeLog(LimeLogType::Error, u8"%s", Message, __VA_ARGS__); \
-	Lime::LimeLog(LimeLogType::Error, u8"(%s)\n", __LINE__, InMessage, __FILE__); \
+	Lime::LimeLog(LimeLogType::Error, u8"(%s)\n", __LINE__, Message, __FILE__); \
 } while(false)

@@ -158,7 +158,7 @@ public:
 			return true;
 		}
 
-	CLASS_PRIVATE:
+	public:
 		const char8_t* MyHead;
 		char8_t* MyCurrent;
 		const char8_t* MyEnd;
@@ -315,7 +315,7 @@ public:
 			return true;
 		}
 
-	CLASS_PRIVATE:
+	public:
 		const char8_t* MyHead;
 		char8_t* MyCurrent;
 		const char8_t* MyEnd;
@@ -349,6 +349,10 @@ public:
 			MyData[Index] = InStr[Index];
 		}
 	}
+	template <class UIterator>
+	constexpr TUtf8String(UIterator InStart, UIterator InEnd) :
+		TUtf8String(InStart.MyCurrent, InEnd - InStart)
+	{}
 	constexpr TUtf8String(const char8_t* InStr)
 	{
 		Lime::size_t Length = 0;
@@ -501,7 +505,6 @@ public:
 		MyData.push_back(u8'\0');
 		return *this;
 	}
-
 	constexpr TUtf8String& operator+=(const TUtf8StringView InStr) noexcept
 	{
 		if (!MyData.empty() && TChar(MyData.back()) == TChar(u8'\0'))
@@ -523,14 +526,23 @@ public:
 		MyData.push_back(u8'\0');
 		return *this;
 	}
+	constexpr TUtf8String& operator+=(const TUtf8String& InStr) noexcept
+	{
+		return *this += TUtf8StringView(InStr.Bytes());
+	}
 
-	constexpr TUtf8String operator+(const TUtf8StringView InStr) const noexcept
+	TUtf8String operator+(const TUtf8String& InStr) const noexcept
+	{
+		TUtf8String Str = *this;
+		return (Str += TUtf8StringView(InStr.Bytes()));
+	}
+	TUtf8String operator+(const TUtf8StringView InStr) const noexcept
 	{
 		TUtf8String Str = *this;
 		return (Str += InStr);
 	}
 
-	constexpr TUtf8String operator+(const char8_t InChar) const noexcept
+	TUtf8String operator+(const char8_t InChar) const noexcept
 	{
 		TUtf8String Str = *this;
 		return Str += InChar;

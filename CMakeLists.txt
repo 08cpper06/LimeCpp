@@ -11,6 +11,7 @@ endif()
 
 add_executable(${PROJECT_NAME}
 	src/Main.cpp
+	src/Tokenize/Tokenize.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)

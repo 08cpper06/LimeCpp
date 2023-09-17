@@ -2,6 +2,7 @@
 
 
 #include "String/HashString.hpp"
+#include "String/String.hpp"
 
 #include "TestFramework.hpp"
 
@@ -17,6 +18,8 @@ bool HashStringTest::RunTest() const
 	ASSERT_EQUAL(THashString(Str), THashString(Str2), "InValid Hash Value");
 
 	ASSERT_EQUAL(THashString(Str3), THashString(Str4), "InValid Hash Value");
+
+	ASSERT_EQUAL(String::ConvertCharToUtf8(*THashString(U';').GetString().Bytes()), TChar(u8";"), "Invalid Hash Value");
 
 	return true;
 }

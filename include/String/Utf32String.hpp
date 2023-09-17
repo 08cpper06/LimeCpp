@@ -132,7 +132,7 @@ public:
 			return true;
 		}
 
-	CLASS_PRIVATE:
+	public:
 		const char32_t* MyHead;
 		char32_t* MyCurrent;
 		const char32_t* MyEnd;
@@ -263,7 +263,7 @@ public:
 			return true;
 		}
 
-	CLASS_PRIVATE:
+	public:
 		const char32_t* MyHead;
 		char32_t* MyCurrent;
 		const char32_t* MyEnd;
@@ -274,7 +274,7 @@ public:
 		MyData()
 	{}
 	constexpr TUtf32String(char32_t InChar) :
-		MyData({ InChar })
+		MyData({ InChar, U'\0' })
 	{}
 	constexpr TUtf32String(const char32_t* InStr, Lime::size_t InLength)
 	{
@@ -284,6 +284,10 @@ public:
 			Char = *InStr++;
 		}
 	}
+	template <class UIterator>
+	constexpr TUtf32String(UIterator InStart, UIterator InEnd) :
+		TUtf32String(InStart.MyCurrent, InEnd - InStart)
+	{}
 	constexpr TUtf32String(const char32_t* InStr)
 	{
 		Lime::size_t Count = 1;
@@ -291,7 +295,7 @@ public:
 		{
 			++Count;
 		}
-		MyData.resize(Count);
+		MyData.resize(Count, '\0');
 		for (char32_t& Char : MyData)
 		{
 			Char = *InStr++;
@@ -344,7 +348,7 @@ public:
 
 	constexpr void ReSize(Lime::size_t InNewSize) override
 	{
-		MyData.resize(InNewSize);
+		MyData.resize(InNewSize, U'\0');
 	}
 	constexpr void Reserve(Lime::size_t InNewSize) override
 	{
@@ -435,7 +439,12 @@ public:
 		return *this;
 	}
 
-	constexpr TUtf32String operator+(const TUtf32StringView InStr) const noexcept
+	TUtf32String operator+(const TUtf32String& InStr) const noexcept
+	{
+		TUtf32String Str = *this;
+		return (Str += TUtf32StringView(InStr.Bytes()));
+	}
+	TUtf32String operator+(const TUtf32StringView InStr) const noexcept
 	{
 		TUtf32String Str = *this;
 		return (Str += InStr);

@@ -131,7 +131,7 @@ public:
 			return true;
 		}
 
-	CLASS_PRIVATE:
+	public:
 		const char32_t* MyHead;
 		char32_t* MyCurrent;
 		const char32_t* MyEnd;
@@ -207,11 +207,11 @@ public:
 			return *this;
 		}
 
-		constexpr TIterator& operator+(Lime::size_t InOffset) const
+		constexpr TIterator operator+(Lime::size_t InOffset) const
 		{
 			TIterator Ret = *this;
 			Ret.MyCurrent += InOffset;
-			return Ret; ;
+			return Ret;
 		}
 		constexpr TIterator& operator+=(Lime::size_t InOffset)
 		{
@@ -262,7 +262,7 @@ public:
 			return true;
 		}
 
-	CLASS_PRIVATE:
+	public:
 		const char32_t* MyHead;
 		char32_t* MyCurrent;
 		const char32_t* MyEnd;
@@ -275,6 +275,10 @@ public:
 	{
 		MyData = Lime::TSpan<char32_t>(const_cast<char32_t*>(InStr), InLength);
 	}
+	template <class UIterator>
+	constexpr TUtf32StringView(UIterator InStart, UIterator InEnd) :
+		TUtf32StringView(InStart.MyCurrent, InEnd - InStart)
+	{}
 	constexpr TUtf32StringView(const char32_t* InStr)
 	{
 		Lime::size_t Count = 0;

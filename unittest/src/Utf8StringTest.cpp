@@ -37,7 +37,7 @@ bool Utf8StringTest::RunTest() const
 		++Itr;
 	}
 
-	TUtf8String Str2 = Str + u8"World";
+	TUtf8String Str2 = Str + TUtf8StringView(u8"World");
 	Itr = Str2.begin();
 	for (size_t Index = 0; Index < Str.CharCount(); ++Index)
 	{
