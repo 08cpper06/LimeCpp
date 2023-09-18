@@ -550,6 +550,23 @@ public:
 	}
 
 public:
+	constexpr bool operator==(const TUtf8String& InStr) const noexcept
+	{
+		if (CharCount() != InStr.CharCount())
+		{
+			return false;
+		}
+		TConstIterator LhsItr = cbegin();
+		TUtf8String::TConstIterator RhsItr = InStr.cbegin();
+		for (; LhsItr && RhsItr;)
+		{
+			if (*LhsItr++ != *RhsItr++)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 	constexpr bool operator==(const TUtf8StringView InStr) const noexcept
 	{
 		if (CharCount() != InStr.CharCount())
@@ -566,6 +583,11 @@ public:
 			}
 		}
 		return true;
+	}
+
+	constexpr bool operator!=(const TUtf8String& InStr) const noexcept
+	{
+		return !(*this == InStr);
 	}
 	constexpr bool operator!=(const TUtf8StringView InStr) const noexcept
 	{

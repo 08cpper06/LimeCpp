@@ -13,7 +13,7 @@ class THashString {
 public:
 	THashString() :
 		MyHashValue(0),
-		MyString()
+		Index(0)
 	{}
 	~THashString() = default;
 
@@ -29,11 +29,11 @@ public:
 			TOption<TUtf32String, ConvertEncodingError> ConvStr = String::ConvertToUtf32(InStr.Bytes());
 			StringTable.insert({ MyHashValue, LastIndex++ });
 			Pool.push_back(*ConvStr);
-			MyString = Pool.back().Bytes();
+			Index = LastIndex - 1;
 		}
 		else
 		{
-			MyString = Pool[Itr->second].Bytes();
+			Index = Itr->second;
 		}
 	}
 	THashString(TUtf8StringView InStr)
@@ -45,11 +45,11 @@ public:
 			TOption<TUtf32String, ConvertEncodingError> ConvStr = String::ConvertToUtf32(InStr);
 			StringTable.insert({ MyHashValue, LastIndex++ });
 			Pool.push_back(*ConvStr);
-			MyString = Pool.back().Bytes();
+			Index = LastIndex - 1;
 		}
 		else
 		{
-			MyString = Pool[Itr->second].Bytes();
+			Index = Itr->second;
 		}
 	}
 	THashString(const TUtf32String& InStr)
@@ -66,11 +66,11 @@ public:
 		{
 			StringTable.insert({ MyHashValue, LastIndex++ });
 			Pool.push_back(Str);
-			MyString = Pool.back().Bytes();
+			Index = LastIndex - 1;
 		}
 		else
 		{
-			MyString = Pool[Itr->second].Bytes();
+			Index = Itr->second;
 		}
 	}
 	THashString(TUtf32StringView InStr)
@@ -87,11 +87,11 @@ public:
 		{
 			StringTable.insert({ MyHashValue, LastIndex++ });
 			Pool.push_back(Str);
-			MyString = Pool.back().Bytes();
+			Index = LastIndex - 1;
 		}
 		else
 		{
-			MyString = Pool[Itr->second].Bytes();
+			Index = Itr->second;
 		}
 	}
 	THashString(const char32_t* InStr)
@@ -103,11 +103,11 @@ public:
 		{
 			StringTable.insert({ MyHashValue, LastIndex++ });
 			Pool.push_back(InStr);
-			MyString = Pool.back().Bytes();
+			Index = LastIndex - 1;
 		}
 		else
 		{
-			MyString = Pool[Itr->second].Bytes();
+			Index = Itr->second;
 		}
 	}
 	THashString(const char32_t InChar)
@@ -119,17 +119,17 @@ public:
 		{
 			StringTable.insert({ MyHashValue, LastIndex++ });
 			Pool.push_back(TUtf32String(InChar));
-			MyString = Pool.back().Bytes();
+			Index = LastIndex - 1;
 		}
 		else
 		{
-			MyString = Pool[Itr->second].Bytes();
+			Index = Itr->second;
 		}
 	}
 
 	TUtf32StringView GetString() const
 	{
-		return MyString;
+		return Pool[Index].Bytes();
 	}
 
 	bool operator==(const THashString& InRhs) const
@@ -160,7 +160,8 @@ public:
 public:
 	Lime::size_t MyHashValue;
 
-	TUtf32StringView MyString;
+	// TUtf32StringView MyString;
+	Lime::size_t Index;
 
 private:
 	inline static Lime::TMap<Lime::size_t /* Hash Value */, Lime::size_t /* Index */> StringTable;
