@@ -65,7 +65,7 @@ bool TokenizeTest::RunTest(const std::string& InParameter) const
 	TUtf32String Line;
 	for (const TToken& Token : List)
 	{
-		Line = String::ConvertToUtf32(Token.GetInfoString().Bytes())->Bytes();
+		Line = *String::ConvertToUtf32(Token.GetInfoString().Bytes());
 		if (NumLine > ResultLines.size())
 		{
 			AssertTrue(false, "line is too short");

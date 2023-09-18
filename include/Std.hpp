@@ -15,6 +15,9 @@
 #include <type_traits>
 
 
+#include "Core/SharedPtr.hpp"
+
+
 enum class LimeLogType {
 	Error,
 	Log
@@ -39,9 +42,6 @@ namespace Lime {
 
 	template <class Key, class Value>
 	using TMap = std::map<Key, Value>;
-
-	template <class Type>
-	using TSharedPtr = std::shared_ptr<Type>;
 
 	template <class Type>
 	using TList = std::list<Type>;

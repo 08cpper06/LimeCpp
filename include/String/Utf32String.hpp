@@ -311,6 +311,17 @@ public:
 		MyData(std::exchange(InRhs.MyData, {}))
 	{}
 
+	constexpr TUtf32String& operator=(TUtf32StringView InRhs)
+	{
+		MyData.resize(InRhs.CharCount() + 1, U'\0');
+		TUtf32StringView::TConstIterator Itr = InRhs.cbegin();
+		for (char32_t& Char : MyData)
+		{
+			Char = *Itr++;
+		}
+		return *this;
+	}
+
 	constexpr TUtf32String& operator=(const TUtf32String& InRhs)
 	{
 		MyData = InRhs.MyData;
