@@ -6,6 +6,7 @@
 #include <memory>
 #include <map>
 #include <iostream>
+#include <vector>
 #include <source_location>
 
 
@@ -17,13 +18,14 @@
 #define DEFAULT_COLOR CONSOLE_COLOR(200, 200, 200)
 
 
-class TestBaseClass {
+class ComplexTestBaseClass {
 public:
-	TestBaseClass() : IsSuccess(true) {}
-	virtual ~TestBaseClass() = default;
+	ComplexTestBaseClass() : IsSuccess(true) {}
+	virtual ~ComplexTestBaseClass() = default;
 
 	virtual std::string GetTestName() const noexcept = 0;
-	virtual bool RunTest() const = 0;
+	virtual void GetTests(std::vector<std::string>& OutParameters) const = 0;
+	virtual bool RunTest(const std::string& InParameter) const = 0;
 
 	void AssertTrue(bool InTrigger, std::string_view InMessage, std::source_location InCodeLocation = std::source_location::current()) const
 	{
@@ -144,9 +146,9 @@ public:
 };
 
 
-class TestFramework {
+class ComplexTestFramework {
 public:
-	static TestFramework& Get() noexcept
+	static ComplexTestFramework& Get() noexcept
 	{
 		return StaticInstance;
 	}
@@ -159,10 +161,30 @@ public:
 			std::cout << DEFAULT_COLOR << InTestName << " is not found" << std::endl;
 			return;
 		}
-		if (!Itr->second->RunTest() || !Itr->second->IsSuccess)
+		std::vector<std::string> Parameters;
+		Itr->second->GetTests(Parameters);
+		if (!Parameters.empty())
 		{
-			std::cout << CONSOLE_COLOR(204, 125, 177) << "Test " << InTestName << " is failed" << DEFAULT_COLOR << std::endl;
+			std::cout << CONSOLE_COLOR(29, 80, 162)
+				<< "=== " << Itr->second->GetTestName() << "(Count : " << Parameters.size() << ") === "
+				<< DEFAULT_COLOR << std::endl;
+			for (const std::string& Parameter : Parameters)
+			{
+				std::cout << CONSOLE_COLOR(49, 144, 112)
+					<< "--- Parameter : \"" << Parameter.c_str() << ("\" ---")
+					<< DEFAULT_COLOR << std::endl;
+				if (!Itr->second->RunTest(Parameter) || !Itr->second->IsSuccess)
+				{
+					std::cout << CONSOLE_COLOR(204, 125, 177) << "Test is failed" << DEFAULT_COLOR << std::endl;
+				}
+				else
+				{
+					std::cout << CONSOLE_COLOR(160, 216, 239) << "Test is success" << DEFAULT_COLOR << std::endl;
+				}
+				Itr->second->IsSuccess = true;
+			}
 		}
+		
 	}
 
 	std::list<std::string> GatherTest()
@@ -175,9 +197,9 @@ public:
 		return TestNameList;
 	}
 
-	friend class TestBaseClass;
+	friend class ComplexTestBaseClass;
 
-	void AddTestClass(TestBaseClass* InClassPtr)
+	void AddTestClass(ComplexTestBaseClass* InClassPtr)
 	{
 		if (InClassPtr)
 		{
@@ -187,16 +209,17 @@ public:
 	}
 
 private:
-	static TestFramework StaticInstance;
-	std::map<std::string, TestBaseClass*> TestList;
+	static ComplexTestFramework StaticInstance;
+	std::map<std::string, ComplexTestBaseClass*> TestList;
 };
 
 
-#define IMPLEMENT_TEST_CLASS(TestClassName) class TestClassName##Test : public TestBaseClass { \
+#define IMPLEMENT_COMPLEX_TEST_CLASS(TestClassName) class TestClassName##Test : public ComplexTestBaseClass { \
 public: \
 	~TestClassName##Test() = default; \
-	TestClassName##Test(nullptr_t) { TestFramework::Get().AddTestClass(new TestClassName##Test()); } \
+	TestClassName##Test(nullptr_t) { ComplexTestFramework::Get().AddTestClass(new TestClassName##Test()); } \
 	TestClassName##Test() {} \
 	std::string GetTestName() const noexcept override { return #TestClassName; } \
-	bool RunTest() const override; \
+	void GetTests(std::vector<std::string>& OutParameters) const override; \
+	bool RunTest(const std::string& InParameter) const override; \
 }; TestClassName##Test TestClassName##Test##Instance(nullptr);
