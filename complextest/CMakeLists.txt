@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME}
 	src/ComplexTestFramework.cpp
 	src/ComplexTestFileManager.cpp
 	src/TokenizeTest.cpp
+	src/ParseTest.cpp
 	../src/Tokenize/Tokenizer.cpp
 	../src/Parse/Parser.cpp
 	../src/Parse/ASTNodeLog.cpp

@@ -1,0 +1,9 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Block Name="Block_main">
+			<Return>
+				<Val Type="Int32">0</Val>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>

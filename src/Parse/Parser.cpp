@@ -21,9 +21,8 @@ void Parser::Analyze(TSourceContext& InContext)
 
 PARSE_FUNCTION_IMPLEMENT(ParseBlock)
 {
-	static size_t NameSuffix = 0;
 	TSharedPtr<TAstBlockNode> Block = MakeShared<TAstBlockNode>();
-	Block->MyBlockName = U"Anonymous_" + ToUtf32String(NameSuffix++);
+	Block->MyBlockName = U"Anonymous_" + OutResult.GenerateUniqueStr();
 	TSharedPtr<TAstBaseNode> Node = nullptr;
 	if (InItr->MyLetter.MyHashValue != U'{')
 	{
@@ -438,10 +437,6 @@ PARSE_FUNCTION_IMPLEMENT(ParseReturn)
 
 PARSE_FUNCTION_IMPLEMENT(ParseIf)
 {
-	auto GenerateBlockName = []() -> TUtf32String {
-		static size_t NameSuffix = 0;
-		return TUtf32String(U"block_") + ToUtf32String(NameSuffix++);
-	};
 	Lime::TTokenIterator TmpItr = InItr;
 	if (TmpItr->MyLetter != THashString(U"if"))
 	{
@@ -595,7 +590,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFor)
 	}
 	++TmpItr;
 
-	TSharedPtr<TAstForNode> Node = TSharedPtr<TAstForNode>();
+	TSharedPtr<TAstForNode> Node = MakeShared<TAstForNode>();
 	Node->MyInitExpr = InitializeExpr;
 	Node->MyCondExpr = ConditionExpr;
 	Node->MyUpdateExpr = UpdateExpr;

@@ -1,0 +1,39 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Block Name="Block_main">
+			<if>
+				<Evaluation>
+					<Assign>
+						<Val Type="Int32">1</Val>
+						<Val Type="Int32">4</Val>
+					</Assign>
+				</Evaluation>
+				<IfTrue>
+					<Block Name="Anonymous_1">
+						<Operator Type="-">
+							<Operator Type="+">
+								<Val Type="Int32">1</Val>
+								<Operator Type="*">
+									<Val Type="Int32">3</Val>
+									<Val Type="Int32">5</Val>
+								</Operator>
+							</Operator>
+							<Val Type="Int32">4</Val>
+						</Operator>
+					</Block>
+				</IfTrue>
+				<IfFalse>
+					<Block Name="Anonymous_2">
+						<Relational Type=">">
+							<Val Type="Int32">1</Val>
+							<Val Type="Int32">4</Val>
+						</Relational>
+					</Block>
+				</IfFalse>
+			</If>
+			<Return>
+				<Val Type="Int32">0</Val>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>

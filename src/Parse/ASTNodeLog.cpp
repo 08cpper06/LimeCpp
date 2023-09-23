@@ -153,24 +153,24 @@ TUtf32String TAstWhileNode::GetInfoString(TUtf32String InPrefix) const
 TUtf32String TAstForNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<For>\n";
+	Str += InPrefix + U"\t<Initialize>\n";
 	if (MyInitExpr)
 	{
-		Str += InPrefix + U"\t<Initialize>\n";
 		Str += MyInitExpr->GetInfoString(InPrefix + U"\t\t");
-		Str += InPrefix + U"\t</Initialize>\n";
 	}
+	Str += InPrefix + U"\t</Initialize>\n";
+	Str += InPrefix + U"\t<Condition>\n";
 	if (MyCondExpr)
 	{
-		Str += InPrefix + U"\t<Condition>\n";
 		Str += MyCondExpr->GetInfoString(InPrefix + U"\t\t");
-		Str += InPrefix + U"\t</Condition>\n";
 	}
+	Str += InPrefix + U"\t</Condition>\n";
+	Str += InPrefix + U"\t<Continus>\n";
 	if (MyUpdateExpr)
 	{
-		Str += InPrefix + U"\t<Continus>\n";
 		Str += MyUpdateExpr->GetInfoString(InPrefix + U"\t\t");
-		Str += InPrefix + U"\t</Continus>\n";
 	}
+	Str += InPrefix + U"\t</Continus>\n";
 
 	Str += MyBlockExpr->GetInfoString(InPrefix + U'\t');
 	Str += InPrefix + U"</For>\n";

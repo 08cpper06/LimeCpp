@@ -16,11 +16,17 @@ public:
 		MyErrorList.push_back(Error);
 		return Error;
 	}
+	TUtf32String GenerateUniqueStr()
+	{
+		return ToUtf32String(UniqueID++);
+	}
 
 	TSharedPtr<TAstBaseNode> MyASTRoot;
 	Lime::TList<TSharedPtr<TAstErrorNode>> MyErrorList;
-	TVarTypeTable MyVarTypes;
+	TVarTypeTable MyVarTypes; 
 
+private:
+	size_t UniqueID { 0 };
 };
 
 

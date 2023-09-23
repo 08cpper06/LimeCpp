@@ -1,0 +1,21 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Block Name="Block_main">
+			<While>
+				<Evaluation>
+					<Relational Type=">">
+						<Val Type="Int32">1</Val>
+						<Val Type="Int32">0</Val>
+					</Relational>
+				</Evaluation>
+				<Block>
+					<Block Name="Anonymous_1">
+					</Block>
+				</Block>
+			</While>
+			<Return>
+				<Val Type="Int32">0</Val>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>

@@ -175,13 +175,17 @@ public:
 inline TUtf32String ToUtf32String(Lime::size_t InValue)
 {
 	TUtf32String Str;
-	TChar Char;
-	do {
-		Char = *String::ConvertCharToUtf32(static_cast<char8_t>(u8'0' + InValue % 10));
-		Str += Char;
-		InValue /= 10;
-	} while (InValue != 0);
-	return Str;
+	char32_t Char;
+	if (InValue)
+	{
+		do {
+			Char = *String::ConvertCharToUtf32(TChar(u8"0123456789"[InValue % 10]));
+			Str += Char;
+			InValue /= 10;
+		} while (InValue != 0);
+		return Str;
+	}
+	return U"0";
 }
 inline TUtf32String ToUtf32String(int InValue)
 {
