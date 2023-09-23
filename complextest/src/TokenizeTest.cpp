@@ -31,8 +31,14 @@ namespace {
 IMPLEMENT_COMPLEX_TEST_CLASS(Tokenize)
 void TokenizeTest::GetTests(std::vector<std::string>& OutParameters) const
 {
-	OutParameters.push_back("Test_01.c");
-	OutParameters.push_back("Test_02.c");
+	TUtf8String Path = u8"../../complextest/test";
+	for (const std::filesystem::directory_entry& Entry : std::filesystem::directory_iterator(Path.Bytes()))
+	{
+		if (Entry.is_regular_file())
+		{
+			OutParameters.push_back(Entry.path().filename().string());
+		}
+	}
 }
 
 bool TokenizeTest::RunTest(const std::string& InParameter) const
@@ -43,10 +49,10 @@ bool TokenizeTest::RunTest(const std::string& InParameter) const
 	{
 		return false;
 	}
-	TSourceContext Context = *Source;
 
-	TOption<TUtf32String> Result = ComplexTestFileManager::Get().GetResultString((ResultRootPath / (InParameter + ".tok")).c_str(), [&Context](std::filesystem::path InPath)
+	TOption<TUtf32String> Result = ComplexTestFileManager::Get().GetResultString((ResultRootPath / (InParameter + ".tok")).c_str(), [&Source](std::filesystem::path InPath)
 	{
+		TSourceContext Context = *Source;
 		Tokenizer::Analyze(Context);
 		TUtf8String Log;
 		for (const TToken& Token : Context.Tokens())
@@ -54,6 +60,9 @@ bool TokenizeTest::RunTest(const std::string& InParameter) const
 			Log += Token.GetInfoString();
 			Log += TChar(u8'\n');
 		}
+
+		std::cout << *Source << std::endl;
+		std::cout << std::endl;
 		std::cout << Log << std::endl;
 		std::cout << std::endl;
 
@@ -64,16 +73,20 @@ bool TokenizeTest::RunTest(const std::string& InParameter) const
 	std::vector<TUtf32String> ResultLines = GetLines(Result->Bytes());
 	Lime::size_t NumLine = 0;
 
+
+	TSourceContext Context = *Source;
 	Tokenizer::Analyze(Context);
 	TUtf32String Line;
+
+	AssertEqual(Context.Tokens().size(), ResultLines.size(), "num of token is not matched");
+	if (!IsSuccess)
+	{
+		return false;
+	}
+
 	for (const TToken& Token : Context.Tokens())
 	{
 		Line = *String::ConvertToUtf32(Token.GetInfoString().Bytes());
-		if (NumLine > ResultLines.size())
-		{
-			AssertTrue(false, "line is too short");
-			break;
-		}
 		if (Line != ResultLines[NumLine])
 		{
 			std::cout << CONSOLE_COLOR(234, 96, 158)

@@ -165,7 +165,7 @@ public:
 		Itr->second->GetTests(Parameters);
 		if (!Parameters.empty())
 		{
-			std::cout << CONSOLE_COLOR(29, 80, 162)
+			std::cout << CONSOLE_COLOR(0, 88, 45)
 				<< "=== " << Itr->second->GetTestName() << "(Count : " << Parameters.size() << ") === "
 				<< DEFAULT_COLOR << std::endl;
 			for (const std::string& Parameter : Parameters)
@@ -175,11 +175,11 @@ public:
 					<< DEFAULT_COLOR << std::endl;
 				if (!Itr->second->RunTest(Parameter) || !Itr->second->IsSuccess)
 				{
-					std::cout << CONSOLE_COLOR(204, 125, 177) << "Test is failed" << DEFAULT_COLOR << std::endl;
+					std::cout << CONSOLE_COLOR(142, 197, 74) << "Test is failed" << DEFAULT_COLOR << std::endl;
 				}
 				else
 				{
-					std::cout << CONSOLE_COLOR(160, 216, 239) << "Test is success" << DEFAULT_COLOR << std::endl;
+					std::cout << CONSOLE_COLOR(142, 197, 74) << "Test is success" << DEFAULT_COLOR << std::endl;
 				}
 				Itr->second->IsSuccess = true;
 			}
