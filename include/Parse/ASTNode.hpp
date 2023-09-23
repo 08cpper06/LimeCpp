@@ -3,14 +3,15 @@
 
 #include "../Std.hpp"
 
-#include "../Tokenize/Tokenize.hpp"
+#include "Tokenize/Token.hpp"
+#include "../String/Utf8String.hpp"
 #include "../String/Utf32String.hpp"
 #include "VariableTypeTable.hpp"
 
 
 namespace Lime {
 	
-	typedef Lime::TList<TToken>::iterator TTokenIterator;
+	typedef decltype(Lime::TList<TToken>().cbegin()) TTokenIterator;
 
 }
 

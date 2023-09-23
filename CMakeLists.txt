@@ -11,8 +11,8 @@ endif()
 
 add_executable(${PROJECT_NAME}
 	src/Main.cpp
-	src/Tokenize/Tokenize.cpp
-	src/Parse/Parse.cpp
+	src/Tokenize/Tokenizer.cpp
+	src/Parse/Parser.cpp
 	src/Parse/ASTNodeLog.cpp
 )
 

@@ -1,6 +1,7 @@
 #include "ComplexTestFramework.hpp"
 #include "ComplexTestFileManager.hpp"
-#include "Tokenize/Tokenize.hpp"
+#include "Tokenize/Tokenizer.hpp"
+#include "SourceContext.hpp"
 
 
 namespace {
@@ -42,11 +43,13 @@ bool TokenizeTest::RunTest(const std::string& InParameter) const
 	{
 		return false;
 	}
-	TOption<TUtf32String> Result = ComplexTestFileManager::Get().GetResultString((ResultRootPath / (InParameter + ".tok")).c_str(), [&Source](std::filesystem::path InPath)
+	TSourceContext Context = *Source;
+
+	TOption<TUtf32String> Result = ComplexTestFileManager::Get().GetResultString((ResultRootPath / (InParameter + ".tok")).c_str(), [&Context](std::filesystem::path InPath)
 	{
-		Lime::TList<TToken> List = Tokenize::Analyze(Source->Bytes());
+		Tokenizer::Analyze(Context);
 		TUtf8String Log;
-		for (const TToken& Token : List)
+		for (const TToken& Token : Context.Tokens())
 		{
 			Log += Token.GetInfoString();
 			Log += TChar(u8'\n');
@@ -61,9 +64,9 @@ bool TokenizeTest::RunTest(const std::string& InParameter) const
 	std::vector<TUtf32String> ResultLines = GetLines(Result->Bytes());
 	Lime::size_t NumLine = 0;
 
-	Lime::TList<TToken> List = Tokenize::Analyze(Source->Bytes());
+	Tokenizer::Analyze(Context);
 	TUtf32String Line;
-	for (const TToken& Token : List)
+	for (const TToken& Token : Context.Tokens())
 	{
 		Line = *String::ConvertToUtf32(Token.GetInfoString().Bytes());
 		if (NumLine > ResultLines.size())

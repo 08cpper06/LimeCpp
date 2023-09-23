@@ -1,24 +1,24 @@
-#include "Tokenize/Tokenize.hpp"
+#include "Tokenize/Tokenizer.hpp"
 #include "Tokenize/SyntaxFunction.hpp"
 
 
-Lime::TSet<THashString> Tokenize::KeywordList;
-Lime::TSet<THashString> Tokenize::SignList;
+Lime::TSet<THashString> Tokenizer::KeywordList;
+Lime::TSet<THashString> Tokenizer::SignList;
 
 
-Lime::TList<TToken> Tokenize::Analyze(TUtf32StringView InSource)
+void Tokenizer::Analyze(TSourceContext& InContext)
 {
 	if (!InitializeFlag)
 	{
 		Initialize();
 	}
+	TUtf32StringView Source = TUtf32StringView(InContext.MySource.Bytes(), InContext.MySource.CharCount());
 
-	std::list<TToken> Tokens;
 	TOption<THashString> Token;
 	THashString Hash;
 	TUtf32StringView::TIterator BaseItr;
 	size_t Line = 1;
-	TUtf32StringView::TIterator Itr = InSource.begin();
+	TUtf32StringView::TIterator Itr = Source.begin();
 
 	while (*Itr)
 	{
@@ -74,7 +74,7 @@ Lime::TList<TToken> Tokenize::Analyze(TUtf32StringView InSource)
 		{
 			BaseItr = Itr;
 			Itr += Token->GetString().CharCount();
-			Tokens.emplace_back(*Token, BaseItr, Itr, Line, TokenType::Keyword);
+			InContext.MyTokens.emplace_back(*Token, BaseItr, Itr, Line, TokenType::Keyword);
 			continue;
 		}
 
@@ -86,7 +86,7 @@ Lime::TList<TToken> Tokenize::Analyze(TUtf32StringView InSource)
 		{
 			BaseItr = Itr;
 			Itr += Token->GetString().CharCount();
-			Tokens.emplace_back(*Token, BaseItr, Itr, Line, TokenType::Sign);
+			InContext.MyTokens.emplace_back(*Token, BaseItr, Itr, Line, TokenType::Sign);
 			continue;
 		}
 
@@ -94,7 +94,7 @@ Lime::TList<TToken> Tokenize::Analyze(TUtf32StringView InSource)
 		{
 			BaseItr = Itr;
 			++Itr;
-			Tokens.emplace_back(THashString(*BaseItr), BaseItr, Itr, Line, TokenType::Sign);
+			InContext.MyTokens.emplace_back(THashString(*BaseItr), BaseItr, Itr, Line, TokenType::Sign);
 			continue;
 		}
 
@@ -104,7 +104,7 @@ Lime::TList<TToken> Tokenize::Analyze(TUtf32StringView InSource)
 		{
 			BaseItr = Itr;
 			Itr += Token->GetString().CharCount();
-			Tokens.emplace_back(*Token, BaseItr, Itr, Line, TokenType::Number);
+			InContext.MyTokens.emplace_back(*Token, BaseItr, Itr, Line, TokenType::Number);
 			continue;
 		}
 
@@ -119,7 +119,7 @@ Lime::TList<TToken> Tokenize::Analyze(TUtf32StringView InSource)
 		{
 			BaseItr = Itr;
 			Itr += Token->GetString().CharCount();
-			Tokens.emplace_back(*Token, BaseItr, Itr, Line, TokenType::Ident);
+			InContext.MyTokens.emplace_back(*Token, BaseItr, Itr, Line, TokenType::Ident);
 			continue;
 		}
 
@@ -127,11 +127,10 @@ Lime::TList<TToken> Tokenize::Analyze(TUtf32StringView InSource)
 	}
 
 	BaseItr = Itr++;
-	Tokens.emplace_back(THashString(U'\0'), BaseItr, Itr, Line, TokenType::Sign);
-	return Tokens;
+	InContext.MyTokens.emplace_back(THashString(U'\0'), BaseItr, Itr, Line, TokenType::Sign);
 }
 
-void Tokenize::Initialize()
+void Tokenizer::Initialize()
 {
 	KeywordList.insert(THashString(U"return"));
 	KeywordList.insert(THashString(U"if"));

@@ -1,26 +1,22 @@
 #include "Parse/Parser.hpp"
 
 
-TParseResult Parser::Analyze(const Lime::TList<TToken>& InList)
+void Parser::Analyze(TSourceContext& InContext)
 {
-	TParseResult Result;
-	Result.MyTokens = InList;
 	TSharedPtr<TAstBlockNode> Block = MakeShared<TAstBlockNode>();
 	Block->MyBlockName = U"Global";
 	TSharedPtr<TAstBaseNode> Node = nullptr;
-	Lime::TTokenIterator Itr = Result.MyTokens.begin();
+	Lime::TTokenIterator Itr = InContext.MyTokens.begin();
 	while (Itr->MyLetter != U'\0')
 	{
-		Node = Parser::ParseStmt(Result, Itr);
+		Node = Parser::ParseStmt(InContext.MyParseResult, Itr);
 		if (!Node)
 		{
 			break;
 		}
 		Block->MyNodes.push_back(Node);
 	}
-	Result.MyASTRoot = Block;
-
-	return Result;
+	InContext.MyParseResult.MyASTRoot = Block;
 }
 
 PARSE_FUNCTION_IMPLEMENT(ParseBlock)

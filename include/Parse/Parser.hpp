@@ -2,26 +2,8 @@
 
 
 #include "ASTNode.hpp"
+#include "SourceContext.hpp"
 
-
-class TParseResult {
-public:
-	TSharedPtr<TAstErrorNode> MakeError(Lime::TTokenIterator InItr, TUtf32StringView InMessage)
-	{
-		TSharedPtr<TAstErrorNode> Error = MakeShared<TAstErrorNode>();
-		Error->MyPosition = InItr;
-		Error->MyMessage = TUtf32String(InMessage.cbegin(), InMessage.cend());
-		MyErrorList.push_back(Error);
-		return Error;
-	}
-
-	TSharedPtr<TAstBaseNode> MyASTRoot;
-	Lime::TList<TSharedPtr<TAstErrorNode>> MyErrorList;
-	TVarTypeTable MyVarTypes;
-
-	/* owner ship */
-	Lime::TList<TToken> MyTokens;
-};
 
 #define PARSE_FUNCTION(FunctionName) \
 	static TSharedPtr<TAstBaseNode> FunctionName(TParseResult& OutResult, Lime::TTokenIterator& InItr)
@@ -32,7 +14,7 @@ public:
 
 class Parser {
 public:
-	static TParseResult Analyze(const Lime::TList<TToken>& InList);
+	static void Analyze(TSourceContext&);
 
 CLASS_PRIVATE:
 	PARSE_FUNCTION(ParseBlock);
