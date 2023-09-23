@@ -129,7 +129,7 @@ public:
 
 	TUtf32StringView GetString() const
 	{
-		return Pool[Index].Bytes();
+		return TUtf32StringView(Pool[Index].Bytes());
 	}
 
 	bool operator==(const THashString& InRhs) const
@@ -174,14 +174,19 @@ private:
 	{
 		return CRC32Table[Index];
 	}
-	constexpr void CalcHashValue(const char8_t* Str)
+	void CalcHashValue(const char8_t* Str)
 	{
+		MyHashValue = 0;
 		Lime::size_t Index = 0;
 		for (; Str[Index]; ++Index)
 		{
 			MyHashValue = (MyHashValue << 8) ^ RefTable(static_cast<unsigned char>((MyHashValue >> 24) ^ Str[Index]));
 		}
-		if (Index == 1 && MyHashValue < 127)
+		if (Index == 1)
+		{
+			MyHashValue = *Str;
+		}
+		else if (MyHashValue < 127)
 		{
 			MyHashValue += 127;
 		}
@@ -200,7 +205,11 @@ private:
 			++Length;
 			++Itr;
 		}
-		if (Length == 1 && MyHashValue < 127)
+		if (Length == 1)
+		{
+			MyHashValue = (*Itr).MyData[Index];
+		}
+		else if (MyHashValue < 127)
 		{
 			MyHashValue += 127;
 		}

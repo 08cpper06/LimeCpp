@@ -13,7 +13,9 @@ bool TokenizeTest::RunTest() const
 	Lime::TList<TToken> List = Tokenize::Analyze(Source);
 	for (TToken& Token : List)
 	{
+		std::printf(CONSOLE_COLOR(103, 190, 141));
 		std::printf("%s\n", reinterpret_cast<const char*>(Token.GetInfoString().Bytes()));
+		std::printf(DEFAULT_COLOR);
 	}
 	return true;
 }

@@ -17,7 +17,10 @@ add_executable(${PROJECT_NAME}
 	src/EncodingConvertTest.cpp
 	src/HashStringTest.cpp
 	src/TokenizeTest.cpp
+	src/ParseTest.cpp
 	../src/Tokenize/Tokenize.cpp
+	../src/Parse/Parse.cpp
+	../src/Parse/ASTNodeLog.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)

@@ -1,0 +1,657 @@
+#include "Parse/Parser.hpp"
+
+
+TParseResult Parser::Analyze(const Lime::TList<TToken>& InList)
+{
+	TParseResult Result;
+	Result.MyTokens = InList;
+	TSharedPtr<TAstBlockNode> Block = MakeShared<TAstBlockNode>();
+	Block->MyBlockName = U"Global";
+	TSharedPtr<TAstBaseNode> Node = nullptr;
+	Lime::TTokenIterator Itr = Result.MyTokens.begin();
+	while (Itr->MyLetter != U'\0')
+	{
+		Node = Parser::ParseStmt(Result, Itr);
+		if (!Node)
+		{
+			break;
+		}
+		Block->MyNodes.push_back(Node);
+	}
+	Result.MyASTRoot = Block;
+
+	return Result;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseBlock)
+{
+	static size_t NameSuffix = 0;
+	TSharedPtr<TAstBlockNode> Block = MakeShared<TAstBlockNode>();
+	Block->MyBlockName = U"Anonymous_" + ToUtf32String(NameSuffix++);
+	TSharedPtr<TAstBaseNode> Node = nullptr;
+	if (InItr->MyLetter.MyHashValue != U'{')
+	{
+		return nullptr;
+	}
+	++InItr;
+	while (InItr->MyLetter.MyHashValue != U'}')
+	{
+		Node = Parser::ParseStmt(OutResult, InItr);
+		if (!Node)
+		{
+			return Block;
+		}
+		Block->MyNodes.push_back(Node);
+	}
+	++InItr;
+	return Block;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseValue)
+{
+	TSharedPtr<TAstBaseNode> Expr = Parser::ParseParenthess(OutResult, InItr);
+	if (Expr)
+	{
+		return Expr;
+	}
+
+	Lime::TTokenIterator TmpItr = InItr;
+	bool IsHasNumber = false;
+	Lime::TTokenIterator StartItr;
+	TSharedPtr<TAstVarNode> Var;
+
+	if (TmpItr->MyType == TokenType::Number)
+	{
+		StartItr = TmpItr;
+	}
+	else if (TmpItr->MyType == TokenType::Ident)
+	{
+		Var = MakeShared<TAstVarNode>();
+		Var->MyName = TmpItr;
+		InItr = ++TmpItr;
+		return Var;
+	}
+	else
+	{
+		switch (TmpItr->MyLetter.MyHashValue) {
+		case U'+':
+		case U'-':
+			StartItr = TmpItr++;
+			break;
+		case U'.':
+			StartItr = TmpItr;
+			break;
+		default:
+			return nullptr;
+		}
+	}
+
+	ValueType ValueType = ValueType::Unknown;
+	if (TmpItr->MyType == TokenType::Number)
+	{
+		IsHasNumber = true;
+		ValueType = ValueType::Int32;
+		++TmpItr;
+	}
+
+	if (TmpItr->MyLetter.MyHashValue == U'.')
+	{
+		if (!IsHasNumber)
+		{
+			StartItr = TmpItr;
+		}
+		++TmpItr;
+		if (TmpItr->MyType == TokenType::Number)
+		{
+			IsHasNumber = true;
+			++TmpItr;
+			ValueType = ValueType::Float;
+		}
+	}
+	if (!IsHasNumber)
+	{
+		return nullptr;
+	}
+
+	TSharedPtr<TAstValNode> Node = MakeShared<TAstValNode>();
+	Node->MyStartItr = StartItr;
+	Node->MyEndItr = TmpItr;
+	Node->MyType = ValueType;
+
+	InItr = TmpItr;
+	return Node;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseAddSub)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	TSharedPtr<TAstBaseNode> Lhs = Parser::ParseMulDiv(OutResult, TmpItr);
+	if (!Lhs)
+	{
+		return nullptr;
+	}
+	TSharedPtr<TAstAddSubNode> Node;
+	TSharedPtr<TAstBaseNode> Value;
+	while (Lhs)
+	{
+		switch (TmpItr->MyLetter.MyHashValue) {
+		case U'+':
+		case U'-':
+			Node = MakeShared<TAstAddSubNode>();
+			Node->MyLhs = Lhs;
+			Node->MyOperator = TmpItr;
+			++TmpItr;
+			Value = Parser::ParseMulDiv(OutResult, TmpItr);
+			if (!Value)
+			{
+				TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found Rhs of `*` or `/`");
+				Node->MyRhs = Error;
+				InItr = TmpItr;
+				return Node;
+			}
+			else
+			{
+				Node->MyRhs = Value;
+			}
+			Lhs = Node;
+			break;
+		default:
+			InItr = TmpItr;
+			return Lhs;
+		}
+	}
+	/* not reachable */
+	return nullptr;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseMulDiv)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	TSharedPtr<TAstBaseNode> Lhs = Parser::ParseUnary(OutResult, TmpItr);
+	if (!Lhs)
+	{
+		return nullptr;
+	}
+	TSharedPtr<TAstMulDivNode> Node = nullptr;
+	TSharedPtr<TAstBaseNode> Value = nullptr;
+	while (Lhs)
+	{
+		switch (TmpItr->MyLetter.MyHashValue) {
+		case U'*':
+		case U'/':
+			Node = MakeShared<TAstMulDivNode>();
+			Node->MyLhs = Lhs;
+			Node->MyOperator = TmpItr;
+			++TmpItr;
+			Value = Parser::ParseUnary(OutResult, TmpItr);
+			if (!Value)
+			{
+				TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found Rhs of `*` or `/`");
+				Node->MyRhs = Error;
+				InItr = TmpItr;
+				return Node;
+			}
+			else
+			{
+				Node->MyRhs = Value;
+			}
+			Lhs = Node;
+			break;
+		default:
+			InItr = TmpItr;
+			return Lhs;
+		}
+	}
+	/* not reachable */
+	return nullptr;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseExpr)
+{
+	if (InItr->MyLetter.MyHashValue == U'\0')
+	{
+		return OutResult.MakeError(InItr, U"Eof detected");
+	}
+	return Parser::ParseAssign(OutResult, InItr);
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseParenthess)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	Lime::TTokenIterator StartItr = TmpItr;
+	if (TmpItr->MyLetter.MyHashValue == U'(')
+	{
+		++TmpItr;
+		TSharedPtr<TAstBaseNode> Node = Parser::ParseExpr(OutResult, TmpItr);
+		if (TmpItr->MyLetter.MyHashValue == U')')
+		{
+			InItr = ++TmpItr;
+			return Node;
+		}
+		TSharedPtr<TAstParenthessNode> Error = MakeShared<TAstParenthessNode>();
+		Error->MyError = OutResult.MakeError(StartItr, U"Not found `)`");
+		Error->MyExpr = Node;
+		InItr = TmpItr;
+		return Error;
+	}
+	return nullptr;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseUnary)
+{
+	if (InItr->MyLetter.MyHashValue != U'+' &&
+		InItr->MyLetter.MyHashValue != U'-')
+	{
+		return Parser::ParseValue(OutResult, InItr);
+	}
+	TSharedPtr<TAstUnaryNode> Node = MakeShared<TAstUnaryNode>();
+	Node->MyOperator = InItr;
+	Node->MyExpr = Parser::ParseValue(OutResult, ++InItr);
+	return Node;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseEquality)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	TSharedPtr<TAstBaseNode> Lhs = Parser::ParseRelational(OutResult, TmpItr);
+	if (!Lhs)
+	{
+		TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found expression Lhs of equality");
+		InItr = TmpItr;
+		return Error;
+	}
+	if (TmpItr->MyLetter != THashString(U"==") &&
+		TmpItr->MyLetter != THashString(U"!="))
+	{
+		InItr = TmpItr;
+		return Lhs;
+	}
+	TSharedPtr<TAstEqualityNode> Node = MakeShared<TAstEqualityNode>();
+	Node->MyLhs = Lhs;
+	Node->MyOperator = TmpItr;
+	++TmpItr;
+	Node->MyRhs = Parser::ParseRelational(OutResult, TmpItr);
+	if (!(Node->MyRhs))
+	{
+		TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found Rhs of equality");
+		InItr = TmpItr;
+		return Error;
+	}
+	InItr = TmpItr;
+	return Node;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseAssign)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	TSharedPtr<TAstBaseNode> Lhs = Parser::ParseEquality(OutResult, TmpItr);
+	if (!Lhs)
+	{
+		return nullptr;
+	}
+	TSharedPtr<TAstAssignNode> Node = nullptr;
+	TSharedPtr<TAstBaseNode> Value = nullptr;
+	while (Lhs)
+	{
+		switch (TmpItr->MyLetter.MyHashValue) {
+		case U'=':
+			Node = MakeShared<TAstAssignNode>();
+			Node->MyLhs = Lhs;
+			++TmpItr;
+			Value = Parser::ParseAssign(OutResult, TmpItr);
+			if (!Value)
+			{
+				TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Expected Rhs of `=`");
+				Node->MyRhs = Error;
+				InItr = TmpItr;
+				return Node;
+			}
+			else
+			{
+				Node->MyRhs = Value;
+			}
+			Lhs = Node;
+			break;
+		default:
+			InItr = TmpItr;
+			return Lhs;
+		}
+	}
+	/* not reachable */
+	return nullptr;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseStmt)
+{
+	if (InItr->MyLetter == U'\0')
+	{
+		return nullptr;
+	}
+	if (InItr->MyLetter == U';')
+	{
+		++InItr;
+		return Parser::ParseStmt(OutResult, InItr);
+	}
+	TSharedPtr<TAstBaseNode> Node = nullptr;
+
+	Node = Parser::ParseFunctionDefinition(OutResult, InItr);
+	if (Node)
+	{
+		return Node;
+	}
+
+	Node = Parser::ParseIf(OutResult, InItr);
+	if (Node)
+	{
+		return Node;
+	}
+
+	Node = Parser::ParseWhile(OutResult, InItr);
+	if (Node)
+	{
+		return Node;
+	}
+
+	Node = Parser::ParseFor(OutResult, InItr);
+	if (Node)
+	{
+		return Node;
+	}
+
+	Node = Parser::ParseReturn(OutResult, InItr);
+	if (Node)
+	{
+		return Node;
+	}
+
+	Node = Parser::ParseExpr(OutResult, InItr);
+	if (Node && Node->StaticClass() == TAstErrorNode().StaticClass())
+	{
+		return Node;
+	}
+
+	if (InItr->MyLetter.MyHashValue != U';')
+	{
+		TSharedPtr<TAstExprNode> Expr = MakeShared<TAstExprNode>();
+		Expr->MyNode = OutResult.MakeError(InItr, U"Not found `;`");
+		return Expr;
+	}
+	if (InItr->MyLetter.MyHashValue != U'\0')
+	{
+		++InItr;
+	}
+	return Node;
+
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseRelational)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	TSharedPtr<TAstBaseNode> Lhs = Parser::ParseAddSub(OutResult, TmpItr);
+	if (!Lhs)
+	{
+		TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found Lhs of relational");
+		InItr = TmpItr;
+		return Error;
+	}
+
+	if (TmpItr->MyLetter != U'<' &&
+		TmpItr->MyLetter != U'>' &&
+		TmpItr->MyLetter != THashString(U"<=") &&
+		TmpItr->MyLetter != THashString(U">="))
+	{
+		InItr = TmpItr;
+		return Lhs;
+	}
+	TSharedPtr<TAstRelationalNode> Node = MakeShared<TAstRelationalNode>();
+	Node->MyLhs = Lhs;
+	Node->MyOperator = TmpItr;
+
+	++TmpItr;
+
+	Node->MyRhs = Parser::ParseAddSub(OutResult, TmpItr);
+	if (!(Node->MyRhs))
+	{
+		TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found Rhs of relational");
+		InItr = TmpItr;
+		return Error;
+	}
+	InItr = TmpItr;
+	return Node;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseReturn)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	if (TmpItr->MyLetter != U"return")
+	{
+		return nullptr;
+	}
+	++TmpItr;
+	TSharedPtr<TAstReturnNode> Node = MakeShared<TAstReturnNode>();
+	Node->MyExpr = Parser::ParseExpr(OutResult, TmpItr);
+	if (TmpItr->MyLetter.MyHashValue != U';')
+	{
+		TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found semicolon");
+		InItr = TmpItr;
+		return Error;
+	}
+	InItr = ++TmpItr;
+	return Node;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseIf)
+{
+	auto GenerateBlockName = []() -> TUtf32String {
+		static size_t NameSuffix = 0;
+		return TUtf32String(U"block_") + ToUtf32String(NameSuffix++);
+	};
+	Lime::TTokenIterator TmpItr = InItr;
+	if (TmpItr->MyLetter != THashString(U"if"))
+	{
+		return nullptr;
+	}
+	++TmpItr;
+	if (TmpItr->MyLetter.MyHashValue != U'(')
+	{
+		InItr = TmpItr;
+		return OutResult.MakeError(InItr, U"Not found `(` after `if`");
+	}
+	++TmpItr;
+	TSharedPtr<TAstBaseNode> Eval = Parser::ParseExpr(OutResult, TmpItr);
+	if (TmpItr->MyLetter.MyHashValue != U')')
+	{
+		InItr = TmpItr;
+		return OutResult.MakeError(TmpItr, U"Expect expression `)`");
+	}
+	++TmpItr;
+	TSharedPtr<TAstIfNode> Node = MakeShared<TAstIfNode>();
+	Node->MyEvalExpr = Eval;
+	Node->MyTrueExpr = Parser::ParseBlock(OutResult, TmpItr);
+	if (!(Node->MyTrueExpr))
+	{
+		Node->MyTrueExpr = Parser::ParseStmt(OutResult, TmpItr);
+		if (!(Node->MyTrueExpr))
+		{
+			InItr = TmpItr;
+			return OutResult.MakeError(InItr, U"Expect true expr");
+		}
+	}
+	if (TmpItr->MyLetter != THashString(U"else"))
+	{
+		InItr = TmpItr;
+		return Node;
+	}
+	++TmpItr;
+	Node->MyFalseExpr = Parser::ParseBlock(OutResult, TmpItr);
+	if (!(Node->MyFalseExpr))
+	{
+		Node->MyFalseExpr = Parser::ParseStmt(OutResult, TmpItr);
+		if (!(Node->MyFalseExpr))
+		{
+			InItr = TmpItr;
+			return OutResult.MakeError(InItr, U"Expect false expr");
+		}
+	}
+	InItr = TmpItr;
+	return Node;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseWhile)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	if (TmpItr->MyLetter != THashString(U"while"))
+	{
+		return nullptr;
+	}
+	++TmpItr;
+	if (TmpItr->MyLetter.MyHashValue != U'(')
+	{
+		InItr = TmpItr;
+		return OutResult.MakeError(InItr, U"Not found `(` after `while`");
+	}
+	++TmpItr;
+
+	TSharedPtr<TAstBaseNode> Eval = Parser::ParseExpr(OutResult, TmpItr);
+	if (TmpItr->MyLetter.MyHashValue != U')')
+	{
+		InItr = TmpItr;
+		return OutResult.MakeError(InItr, U"Expect expression `)`");
+	}
+	TSharedPtr<TAstWhileNode> Node = MakeShared<TAstWhileNode>();
+	Node->MyEvalExpr = Eval;
+	++TmpItr;
+
+	if (TmpItr->MyLetter.MyHashValue == U'{')
+	{
+		Node->MyBlockExpr = Parser::ParseBlock(OutResult, TmpItr);
+	}
+	else
+	{
+		Node->MyBlockExpr = Parser::ParseExpr(OutResult, TmpItr);
+		if (TmpItr->MyLetter.MyHashValue != U';')
+		{
+			InItr = TmpItr;
+			return OutResult.MakeError(InItr, U"Not found block for `while`");
+		}
+		++TmpItr;
+	}
+
+	if (!(Node->MyBlockExpr))
+	{
+		InItr = TmpItr;
+		return OutResult.MakeError(InItr, U"Not found block for `while`");
+	}
+	InItr = TmpItr;
+	return Node;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseFor)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	if (TmpItr->MyLetter != THashString(U"for"))
+	{
+		return nullptr;
+	}
+	++TmpItr;
+
+	if (TmpItr->MyLetter.MyHashValue != U'(')
+	{
+		InItr = TmpItr;
+		return OutResult.MakeError(TmpItr, U"Expect `(`");
+	}
+	++TmpItr;
+
+	TSharedPtr<TAstBaseNode> InitializeExpr = nullptr;
+	if (TmpItr->MyLetter.MyHashValue != U';')
+	{
+		InitializeExpr = Parser::ParseExpr(OutResult, TmpItr);
+	}
+
+	if (TmpItr->MyLetter.MyHashValue != U';')
+	{
+		InItr = ++TmpItr;
+		return OutResult.MakeError(TmpItr, U"Expect `;`");
+	}
+	++TmpItr;
+
+	TSharedPtr<TAstBaseNode> ConditionExpr = nullptr;
+	if (TmpItr->MyLetter.MyHashValue != U';')
+	{
+		ConditionExpr = Parser::ParseExpr(OutResult, TmpItr);
+	}
+	if (TmpItr->MyLetter.MyHashValue != U';')
+	{
+		InItr = ++TmpItr;
+		return OutResult.MakeError(TmpItr, U"Expect `;`");
+	}
+	++TmpItr;
+
+	TSharedPtr<TAstBaseNode> UpdateExpr = nullptr;
+	if (TmpItr->MyLetter.MyHashValue != U')')
+	{
+		UpdateExpr = Parser::ParseExpr(OutResult, TmpItr);
+	}
+	if (TmpItr->MyLetter.MyHashValue != U')')
+	{
+		InItr = TmpItr;
+		return OutResult.MakeError(TmpItr, U"Expect `)`");
+	}
+	++TmpItr;
+
+	TSharedPtr<TAstForNode> Node = TSharedPtr<TAstForNode>();
+	Node->MyInitExpr = InitializeExpr;
+	Node->MyCondExpr = ConditionExpr;
+	Node->MyUpdateExpr = UpdateExpr;
+
+	Node->MyBlockExpr = Parser::ParseBlock(OutResult, TmpItr);
+	if (!(Node->MyBlockExpr))
+	{
+		Node->MyBlockExpr = Parser::ParseStmt(OutResult, TmpItr);
+		if (!(Node->MyBlockExpr))
+		{
+			InItr = TmpItr;
+			return OutResult.MakeError(InItr, U"not found block for `for`");
+		}
+	}
+	InItr = TmpItr;
+	return Node;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	if (!OutResult.MyVarTypes.IsDefined(TmpItr->MyLetter))
+	{
+		return nullptr;
+	}
+	TSharedPtr<TAstFunctionDefinition> Node = MakeShared<TAstFunctionDefinition>();
+	Node->MyReturnType = *OutResult.MyVarTypes.GetInfo(TmpItr->MyLetter);
+	++TmpItr;
+	Node->MyFunctionName = TmpItr;
+	++TmpItr;
+	if (TmpItr->MyLetter.MyHashValue != U'(')
+	{
+		return nullptr; /* Variable Definition? */
+	}
+	++TmpItr;
+	/* TODO : Parse Args */
+
+	if (TmpItr->MyLetter.MyHashValue != U')')
+	{
+		InItr = TmpItr;
+		return OutResult.MakeError(TmpItr, U"Expect `)`");
+	}
+	++TmpItr;
+
+	Node->MyBlockExpr = Parser::ParseBlock(OutResult, TmpItr);
+	if (Node->MyBlockExpr && Node->MyBlockExpr->StaticClass() == TAstBlockNode().StaticClass())
+	{
+		TSharedPtr<TAstBlockNode> Block = DynamicCast<TAstBlockNode>(Node->MyBlockExpr);
+		Block->MyBlockName = TUtf32String(U"Block_") + Node->MyFunctionName->MyLetter.GetString().Bytes();
+	}
+
+	InItr = TmpItr;
+
+	return Node;
+}

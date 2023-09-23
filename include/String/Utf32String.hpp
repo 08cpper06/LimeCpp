@@ -311,10 +311,11 @@ public:
 		MyData(std::exchange(InRhs.MyData, {}))
 	{}
 
-	constexpr TUtf32String& operator=(TUtf32StringView InRhs)
+	TUtf32String& operator=(const char32_t* InRhs)
 	{
-		MyData.resize(InRhs.CharCount() + 1, U'\0');
-		TUtf32StringView::TConstIterator Itr = InRhs.cbegin();
+		TUtf32StringView Rhs(InRhs);
+		MyData.resize(Rhs.CharCount() + 1, U'\0');
+		TUtf32StringView::TConstIterator Itr = Rhs.cbegin();
 		for (char32_t& Char : MyData)
 		{
 			Char = *Itr++;
@@ -431,8 +432,44 @@ public:
 		MyData.push_back(U'\0');
 		return *this;
 	}
-
-	constexpr TUtf32String& operator+=(const TUtf32StringView InStr) noexcept
+	
+	TUtf32String& operator+=(const char32_t* InStr) noexcept
+	{
+		TUtf32StringView Rhs = InStr;
+		if (!MyData.empty() && MyData.back() == U'\0')
+		{
+			MyData.pop_back();
+		}
+		Lime::size_t Lneght = 0;
+		if (MyData.size() + Rhs.CharCount() > MyData.capacity())
+		{
+			Reserve(MyData.size() + Rhs.CharCount());
+		}
+		for (char32_t Char : Rhs)
+		{
+			MyData.push_back(Char);
+		}
+		MyData.push_back(U'\0');
+		return *this;
+	}
+	TUtf32String& operator+=(const TUtf32String& InStr) noexcept
+	{
+		if (!MyData.empty() && MyData.back() == U'\0')
+		{
+			MyData.pop_back();
+		}
+		if (MyData.size() + InStr.CharCount() > MyData.capacity())
+		{
+			Reserve(MyData.size() + InStr.CharCount());
+		}
+		for (char32_t Char : InStr)
+		{
+			MyData.push_back(Char);
+		}
+		MyData.push_back(U'\0');
+		return *this;
+	}
+	TUtf32String& operator+=(const TUtf32StringView InStr) noexcept
 	{
 		if (!MyData.empty() && MyData.back() == U'\0')
 		{
@@ -453,9 +490,9 @@ public:
 	TUtf32String operator+(const TUtf32String& InStr) const noexcept
 	{
 		TUtf32String Str = *this;
-		return (Str += TUtf32StringView(InStr.Bytes()));
+		return (Str += InStr.Bytes());
 	}
-	TUtf32String operator+(const TUtf32StringView InStr) const noexcept
+	TUtf32String operator+(const char32_t* InStr) const noexcept
 	{
 		TUtf32String Str = *this;
 		return (Str += InStr);
@@ -515,3 +552,15 @@ public:
 CLASS_PRIVATE:
 	Lime::TArray<char32_t> MyData;
 };
+
+inline TUtf32String operator+(const char32_t* InLhs, const TUtf32String& InRhs) noexcept
+{
+	TUtf32String Str = InLhs;
+	return Str + InRhs;
+}
+
+inline TUtf32String operator+(const char32_t InLhs, const TUtf32String& InRhs) noexcept
+{
+	TUtf32String Str = InLhs;
+	return Str + InRhs;
+}

@@ -171,3 +171,25 @@ public:
 		return Char;
 	}
 };
+
+inline TUtf32String ToUtf32String(Lime::size_t InValue)
+{
+	TUtf32String Str;
+	TChar Char;
+	do {
+		Char = *String::ConvertCharToUtf32(static_cast<char8_t>(u8'0' + InValue % 10));
+		Str += Char;
+		InValue /= 10;
+	} while (InValue != 0);
+	return Str;
+}
+inline TUtf32String ToUtf32String(int InValue)
+{
+	TUtf32String Str = ToUtf32String(Lime::size_t(InValue > 0 ? InValue : -InValue));
+	if (InValue < 0)
+	{
+		Str = U'-';
+		InValue *= -1;
+	}
+	return Str;
+}

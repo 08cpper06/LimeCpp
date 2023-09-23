@@ -2,6 +2,7 @@
 
 
 #include <cstddef>
+#include <atomic>
 
 
 template <class Type>
@@ -14,27 +15,27 @@ private:
 	{
 		if (MyRefCount)
 		{
-			if (--(*MyRefCount))
+			if (--(*MyRefCount) == 0)
 			{
 				delete MyRefCount;
 				delete MyPtr;
-				std::exchange(MyPtr, nullptr);
-				std::exchange(MyRefCount, nullptr);
 			}
+			MyPtr = nullptr;
+			MyRefCount = nullptr;
 		}
 	}
 
-	void SetPtr(Type* InPtr, std::size_t* Counter = nullptr) noexcept
+	void SetPtr(Type* InPtr, std::atomic<std::size_t>* InCounter = nullptr) noexcept
 	{
 		DecreaseRefCount();
 		MyPtr = InPtr;
 		if (MyPtr)
 		{
-			if (Counter)
+			MyRefCount = InCounter;
+			if (MyRefCount)
 			{
-				MyRefCount = new std::size_t(0);
+				++(*MyRefCount);
 			}
-			++(*MyRefCount);
 		}
 	}
 
@@ -44,18 +45,22 @@ public:
 		SetPtr(nullptr);
 	}
 
+	TSharedPtr(std::nullptr_t) noexcept
+	{
+		SetPtr(nullptr);
+	}
+
 	TSharedPtr(const TSharedPtr<Type>& InRhs)
 	{
-		SetPtr(InRhs.MyPtr, InRhs.MyRefCount);
+		SetPtr(reinterpret_cast<Type*>(InRhs.MyPtr), const_cast<std::atomic<std::size_t>*>(InRhs.MyRefCount));
 	}
 
 	template <
-		class UType,
-		typename std::enable_if<std::is_convertible_v<Type, UType>, std::nullptr_t>::type = nullptr
+		class UType
 	>
 	TSharedPtr(const TSharedPtr<UType>& InRhs)
 	{
-		SetPtr(InRhs.MyPtr, InRhs.MyRefCount);
+		SetPtr(reinterpret_cast<Type*>(InRhs.MyPtr), const_cast<std::atomic<std::size_t>*>(InRhs.MyRefCount));
 	}
 
 	TSharedPtr(TSharedPtr<Type>&& InRhs) noexcept
@@ -65,8 +70,7 @@ public:
 	}
 
 	template <
-		class UType,
-		typename std::enable_if<std::is_convertible_v<Type, UType>, std::nullptr_t>::type = nullptr
+		class UType
 	>
 	TSharedPtr(TSharedPtr<Type>&& InRhs) noexcept
 	{
@@ -76,16 +80,15 @@ public:
 
 	~TSharedPtr() noexcept
 	{
-		SetPtr(nullptr);
+		DecreaseRefCount();
 	}
 
 	template <
-		class UType,
-		typename std::enable_if<std::is_convertible_v<Type, UType>, std::nullptr_t>::type = nullptr
+		class UType
 	>
 	TSharedPtr(UType* InPtr) noexcept
 	{
-		SetPtr(InPtr);
+		SetPtr(InPtr, new std::atomic<std::size_t>());
 	}
 
 	void Reset() noexcept
@@ -112,10 +115,28 @@ public:
 public:
 	TSharedPtr<Type>& operator=(const TSharedPtr<Type>& InRhs) noexcept
 	{
-		SetPtr(InRhs.MyPtr, InRhs.MyRefCount);
+		SetPtr(reinterpret_cast<Type*>(InRhs.MyPtr), const_cast<std::atomic<std::size_t>*>(InRhs.MyRefCount));
 		return *this;
 	}
+	template <
+		class UType
+	>
+	TSharedPtr<Type>& operator=(const TSharedPtr<UType>& InRhs) noexcept
+	{
+		SetPtr(reinterpret_cast<Type*>(InRhs.MyPtr), const_cast<std::atomic<std::size_t>*>(InRhs.MyRefCount));
+		return *this;
+	}
+
 	TSharedPtr<Type>& operator=(TSharedPtr<Type>&& InRhs) noexcept
+	{
+		SetPtr(InRhs.MyPtr, InRhs.MyRefCount);
+		InRhs.DecreaseRefCount();
+		return *this;
+	}
+	template <
+		class UType
+	>
+	TSharedPtr<Type>& operator=(TSharedPtr<UType>&& InRhs) noexcept
 	{
 		SetPtr(InRhs.MyPtr, InRhs.MyRefCount);
 		InRhs.DecreaseRefCount();
@@ -134,14 +155,30 @@ public:
 	}
 
 private:
-	std::size_t* MyRefCount;
-	Type* MyPtr;
+	friend class TSharedPtr;
+	std::atomic<std::size_t>* MyRefCount { nullptr };
+	Type* MyPtr { nullptr };
 };
 
 template <class Type, class... Args>
 inline TSharedPtr<Type> MakeShared(Args&&... InArgs)
 {
 	return new Type(InArgs...);
+}
+template <class Type>
+inline TSharedPtr<Type> MakeShared()
+{
+	return new Type();
+}
+
+template <
+	class UType,
+	class Type,
+	typename std::enable_if_t<std::is_base_of_v<Type, UType>, std::nullptr_t> = nullptr
+>
+inline TSharedPtr<UType> DynamicCast(TSharedPtr<Type> InPtr)
+{
+	return InPtr;
 }
 
 template <class Type>
