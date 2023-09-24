@@ -2,7 +2,7 @@
 	<FunctionDefinition Name="main" ReturnType="int">
 		<Block Name="Block_main">
 			<Return>
-				<Val Type="Int32">0</Val>
+				<Val Type="int">0</Val>
 			</Return>
 		</Block>
 	</FunctionDefinition>

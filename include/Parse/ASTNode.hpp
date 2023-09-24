@@ -62,9 +62,9 @@ inline TUtf32String ToUtf32String(ValueType InType) noexcept
 {
 	switch (InType) {
 	case ValueType::Int32:
-		return U"Int32";
+		return U"int";
 	case ValueType::Float:
-		return U"Float";
+		return U"float";
 	}
 	return U"Unknown";
 }
@@ -73,9 +73,9 @@ inline TUtf8String ToUtf8String(ValueType InType) noexcept
 {
 	switch (InType) {
 	case ValueType::Int32:
-		return u8"Int32";
+		return u8"int";
 	case ValueType::Float:
-		return u8"Float";
+		return u8"float";
 	}
 	return u8"Unknown";
 }
@@ -171,7 +171,7 @@ public:
 
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyName;
-	TVarTypeInfo MyReturnType;
+	TVarTypeInfo MyType;
 };
 
 class TAstReturnNode : public TAstBaseNode {

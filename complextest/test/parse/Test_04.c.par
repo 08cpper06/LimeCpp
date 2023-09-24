@@ -4,8 +4,8 @@
 			<While>
 				<Evaluation>
 					<Relational Type=">">
-						<Val Type="Int32">1</Val>
-						<Val Type="Int32">0</Val>
+						<Val Type="int">1</Val>
+						<Val Type="int">0</Val>
 					</Relational>
 				</Evaluation>
 				<Block>
@@ -14,7 +14,7 @@
 				</Block>
 			</While>
 			<Return>
-				<Val Type="Int32">0</Val>
+				<Val Type="int">0</Val>
 			</Return>
 		</Block>
 	</FunctionDefinition>

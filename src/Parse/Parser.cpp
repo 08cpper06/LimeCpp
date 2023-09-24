@@ -31,6 +31,11 @@ PARSE_FUNCTION_IMPLEMENT(ParseBlock)
 	++InItr;
 	while (InItr->MyLetter.MyHashValue != U'}')
 	{
+		if (InItr->MyLetter.MyHashValue == U';')
+		{
+			++InItr;
+			continue;
+		}
 		Node = Parser::ParseStmt(OutResult, InItr);
 		if (!Node)
 		{
@@ -53,7 +58,6 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 	Lime::TTokenIterator TmpItr = InItr;
 	bool IsHasNumber = false;
 	Lime::TTokenIterator StartItr;
-	TSharedPtr<TAstVarNode> Var;
 
 	if (TmpItr->MyType == TokenType::Number)
 	{
@@ -61,8 +65,9 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 	}
 	else if (TmpItr->MyType == TokenType::Ident)
 	{
-		Var = MakeShared<TAstVarNode>();
+		TSharedPtr<TAstVarNode> Var = MakeShared<TAstVarNode>();
 		Var->MyName = TmpItr;
+		/* TODO : Set Variable Type */
 		InItr = ++TmpItr;
 		return Var;
 	}

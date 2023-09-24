@@ -153,24 +153,27 @@ TUtf32String TAstWhileNode::GetInfoString(TUtf32String InPrefix) const
 TUtf32String TAstForNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<For>\n";
-	Str += InPrefix + U"\t<Initialize>\n";
+	Str += InPrefix + U"\t<Initialize>";
 	if (MyInitExpr)
 	{
-		Str += MyInitExpr->GetInfoString(InPrefix + U"\t\t");
+		Str += U"\n" + MyInitExpr->GetInfoString(InPrefix + U"\t\t");
+		Str += U"\t" + InPrefix;
 	}
-	Str += InPrefix + U"\t</Initialize>\n";
-	Str += InPrefix + U"\t<Condition>\n";
+	Str += U"</Initialize>\n";
+	Str += InPrefix + U"\t<Condition>";
 	if (MyCondExpr)
 	{
-		Str += MyCondExpr->GetInfoString(InPrefix + U"\t\t");
+		Str += U"\n" + MyCondExpr->GetInfoString(InPrefix + U"\t\t");
+		Str += U"\t" + InPrefix;
 	}
-	Str += InPrefix + U"\t</Condition>\n";
-	Str += InPrefix + U"\t<Continus>\n";
+	Str += U"</Condition>\n";
+	Str += InPrefix + U"\t<Continus>";
 	if (MyUpdateExpr)
 	{
-		Str += MyUpdateExpr->GetInfoString(InPrefix + U"\t\t");
+		Str += U"\n" + MyUpdateExpr->GetInfoString(InPrefix + U"\t\t");
+		Str += U"\t" + InPrefix;
 	}
-	Str += InPrefix + U"\t</Continus>\n";
+	Str += U"</Continus>\n";
 
 	Str += MyBlockExpr->GetInfoString(InPrefix + U'\t');
 	Str += InPrefix + U"</For>\n";

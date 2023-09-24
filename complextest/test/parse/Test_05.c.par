@@ -2,18 +2,14 @@
 	<FunctionDefinition Name="main" ReturnType="int">
 		<Block Name="Block_main">
 			<For>
-				<Initialize>
-				</Initialize>
-				<Condition>
-				</Condition>
-				<Continus>
-				</Continus>
+				<Initialize></Initialize>
+				<Condition></Condition>
+				<Continus></Continus>
 				<Block Name="Anonymous_1">
-					<Error Line=5 Message="Not found Lhs of relational"/>
 				</Block>
 			</For>
 			<Return>
-				<Val Type="Int32">0</Val>
+				<Val Type="int">0</Val>
 			</Return>
 		</Block>
 	</FunctionDefinition>
