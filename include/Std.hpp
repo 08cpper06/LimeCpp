@@ -15,7 +15,8 @@
 #include <type_traits>
 
 
-#include "Core/SharedPtr.hpp"
+#include "Memory/SharedPtr.hpp"
+#include "Memory/WeakPtr.hpp"
 
 
 enum class LimeLogType {
