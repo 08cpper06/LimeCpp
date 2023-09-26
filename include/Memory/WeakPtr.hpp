@@ -47,12 +47,12 @@ public:
 
 	void Swap(TWeakPtr<Type>& InRhs) noexcept
 	{
-		_Swap(InRhs);
+		this->_Swap(InRhs);
 	}
 	template <class UType>
 	void Swap(TWeakPtr<UType>& InRhs) noexcept
 	{
-		_Swap(InRhs);
+		this->_Swap(InRhs);
 	}
 
 public:
