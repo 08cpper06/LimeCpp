@@ -1,0 +1,17 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Block Name="Block_main">
+			<Variable Type="int" Name="i"></Variable>
+			<Assign>
+				<Variable Type="int" Name="i"></Variable>
+				<Val Type="int">0</Val>
+			</Assign>
+			<Return>
+				<Operator Type="+">
+					<Variable Type="int" Name="i"></Variable>
+					<Val Type="int">2</Val>
+				</Operator>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>

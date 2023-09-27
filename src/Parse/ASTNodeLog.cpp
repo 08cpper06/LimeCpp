@@ -103,7 +103,12 @@ TUtf32String TAstRelationalNode::GetInfoString(TUtf32String InPrefix) const
 
 TUtf32String TAstVarNode::GetInfoString(TUtf32String InPrefix) const
 {
-	return U">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+	TUtf32String Str = InPrefix + U"<Variable Type=\"";
+	Str += MyType.MyName.GetString();
+	Str += U"\" Name=\"";
+	Str += MyName->MyLetter.GetString();
+	Str += U"\"></Variable>\n";
+	return Str;
 }
 
 TUtf32String TAstReturnNode::GetInfoString(TUtf32String InPrefix) const
@@ -192,3 +197,19 @@ TUtf32String TAstFunctionDefinition::GetInfoString(TUtf32String InPrefix) const
 	return Str;
 }
 
+TUtf32String TAstVariableDefinition::GetInfoString(TUtf32String InPrefix) const
+{
+	TUtf32String Str = InPrefix + U"<VariableDefinition Type=\"";
+	Str += MyType.MyName.GetString();
+	Str += U"\" Name=\"";
+	Str += MyName->MyLetter.GetString();
+	Str += U"\">";
+	
+	if (MyInitializeExpr)
+	{
+		Str += U'\n' + MyInitializeExpr->GetInfoString(InPrefix + U'\t') + InPrefix;
+	}
+	
+	Str += U"</VariableDefinition>\n";
+	return Str;
+}

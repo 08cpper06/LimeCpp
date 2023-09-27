@@ -8,11 +8,11 @@
 
 class TParseResult {
 public:
-	TSharedPtr<TAstErrorNode> MakeError(Lime::TTokenIterator InItr, TUtf32StringView InMessage)
+	TSharedPtr<TAstErrorNode> MakeError(Lime::TTokenIterator InItr, TUtf32String InMessage)
 	{
 		TSharedPtr<TAstErrorNode> Error = MakeShared<TAstErrorNode>();
 		Error->MyPosition = InItr;
-		Error->MyMessage = TUtf32String(InMessage.cbegin(), InMessage.cend());
+		Error->MyMessage = InMessage;
 		MyErrorList.push_back(Error);
 		return Error;
 	}
@@ -23,7 +23,10 @@ public:
 
 	TSharedPtr<TAstBaseNode> MyASTRoot;
 	Lime::TList<TSharedPtr<TAstErrorNode>> MyErrorList;
-	TVarTypeTable MyVarTypes; 
+	TVarTypeTable MyVarTypes;
+	TVariableTable MyVariableTable;
+
+	TSharedPtr<TBlockEntry> CurrentBlock;
 
 private:
 	size_t UniqueID { 0 };

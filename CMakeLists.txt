@@ -14,6 +14,8 @@ add_executable(${PROJECT_NAME}
 	src/Tokenize/Tokenizer.cpp
 	src/Parse/Parser.cpp
 	src/Parse/ASTNodeLog.cpp
+	src/Parse/VariableTable.cpp
+	src/Parse/VariableTypeTable.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)

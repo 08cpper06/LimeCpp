@@ -5,6 +5,7 @@ void Parser::Analyze(TSourceContext& InContext)
 {
 	TSharedPtr<TAstBlockNode> Block = MakeShared<TAstBlockNode>();
 	Block->MyBlockName = U"Global";
+	InContext.MyParseResult.CurrentBlock = InContext.MyParseResult.MyVariableTable.AddBlock(nullptr, Block->MyBlockName);
 	TSharedPtr<TAstBaseNode> Node = nullptr;
 	Lime::TTokenIterator Itr = InContext.MyTokens.begin();
 	while (Itr->MyLetter != U'\0')
@@ -23,6 +24,8 @@ PARSE_FUNCTION_IMPLEMENT(ParseBlock)
 {
 	TSharedPtr<TAstBlockNode> Block = MakeShared<TAstBlockNode>();
 	Block->MyBlockName = U"Anonymous_" + OutResult.GenerateUniqueStr();
+	TSharedPtr<TBlockEntry> OldBlockEntry = OutResult.CurrentBlock;
+	OutResult.CurrentBlock = OutResult.MyVariableTable.AddBlock(OutResult.CurrentBlock, Block->MyBlockName);
 	TSharedPtr<TAstBaseNode> Node = nullptr;
 	if (InItr->MyLetter.MyHashValue != U'{')
 	{
@@ -43,6 +46,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseBlock)
 		}
 		Block->MyNodes.push_back(Node);
 	}
+	OutResult.CurrentBlock = OldBlockEntry;
 	++InItr;
 	return Block;
 }
@@ -67,7 +71,18 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 	{
 		TSharedPtr<TAstVarNode> Var = MakeShared<TAstVarNode>();
 		Var->MyName = TmpItr;
-		/* TODO : Set Variable Type */
+		TOption<TVarInfo> VarInfo = OutResult.CurrentBlock->GetInfo(TmpItr->MyLetter);
+		if (!VarInfo)
+		{
+			TUtf32String Message = U'`';
+			Message += TmpItr->MyLetter.GetString();
+			Message += U"` is not defined";
+			InItr = ++TmpItr;
+
+			return OutResult.MakeError(TmpItr, Message);
+		}
+		Var->MyBlock = OutResult.MyVariableTable.GetBlock(VarInfo->MyScope);
+		Var->MyType = VarInfo->MyType;
 		InItr = ++TmpItr;
 		return Var;
 	}
@@ -364,6 +379,12 @@ PARSE_FUNCTION_IMPLEMENT(ParseStmt)
 		return Node;
 	}
 
+	Node = Parser::ParseVariableDefinition(OutResult, InItr);
+	if (Node)
+	{
+		return Node;
+	}
+
 	Node = Parser::ParseExpr(OutResult, InItr);
 	if (Node && Node->StaticClass() == TAstErrorNode().StaticClass())
 	{
@@ -631,6 +652,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 		return nullptr; /* Variable Definition? */
 	}
 	++TmpItr;
+
 	/* TODO : Parse Args */
 
 	if (TmpItr->MyLetter.MyHashValue != U')')
@@ -648,6 +670,55 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 	}
 
 	InItr = TmpItr;
+
+	return Node;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	TOption<TVarTypeInfo> TypeInfo = OutResult.MyVarTypes.GetInfo(TmpItr->MyLetter);
+	if (!TypeInfo)
+	{
+		return nullptr;
+	}
+	++TmpItr;
+	TSharedPtr<TAstVariableDefinition> Node = MakeShared<TAstVariableDefinition>();
+	Node->MyType = *TypeInfo;
+	Node->MyName = TmpItr;
+	Node->MyBlock = OutResult.CurrentBlock;
+
+	if (OutResult.CurrentBlock->IsDefined(TmpItr->MyLetter))
+	{
+		InItr = TmpItr;
+		TUtf32String VariableName = TUtf32String(TmpItr->MyLetter.GetString().Bytes(), TmpItr->MyLetter.GetString().CharCount());
+		return OutResult.MakeError(TmpItr, U"`" + VariableName + U"` is already defined");
+	}
+	++TmpItr;
+
+	/* TODO : Array `[]` */
+	Lime::size_t ArrayCount = 1;
+
+	OutResult.CurrentBlock->Define(Node->MyName->MyLetter, *TypeInfo, ArrayCount);
+
+	if (TmpItr->MyLetter.MyHashValue == U';')
+	{
+		InItr = TmpItr;
+		return Node;
+	}
+
+	InItr = TmpItr;
+	if (TmpItr->MyLetter.MyHashValue == U'=')
+	{
+		if (ArrayCount == 1)
+		{
+			Node->MyInitializeExpr = Parser::ParseExpr(OutResult, ++InItr);
+		}
+		else
+		{
+			/* TODO : Array Initialization */
+		}
+	}
 
 	return Node;
 }

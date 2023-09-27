@@ -7,6 +7,7 @@
 #include "../String/Utf8String.hpp"
 #include "../String/Utf32String.hpp"
 #include "VariableTypeTable.hpp"
+#include "VariableTable.hpp"
 
 
 namespace Lime {
@@ -171,6 +172,7 @@ public:
 
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyName;
+	TWeakPtr<TBlockEntry> MyBlock;
 	TVarTypeInfo MyType;
 };
 
@@ -222,4 +224,16 @@ CLASS_PRIVATE:
 	TVarTypeInfo MyReturnType;
 
 	TSharedPtr<TAstBaseNode> MyBlockExpr;
+};
+
+class TAstVariableDefinition : public TAstBaseNode {
+public:
+	AST_BODY_CLASS(TAstVariableDefinition);
+
+CLASS_PRIVATE:
+	Lime::TTokenIterator MyName;
+	TWeakPtr<TBlockEntry> MyBlock;
+	TVarTypeInfo MyType;
+
+	TSharedPtr<TAstBaseNode> MyInitializeExpr;
 };

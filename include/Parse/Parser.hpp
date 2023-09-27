@@ -48,4 +48,6 @@ CLASS_PRIVATE:
 	PARSE_FUNCTION(ParseFor);
 
 	PARSE_FUNCTION(ParseFunctionDefinition);
+
+	PARSE_FUNCTION(ParseVariableDefinition);
 };

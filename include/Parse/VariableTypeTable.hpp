@@ -2,64 +2,34 @@
 
 
 #include "../Std.hpp"
+#include "String/HashString.hpp"
 
 
-struct TVarTypeInfo {
-	THashString MyName { U"" };
-	size_t MyAlignemnt { 1 };
+class TVarTypeInfo {
+public:
+	TVarTypeInfo();
+	TVarTypeInfo(THashString InName, Lime::size_t InAlignment);
+	~TVarTypeInfo() = default;
+public:
+	THashString MyName;
+	Lime::size_t MyAlignemnt;
 
-	Lime::TArray<THashString> MyMemberVariable {};
+	Lime::TArray<THashString> MyMemberVariable;
 };
 
 class TVarTypeTable {
 public:
-	bool IsDefined(THashString InName) const
-	{
-		Lime::TMap<size_t, TVarTypeInfo>::const_iterator Itr = Table.find(InName.MyHashValue);
-		return Itr != Table.end();
-	}
+	bool IsDefined(THashString InName) const;
 
-	TOption<TVarTypeInfo> GetInfo(THashString InName) const
-	{
-		Lime::TMap<size_t, TVarTypeInfo>::const_iterator Itr = Table.find(InName.MyHashValue);
-		if (Itr == Table.end())
-		{
-			return DefaultErrorType::Error;
-		}
-		return Itr->second;
-	}
-
-	void AddDefine(const TVarTypeInfo& Info)
-	{
-		if (!IsDefined(Info.MyName))
-		{
-			Table.insert(std::pair<size_t, TVarTypeInfo>(Info.MyName.MyHashValue, Info));
-		}
-	}
+	TOption<TVarTypeInfo> GetInfo(THashString InName) const;
+	
+	void AddDefine(const TVarTypeInfo& Info);
 
 private:
 	std::map<size_t /* HashValue */, TVarTypeInfo> Table;
 
 private:
 public:
-	TVarTypeTable()
-	{
-		TVarTypeInfo BuiltInType[] = {
-			{ THashString(U"char"), 1 },
-			{ THashString(U"short"), 2 },
-			{ THashString(U"int"), 4 },
-			{ THashString(U"long"), 4 },
-			{ THashString(U"unsigned char"), 1 },
-			{ THashString(U"unsigned short"), 2 },
-			{ THashString(U"unsigned int"), 4 },
-			{ THashString(U"unsigned long"), 4 },
-			{ THashString(U"float"), 4 },
-			{ THashString(U"double"), 8 }
-		};
-
-		for (const TVarTypeInfo& Info : BuiltInType)
-		{
-			Table.insert(std::pair<size_t, TVarTypeInfo>(Info.MyName.MyHashValue, Info));
-		}
-	}
+	TVarTypeTable();
+	~TVarTypeTable() = default;
 };
