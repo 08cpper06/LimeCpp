@@ -2,6 +2,7 @@
 
 
 #include "RefCounter.hpp"
+#include <type_traits>
 
 
 template <class Type>
@@ -162,27 +163,48 @@ public:
 	}
 
 public:
+
+	template <
+		std::enable_if_t<!std::is_array_v<Type>, std::nullptr_t> = nullptr
+	>
 	Type& operator*() const noexcept
 	{
 		return *Get();
 	}
 
+	template <
+		std::enable_if_t<!std::is_array_v<Type>, std::nullptr_t> = nullptr
+	>
 	Type* operator->() const noexcept
 	{
 		return Get();
+	}
+	
+	template <
+		class UType = Type,
+		std::enable_if_t<std::is_array_v<UType>, std::nullptr_t> = nullptr
+	>
+	Type& operator[](ptrdiff_t InIndex) const noexcept
+	{
+		return Get()[InIndex];
 	}
 
 };
 
 template <class Type, class... Args>
-inline TSharedPtr<Type> MakeShared(Args&&... InArgs) noexcept
+inline std::enable_if_t<!std::is_array_v<Type>, TSharedPtr<Type>> MakeShared(Args&&... InArgs) noexcept
 {
 	return TSharedPtr<Type>(new Type(InArgs...));
 }
 template <class Type>
-inline TSharedPtr<Type> MakeShared() noexcept
+inline std::enable_if_t<!std::is_array_v<Type>, TSharedPtr<Type>> MakeShared() noexcept
 {
 	return TSharedPtr<Type>(new Type());
+}
+template <class Type>
+inline std::enable_if_t<std::is_array_v<Type>, TSharedPtr<Type>> MakeShared(std::size_t InCount) noexcept
+{
+	return TSharedPtr<Type[]>(new Type[InCount]);
 }
 
 template <
@@ -199,6 +221,3 @@ inline TSharedPtr<UType> DynamicCast(TSharedPtr<Type> InPtr) noexcept
 	}
 	return TSharedPtr<UType>();
 }
-
-template <class Type>
-class TSharedPtr<Type []>;

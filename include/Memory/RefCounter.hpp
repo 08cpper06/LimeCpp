@@ -63,6 +63,18 @@ public:
 	TSmartPointerBase(const TSmartPointerBase&) = delete;
 	TSmartPointerBase& operator=(const TSmartPointerBase&) = delete;
 
+	virtual void Destroy() noexcept
+	{
+		if constexpr (std::is_array_v<Type>)
+		{
+			delete[] this->MyPtr;
+		}
+		else
+		{
+			delete this->MyPtr;
+		}
+		MyPtr = nullptr;
+	}
 protected:
 	void DecreaseWeakRef() noexcept
 	{
@@ -83,7 +95,7 @@ protected:
 		{
 			if (MyRefCounter->DecRef())
 			{
-				delete MyPtr;
+				Destroy();
 				DecreaseWeakRef();
 			}
 			MyPtr = nullptr;
