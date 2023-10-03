@@ -234,6 +234,18 @@ CLASS_PRIVATE:
 	Lime::TTokenIterator MyName;
 	TWeakPtr<TBlockEntry> MyBlock;
 	TVarTypeInfo MyType;
+	bool MyIsArray;
+	size_t MyArrayCount;
 
 	TSharedPtr<TAstBaseNode> MyInitializeExpr;
+};
+
+class TAstInitializerList : public TAstBaseNode {
+public:
+	AST_BODY_CLASS(TAstInitializerList);
+
+CLASS_PRIVATE:
+	TVarTypeInfo MyType;
+	Lime::TArray<TSharedPtr<TAstBaseNode>> MyLists;
+	TSharedPtr<TAstErrorNode> MyError;
 };

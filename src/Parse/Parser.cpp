@@ -1,4 +1,5 @@
 #include "Parse/Parser.hpp"
+#include "String/StringUtility.hpp"
 
 
 void Parser::Analyze(TSourceContext& InContext)
@@ -696,10 +697,30 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 	}
 	++TmpItr;
 
-	/* TODO : Array `[]` */
 	Lime::size_t ArrayCount = 1;
+	bool IsArray = false;
+	if (TmpItr->MyLetter.MyHashValue == U'[')
+	{
+		IsArray = true;
+		++TmpItr;
+		if (TmpItr->MyType == TokenType::Number)
+		{
+			/* explicit array count */
+			ArrayCount = *Lime::ToUInt(TmpItr->MyLetter.GetString());
+			++TmpItr;
+		}
 
-	OutResult.CurrentBlock->Define(Node->MyName->MyLetter, *TypeInfo, ArrayCount);
+		if (TmpItr->MyLetter.MyHashValue != U']')
+		{
+			InItr = TmpItr;
+			return OutResult.MakeError(TmpItr, U"Expect `]`");
+		}
+		++TmpItr;
+	}
+
+	Node->MyIsArray = IsArray;
+	Node->MyArrayCount = ArrayCount;
+	OutResult.CurrentBlock->Define(Node->MyName->MyLetter, *TypeInfo, IsArray, ArrayCount);
 
 	if (TmpItr->MyLetter.MyHashValue == U';')
 	{
@@ -710,13 +731,45 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 	InItr = TmpItr;
 	if (TmpItr->MyLetter.MyHashValue == U'=')
 	{
-		if (ArrayCount == 1)
+		if (IsArray)
 		{
-			Node->MyInitializeExpr = Parser::ParseExpr(OutResult, ++InItr);
+			Lime::TArray<TSharedPtr<TAstBaseNode>> List(ArrayCount);
+			++TmpItr;
+			if (TmpItr->MyLetter.MyHashValue != U'{')
+			{
+				InItr = TmpItr;
+				return OutResult.MakeError(TmpItr, U"InitializerList should be start `{`");
+			}
+			++TmpItr;
+			TSharedPtr<TAstInitializerList> InitialValues = MakeShared<TAstInitializerList>();
+			while (TmpItr->MyLetter.MyHashValue != U'}')
+			{
+				TSharedPtr<TAstBaseNode> ElementNode = Parser::ParseExpr(OutResult, TmpItr);
+				if (TmpItr->MyLetter.MyHashValue == U'}')
+				{
+					InitialValues->MyLists.push_back(ElementNode);
+					break;
+				}
+				if (TmpItr->MyLetter.MyHashValue != U',' || !ElementNode.Get())
+				{
+					InItr = TmpItr;
+					return OutResult.MakeError(TmpItr, U"invalid expression was found in `{ }`");
+				}
+				InitialValues->MyLists.push_back(ElementNode);
+				++TmpItr;
+			}
+			Node->MyInitializeExpr = InitialValues;
+			InItr = ++TmpItr;
+			if (InitialValues->MyLists.size() > ArrayCount)
+			{
+				TUtf32String Message = U"InitializerList too much elements : " + ToUtf32String(InitialValues->MyLists.size());
+				Message += U" (expected less than " + ToUtf32String(ArrayCount) + U")";
+				InitialValues->MyError = OutResult.MakeError(InItr,  Message);
+			}
 		}
 		else
 		{
-			/* TODO : Array Initialization */
+			Node->MyInitializeExpr = Parser::ParseExpr(OutResult, ++InItr);
 		}
 	}
 

@@ -1,0 +1,18 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Block Name="Block_main">
+			<VariableDefinition Type="int" Name="arr" ArrayCount="3">
+				<InitializerList>
+					<Val Type="int">1</Val>
+					<Val Type="int">2</Val>
+					<Val Type="int">3</Val>
+					<Val Type="int">4</Val>
+				</InitializerList>
+				<Error Line=3 Message="InitializerList too much elements : 4 (expected less than 3)"/>
+			</VariableDefinition>
+			<Return>
+				<Val Type="int">0</Val>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>

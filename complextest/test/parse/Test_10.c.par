@@ -1,7 +1,7 @@
 <Block Name="Global">
 	<FunctionDefinition Name="main" ReturnType="int">
 		<Block Name="Block_main">
-			<VariableDefinition Type="int" Name="i"></VariableDefinition>
+			<VariableDefinition Type="int" Name="arr" ArrayCount="10"></VariableDefinition>
 			<Return>
 				<Val Type="int">0</Val>
 			</Return>

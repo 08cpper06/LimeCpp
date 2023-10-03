@@ -203,6 +203,11 @@ TUtf32String TAstVariableDefinition::GetInfoString(TUtf32String InPrefix) const
 	Str += MyType.MyName.GetString();
 	Str += U"\" Name=\"";
 	Str += MyName->MyLetter.GetString();
+	if (MyIsArray)
+	{
+		Str += U"\" ArrayCount=\"";
+		Str += ToUtf32String(MyArrayCount);
+	}
 	Str += U"\">";
 	
 	if (MyInitializeExpr)
@@ -211,5 +216,20 @@ TUtf32String TAstVariableDefinition::GetInfoString(TUtf32String InPrefix) const
 	}
 	
 	Str += U"</VariableDefinition>\n";
+	return Str;
+}
+
+TUtf32String TAstInitializerList::GetInfoString(TUtf32String InPrefix) const
+{
+	TUtf32String Str = InPrefix + U"<InitializerList>\n";
+	for (TSharedPtr<TAstBaseNode> Node : MyLists)
+	{
+		Str += Node->GetInfoString(InPrefix + U'\t');
+	}
+	Str += InPrefix + U"</InitializerList>\n";
+	if (MyError)
+	{
+		Str += MyError->GetInfoString(InPrefix);
+	}
 	return Str;
 }

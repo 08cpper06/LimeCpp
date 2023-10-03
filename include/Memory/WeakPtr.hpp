@@ -115,6 +115,3 @@ public:
 	}
 
 };
-
-template <class Type>
-class TWeakPtr<Type []>;

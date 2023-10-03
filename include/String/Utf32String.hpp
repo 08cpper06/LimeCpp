@@ -271,7 +271,7 @@ public:
 
 public:
 	constexpr TUtf32String() :
-		MyData()
+		MyData({ U'\0' })
 	{}
 	constexpr TUtf32String(char32_t InChar) :
 		MyData({ InChar, U'\0' })
