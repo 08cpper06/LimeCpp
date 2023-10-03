@@ -185,7 +185,7 @@ TUtf32String TAstForNode::GetInfoString(TUtf32String InPrefix) const
 	return Str;
 }
 
-TUtf32String TAstFunctionDefinition::GetInfoString(TUtf32String InPrefix) const
+TUtf32String TAstFunctionDefinitionNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<FunctionDefinition Name=\"";
 	Str += MyFunctionName->MyLetter.GetString();
@@ -197,7 +197,7 @@ TUtf32String TAstFunctionDefinition::GetInfoString(TUtf32String InPrefix) const
 	return Str;
 }
 
-TUtf32String TAstVariableDefinition::GetInfoString(TUtf32String InPrefix) const
+TUtf32String TAstVariableDefinitionNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<VariableDefinition Type=\"";
 	Str += MyType.MyName.GetString();
@@ -219,7 +219,7 @@ TUtf32String TAstVariableDefinition::GetInfoString(TUtf32String InPrefix) const
 	return Str;
 }
 
-TUtf32String TAstInitializerList::GetInfoString(TUtf32String InPrefix) const
+TUtf32String TAstInitializerListNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<InitializerList>\n";
 	for (TSharedPtr<TAstBaseNode> Node : MyLists)

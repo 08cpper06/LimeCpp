@@ -215,9 +215,9 @@ CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyBlockExpr;
 };
 
-class TAstFunctionDefinition : public TAstBaseNode {
+class TAstFunctionDefinitionNode : public TAstBaseNode {
 public:
-	AST_BODY_CLASS(TAstFunctionDefinition);
+	AST_BODY_CLASS(TAstFunctionDefinitionNode);
 
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyFunctionName;
@@ -226,9 +226,9 @@ CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyBlockExpr;
 };
 
-class TAstVariableDefinition : public TAstBaseNode {
+class TAstVariableDefinitionNode : public TAstBaseNode {
 public:
-	AST_BODY_CLASS(TAstVariableDefinition);
+	AST_BODY_CLASS(TAstVariableDefinitionNode);
 
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyName;
@@ -240,9 +240,9 @@ CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyInitializeExpr;
 };
 
-class TAstInitializerList : public TAstBaseNode {
+class TAstInitializerListNode : public TAstBaseNode {
 public:
-	AST_BODY_CLASS(TAstInitializerList);
+	AST_BODY_CLASS(TAstInitializerListNode);
 
 CLASS_PRIVATE:
 	TVarTypeInfo MyType;

@@ -643,7 +643,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 	{
 		return nullptr;
 	}
-	TSharedPtr<TAstFunctionDefinition> Node = MakeShared<TAstFunctionDefinition>();
+	TSharedPtr<TAstFunctionDefinitionNode> Node = MakeShared<TAstFunctionDefinitionNode>();
 	Node->MyReturnType = *OutResult.MyVarTypes.GetInfo(TmpItr->MyLetter);
 	++TmpItr;
 	Node->MyFunctionName = TmpItr;
@@ -684,7 +684,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 		return nullptr;
 	}
 	++TmpItr;
-	TSharedPtr<TAstVariableDefinition> Node = MakeShared<TAstVariableDefinition>();
+	TSharedPtr<TAstVariableDefinitionNode> Node = MakeShared<TAstVariableDefinitionNode>();
 	Node->MyType = *TypeInfo;
 	Node->MyName = TmpItr;
 	Node->MyBlock = OutResult.CurrentBlock;
@@ -741,7 +741,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 				return OutResult.MakeError(TmpItr, U"InitializerList should be start `{`");
 			}
 			++TmpItr;
-			TSharedPtr<TAstInitializerList> InitialValues = MakeShared<TAstInitializerList>();
+			TSharedPtr<TAstInitializerListNode> InitialValues = MakeShared<TAstInitializerListNode>();
 			while (TmpItr->MyLetter.MyHashValue != U'}')
 			{
 				TSharedPtr<TAstBaseNode> ElementNode = Parser::ParseExpr(OutResult, TmpItr);
