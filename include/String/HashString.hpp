@@ -293,3 +293,20 @@ std::basic_ostream<char, _Traits>& operator<<(std::basic_ostream<char, _Traits>&
 {
 	return _Ostr << _Val.GetString();
 }
+
+inline TUtf32String operator+(const TUtf32String& InLhs, THashString InRhs) noexcept
+{
+	TUtf32String Str = InLhs;
+	return Str += InRhs.GetString().Bytes();
+}
+
+inline TUtf32String operator+(THashString InLhs, const TUtf32String& InRhs) noexcept
+{
+	TUtf32String Str(InLhs.GetString().Bytes(), InLhs.GetString().CharCount());
+	return Str += InRhs.Bytes();
+}
+
+inline TUtf32String& operator+=(TUtf32String& InLhs, THashString InRhs) noexcept
+{
+	return InLhs += InRhs.GetString();
+}

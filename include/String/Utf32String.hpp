@@ -564,3 +564,8 @@ inline TUtf32String operator+(const char32_t InLhs, const TUtf32String& InRhs) n
 	TUtf32String Str = InLhs;
 	return Str + InRhs;
 }
+
+inline TUtf32String operator+(const TUtf32StringView InLhs, const TUtf32StringView InRhs) noexcept
+{
+	return TUtf32String(InLhs.Bytes(), InLhs.CharCount()) + TUtf32String(InRhs.Bytes(), InRhs.CharCount());
+}

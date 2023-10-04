@@ -188,10 +188,7 @@ TUtf32String TAstForNode::GetInfoString(TUtf32String InPrefix) const
 TUtf32String TAstFunctionDefinitionNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<FunctionDefinition Name=\"";
-	Str += MyFunctionName->MyLetter.GetString();
-	Str += U"\" ReturnType=\"";
-	Str += MyReturnType.MyName.GetString();
-	Str += U"\">\n";
+	Str += MyFunctionName->MyLetter + U"\" ReturnType=\"" + MyReturnType.MyName + U"\">\n";
 	Str += MyBlockExpr->GetInfoString(InPrefix + U'\t');
 	Str += InPrefix + U"</FunctionDefinition>\n";
 	return Str;
@@ -200,9 +197,7 @@ TUtf32String TAstFunctionDefinitionNode::GetInfoString(TUtf32String InPrefix) co
 TUtf32String TAstVariableDefinitionNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<VariableDefinition Type=\"";
-	Str += MyType.MyName.GetString();
-	Str += U"\" Name=\"";
-	Str += MyName->MyLetter.GetString();
+	Str += MyType.MyName + U"\" Name=\"" + MyName->MyLetter;
 	if (MyIsArray)
 	{
 		Str += U"\" ArrayCount=\"";

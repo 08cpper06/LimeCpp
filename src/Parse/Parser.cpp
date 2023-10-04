@@ -692,8 +692,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 	if (OutResult.CurrentBlock->IsDefined(TmpItr->MyLetter))
 	{
 		InItr = TmpItr;
-		TUtf32String VariableName = TUtf32String(TmpItr->MyLetter.GetString().Bytes(), TmpItr->MyLetter.GetString().CharCount());
-		return OutResult.MakeError(TmpItr, U"`" + VariableName + U"` is already defined");
+		return OutResult.MakeError(TmpItr, U"`" + TmpItr->MyLetter + U"` is already defined");
 	}
 	++TmpItr;
 
