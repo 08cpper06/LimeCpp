@@ -228,6 +228,11 @@ PARSE_FUNCTION_IMPLEMENT(ParseExpr)
 	{
 		return OutResult.MakeError(InItr, U"Eof detected");
 	}
+	TSharedPtr<TAstBaseNode> Node = Parser::ParseVariableDefinition(OutResult, InItr);
+	if (Node)
+	{
+		return Node;
+	}
 	return Parser::ParseAssign(OutResult, InItr);
 }
 
@@ -375,12 +380,6 @@ PARSE_FUNCTION_IMPLEMENT(ParseStmt)
 	}
 
 	Node = Parser::ParseReturn(OutResult, InItr);
-	if (Node)
-	{
-		return Node;
-	}
-
-	Node = Parser::ParseVariableDefinition(OutResult, InItr);
 	if (Node)
 	{
 		return Node;

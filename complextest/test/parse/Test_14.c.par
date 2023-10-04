@@ -1,0 +1,43 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Block Name="Block_main">
+			<VariableDefinition Type="int" Name="sum">
+				<Val Type="int">0</Val>
+			</VariableDefinition>
+			<For>
+				<Initialize>
+					<VariableDefinition Type="int" Name="i">
+						<Val Type="int">0</Val>
+					</VariableDefinition>
+				</Initialize>
+				<Condition>
+					<Relational Type="<">
+						<Variable Type="int" Name="i"></Variable>
+						<Val Type="int">10</Val>
+					</Relational>
+				</Condition>
+				<Continus>
+					<Assign>
+						<Variable Type="int" Name="i"></Variable>
+						<Operator Type="+">
+							<Variable Type="int" Name="i"></Variable>
+							<Val Type="int">1</Val>
+						</Operator>
+					</Assign>
+				</Continus>
+				<Block Name="Anonymous_1">
+					<Assign>
+						<Variable Type="int" Name="sum"></Variable>
+						<Operator Type="+">
+							<Variable Type="int" Name="sum"></Variable>
+							<Variable Type="int" Name="i"></Variable>
+						</Operator>
+					</Assign>
+				</Block>
+			</For>
+			<Return>
+				<Val Type="int">0</Val>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>
