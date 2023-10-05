@@ -638,12 +638,12 @@ PARSE_FUNCTION_IMPLEMENT(ParseFor)
 PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 {
 	Lime::TTokenIterator TmpItr = InItr;
-	if (!OutResult.MyVarTypes.IsDefined(TmpItr->MyLetter))
+	if (!OutResult.MyTypeTable.IsDefined(TmpItr->MyLetter))
 	{
 		return nullptr;
 	}
 	TSharedPtr<TAstFunctionDefinitionNode> Node = MakeShared<TAstFunctionDefinitionNode>();
-	Node->MyReturnType = *OutResult.MyVarTypes.GetInfo(TmpItr->MyLetter);
+	Node->MyReturnType = *OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
 	++TmpItr;
 	Node->MyFunctionName = TmpItr;
 	++TmpItr;
@@ -677,7 +677,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 {
 	Lime::TTokenIterator TmpItr = InItr;
-	TOption<TVarTypeInfo> TypeInfo = OutResult.MyVarTypes.GetInfo(TmpItr->MyLetter);
+	TOption<TTypeInfo> TypeInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
 	if (!TypeInfo)
 	{
 		return nullptr;

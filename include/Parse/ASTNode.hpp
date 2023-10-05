@@ -6,7 +6,7 @@
 #include "Tokenize/Token.hpp"
 #include "../String/Utf8String.hpp"
 #include "../String/Utf32String.hpp"
-#include "VariableTypeTable.hpp"
+#include "TypeTable.hpp"
 #include "VariableTable.hpp"
 
 
@@ -173,7 +173,7 @@ public:
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyName;
 	TWeakPtr<TBlockEntry> MyBlock;
-	TVarTypeInfo MyType;
+	TTypeInfo MyType;
 };
 
 class TAstReturnNode : public TAstBaseNode {
@@ -221,7 +221,7 @@ public:
 
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyFunctionName;
-	TVarTypeInfo MyReturnType;
+	TTypeInfo MyReturnType;
 
 	TSharedPtr<TAstBaseNode> MyBlockExpr;
 };
@@ -233,7 +233,7 @@ public:
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyName;
 	TWeakPtr<TBlockEntry> MyBlock;
-	TVarTypeInfo MyType;
+	TTypeInfo MyType;
 	bool MyIsArray;
 	size_t MyArrayCount;
 
@@ -245,7 +245,7 @@ public:
 	AST_BODY_CLASS(TAstInitializerListNode);
 
 CLASS_PRIVATE:
-	TVarTypeInfo MyType;
+	TTypeInfo MyType;
 	Lime::TArray<TSharedPtr<TAstBaseNode>> MyLists;
 	TSharedPtr<TAstErrorNode> MyError;
 };

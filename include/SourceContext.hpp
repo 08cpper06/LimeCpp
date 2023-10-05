@@ -23,7 +23,7 @@ public:
 
 	TSharedPtr<TAstBaseNode> MyASTRoot;
 	Lime::TList<TSharedPtr<TAstErrorNode>> MyErrorList;
-	TVarTypeTable MyVarTypes;
+	TTypeTable MyTypeTable;
 	TVariableTable MyVariableTable;
 
 	TSharedPtr<TBlockEntry> CurrentBlock;

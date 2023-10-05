@@ -18,7 +18,7 @@ add_executable(${PROJECT_NAME}
 	../src/Tokenize/Tokenizer.cpp
 	../src/Parse/Parser.cpp
 	../src/Parse/ASTNodeLog.cpp
-	../src/Parse/VariableTypeTable.cpp
+	../src/Parse/TypeTable.cpp
 	../src/Parse/VariableTable.cpp
 )
 

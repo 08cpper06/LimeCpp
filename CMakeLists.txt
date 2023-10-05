@@ -15,7 +15,7 @@ add_executable(${PROJECT_NAME}
 	src/Parse/Parser.cpp
 	src/Parse/ASTNodeLog.cpp
 	src/Parse/VariableTable.cpp
-	src/Parse/VariableTypeTable.cpp
+	src/Parse/TypeTable.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)

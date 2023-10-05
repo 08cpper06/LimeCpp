@@ -7,7 +7,7 @@ TVarInfo::TVarInfo() :
 	MyArrayCount(1)
 {}
 
-TVarInfo::TVarInfo(THashString InName, const TVarTypeInfo& InType, bool InIsArray, Lime::size_t InArrayCount, THashString InScopeName) :
+TVarInfo::TVarInfo(THashString InName, const TTypeInfo& InType, bool InIsArray, Lime::size_t InArrayCount, THashString InScopeName) :
 	MyName(InName),
 	MyType(InType),
 	MyArrayCount(InArrayCount),
@@ -58,7 +58,7 @@ bool TBlockEntry::IsDefined(THashString InVarName) const noexcept
 	return Itr != MyVariableTable.end();
 }
 
-void TBlockEntry::Define(THashString InVarName, const TVarTypeInfo& InInfo, bool InIsArray, Lime::size_t InArrayCount) noexcept
+void TBlockEntry::Define(THashString InVarName, const TTypeInfo& InInfo, bool InIsArray, Lime::size_t InArrayCount) noexcept
 {
 	MyVariableTable.insert({
 		InVarName,
