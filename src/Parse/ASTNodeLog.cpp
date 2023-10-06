@@ -25,7 +25,7 @@ TUtf32String TAstBlockNode::GetInfoString(TUtf32String InPrefix) const
 
 TUtf32String TAstValNode::GetInfoString(TUtf32String InPrefix) const
 {
-	TUtf32String Str = InPrefix + U"<Val Type=\"" + ToUtf32String(MyType) + U"\">";
+	TUtf32String Str = InPrefix + U"<Val Type=\"" + MyType.MyName + U"\">";
 	for (Lime::TTokenIterator Itr = MyStartItr; Itr != MyEndItr; ++Itr)
 	{
 		Str += Itr->MyLetter.GetString();
@@ -256,5 +256,74 @@ TUtf32String TAstInitializerListNode::GetInfoString(TUtf32String InPrefix) const
 	{
 		Str += MyError->GetInfoString(InPrefix);
 	}
+	return Str;
+}
+
+TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
+{
+	TUtf32String Str = InPrefix + U"<FunctionCall Name=\"";
+	Str += MyFunction.MyName;
+	Str += U"\">\n";
+
+	if (MyError)
+	{
+		Str += MyError->GetInfoString(InPrefix + U'\t');
+		Str += InPrefix + U"</FunctionCall>\n";
+		return Str;
+	}
+
+	if (MyArguments.empty())
+	{
+		Str += InPrefix + U"\t<Arguments></Arguments>\n";
+	}
+	else
+	{
+		Str += InPrefix + U"\t<Arguments>\n";
+		for (TSharedPtr<TAstBaseNode> Value : MyArguments)
+		{
+			if (Value->StaticClass() == TAstValNode().StaticClass())
+			{
+				TSharedPtr<TAstValNode> TmpNode = StaticCast<TAstValNode>(Value);
+				Str += InPrefix + U"\t\t<Detail Type=\"";
+				Str += TmpNode->MyType.MyName;
+				TUtf32String ValueStr;
+				for (Lime::TTokenIterator Itr = TmpNode->MyStartItr; Itr != TmpNode->MyEndItr; ++Itr)
+				{
+					ValueStr += Itr->MyLetter.GetString();
+				}
+				Str += U"\" Value=\"" + ValueStr + U"\"/>\n";
+			}
+			else if (Value->StaticClass() == TAstVarNode().StaticClass())
+			{
+				TSharedPtr<TAstVarNode> TmpNode = StaticCast<TAstVarNode>(Value);
+				TVarInfo Info;
+				{
+					TSharedPtr<TBlockEntry> Block = TmpNode->MyBlock.Lock();
+					Info = *Block->GetInfo(TmpNode->MyName->MyLetter);
+				}
+				if (Info.MyIsArray)
+				{
+					Str += InPrefix + U"\t\t<Detail Type=\"";
+					Str += Info.MyName + U"[]";
+					Str += U"\" Name=\"" + Info.MyName + U"\" Count=\"";
+					Str += ToUtf32String(Info.MyArrayCount);
+					Str += U"\"/>\n";
+				}
+				else
+				{
+					Str += InPrefix + U"\t\t<Detail Type=\"";
+					Str += Info.MyName;
+					Str += U"\" Name=\"" + Info.MyName + U"\"/>\n";
+				}
+			}
+			else if (Value->StaticClass() == TAstErrorNode().StaticClass())
+			{
+				Str += Value->GetInfoString(InPrefix + U"\t\t");
+			}
+		}
+		Str += InPrefix + U"\t</Arguments>\n";
+	}
+
+	Str += InPrefix + U"</FunctionCall>\n";
 	return Str;
 }

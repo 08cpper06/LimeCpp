@@ -50,4 +50,6 @@ CLASS_PRIVATE:
 	PARSE_FUNCTION(ParseFunctionDefinition);
 
 	PARSE_FUNCTION(ParseVariableDefinition);
+
+	PARSE_FUNCTION(ParseFunctionCall);
 };

@@ -102,11 +102,11 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 		}
 	}
 
-	ValueType ValueType = ValueType::Unknown;
+	TOption<TTypeInfo> ValueType;
 	if (TmpItr->MyType == TokenType::Number)
 	{
 		IsHasNumber = true;
-		ValueType = ValueType::Int32;
+		ValueType = OutResult.MyTypeTable.GetInfo(U"int");
 		++TmpItr;
 	}
 
@@ -121,7 +121,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 		{
 			IsHasNumber = true;
 			++TmpItr;
-			ValueType = ValueType::Float;
+			ValueType = OutResult.MyTypeTable.GetInfo(U"float");
 		}
 	}
 	if (!IsHasNumber)
@@ -129,10 +129,15 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 		return nullptr;
 	}
 
+	if (!ValueType)
+	{
+		InItr = TmpItr;
+		return OutResult.MakeError(TmpItr, U"Unknown type");
+	}
 	TSharedPtr<TAstValNode> Node = MakeShared<TAstValNode>();
 	Node->MyStartItr = StartItr;
 	Node->MyEndItr = TmpItr;
-	Node->MyType = ValueType;
+	Node->MyType = *ValueType;
 
 	InItr = TmpItr;
 	return Node;
@@ -228,7 +233,14 @@ PARSE_FUNCTION_IMPLEMENT(ParseExpr)
 	{
 		return OutResult.MakeError(InItr, U"Eof detected");
 	}
-	TSharedPtr<TAstBaseNode> Node = Parser::ParseVariableDefinition(OutResult, InItr);
+	TSharedPtr<TAstBaseNode> Node;
+	Node = ParseFunctionCall(OutResult, InItr);
+	if (Node)
+	{
+		return Node;
+	}
+
+	Node = Parser::ParseVariableDefinition(OutResult, InItr);
 	if (Node)
 	{
 		return Node;
@@ -666,10 +678,10 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 		if (ArgumentsTypeInfo)
 		{
 			Arguments.push_back(TmpItr->MyLetter);
-			TSharedPtr<TAstBaseNode> TmpNode = DynamicCast<TAstVariableDefinitionNode>(ParseVariableDefinition(OutResult, TmpItr));
+			TSharedPtr<TAstBaseNode> TmpNode = ParseVariableDefinition(OutResult, TmpItr);
 			if (TmpNode->StaticClass() == TAstVariableDefinitionNode().StaticClass())
 			{
-				TSharedPtr<TAstVariableDefinitionNode> VarDefineNode = DynamicCast<TAstVariableDefinitionNode>(TmpNode);
+				TSharedPtr<TAstVariableDefinitionNode> VarDefineNode = StaticCast<TAstVariableDefinitionNode>(TmpNode);
 				OutResult.CurrentBlock->Define(VarDefineNode->MyName->MyLetter, *ArgumentsTypeInfo, VarDefineNode->MyIsArray, VarDefineNode->MyArrayCount);
 				TOption<TVarInfo> Info = OutResult.CurrentBlock->GetInfo(VarDefineNode->MyName->MyLetter);
 				Node->MyArguments.push_back({ *ArgumentsTypeInfo, *Info });
@@ -702,7 +714,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 	Node->MyBlockExpr = Parser::ParseBlock(OutResult, TmpItr);
 	if (Node->MyBlockExpr && Node->MyBlockExpr->StaticClass() == TAstBlockNode().StaticClass())
 	{
-		TSharedPtr<TAstBlockNode> Block = DynamicCast<TAstBlockNode>(Node->MyBlockExpr);
+		TSharedPtr<TAstBlockNode> Block = StaticCast<TAstBlockNode>(Node->MyBlockExpr);
 		Block->MyBlockName = TUtf32String(U"Block_") + Node->MyFunctionName->MyLetter;
 	}
 	OutResult.MyTypeTable.AddDefine(TTypeInfo(Node->MyFunctionName->MyLetter, Arguments, Node->MyReturnType.MyName));
@@ -818,6 +830,84 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 			Node->MyInitializeExpr = Parser::ParseExpr(OutResult, ++InItr);
 		}
 	}
+
+	return Node;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	TOption<TTypeInfo> TypeInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
+	if (!TypeInfo || !(TypeInfo->MyReturnType))
+	{
+		return nullptr;
+	}
+	TSharedPtr<TAstFunctionCallNode> Node = MakeShared<TAstFunctionCallNode>();
+	Node->MyFunction = *TypeInfo;
+	++TmpItr;
+
+	if (TmpItr->MyLetter.MyHashValue != U'(')
+	{
+		return nullptr;
+	}
+
+	Lime::size_t ArgIndex = 0;
+	const Lime::TArray<THashString>& ArgumentTypes = TypeInfo->MyMemberVariable;
+
+	do {
+		++TmpItr;
+
+		TSharedPtr<TAstBaseNode> Argument = Parser::ParseValue(OutResult, TmpItr);
+		if (!Argument)
+		{
+			InItr = TmpItr;
+			return OutResult.MakeError(TmpItr, U"Expected expression");
+		}
+		else
+		{
+			if (Argument->StaticClass() == TAstErrorNode().StaticClass())
+			{
+				Node->MyArguments.push_back(Argument);
+			}
+			else
+			{
+				THashString DefinedArgumentType;
+				if (Argument->StaticClass() == TAstValNode().StaticClass())
+				{
+					DefinedArgumentType = StaticCast<TAstValNode>(Argument)->MyType.MyName;
+				}
+				else if (Argument->StaticClass() == TAstValNode().StaticClass())
+				{
+					DefinedArgumentType = StaticCast<TAstVarNode>(Argument)->MyType.MyName;
+				}
+				if (ArgIndex >= ArgumentTypes.size())
+				{
+					Node->MyArguments.push_back(OutResult.MakeError(TmpItr, U"Too much arguments"));
+				}
+				else
+				{
+					if (ArgumentTypes[ArgIndex] != DefinedArgumentType)
+					{
+						TUtf32String Message = U"Argument type is not matched(Expected : " + ArgumentTypes[ArgIndex] + U", Actual : " + DefinedArgumentType + U")";
+						Node->MyArguments.push_back(OutResult.MakeError(TmpItr, Message));
+					}
+					else
+					{
+						Node->MyArguments.push_back(Argument);
+					}
+				}
+			}
+		}
+		++ArgIndex;
+	} while (TmpItr->MyLetter.MyHashValue == U',');
+
+	if (TmpItr->MyLetter.MyHashValue != U')')
+	{
+		InItr = TmpItr;
+		return OutResult.MakeError(TmpItr, U"Expect `)`");
+	}
+	++TmpItr;
+	InItr = TmpItr;
 
 	return Node;
 }

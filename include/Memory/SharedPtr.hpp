@@ -231,3 +231,18 @@ inline TSharedPtr<UType> DynamicCast(TSharedPtr<Type> InPtr) noexcept
 	}
 	return TSharedPtr<UType>();
 }
+
+template <
+	class UType,
+	class Type,
+	typename std::enable_if_t<std::is_base_of_v<Type, UType>, std::nullptr_t> = nullptr
+>
+inline TSharedPtr<UType> StaticCast(TSharedPtr<Type> InPtr) noexcept
+{
+	const auto Ptr = static_cast<typename TSharedPtr<UType>::ElementType*>(InPtr.Get());
+	if (Ptr)
+	{
+		return TSharedPtr<UType>(InPtr, Ptr);
+	}
+	return TSharedPtr<UType>();
+}

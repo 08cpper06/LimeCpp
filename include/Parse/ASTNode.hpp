@@ -42,6 +42,8 @@ public:
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyPosition;
 	TUtf32String MyMessage;
+
+	friend class TParseResult;
 };
 
 class TAstBlockNode : public TAstBaseNode {
@@ -70,17 +72,6 @@ inline TUtf32String ToUtf32String(ValueType InType) noexcept
 	return U"Unknown";
 }
 
-inline TUtf8String ToUtf8String(ValueType InType) noexcept
-{
-	switch (InType) {
-	case ValueType::Int32:
-		return u8"int";
-	case ValueType::Float:
-		return u8"float";
-	}
-	return u8"Unknown";
-}
-
 class TAstValNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstValNode);
@@ -88,7 +79,9 @@ public:
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyStartItr;
 	Lime::TTokenIterator MyEndItr;
-	ValueType MyType;
+	TTypeInfo MyType;
+
+	friend class TAstFunctionCallNode;
 };
 
 class TAstAddSubNode : public TAstBaseNode {
@@ -174,6 +167,8 @@ CLASS_PRIVATE:
 	Lime::TTokenIterator MyName;
 	TWeakPtr<TBlockEntry> MyBlock;
 	TTypeInfo MyType;
+
+	friend class TAstFunctionCallNode;
 };
 
 class TAstReturnNode : public TAstBaseNode {
@@ -248,5 +243,15 @@ public:
 CLASS_PRIVATE:
 	TTypeInfo MyType;
 	Lime::TArray<TSharedPtr<TAstBaseNode>> MyLists;
+	TSharedPtr<TAstErrorNode> MyError;
+};
+
+class TAstFunctionCallNode : public TAstBaseNode {
+public:
+	AST_BODY_CLASS(TAstFunctionCallNode);
+
+CLASS_PRIVATE:
+	Lime::TArray<TSharedPtr<TAstBaseNode>> MyArguments;
+	TTypeInfo MyFunction;
 	TSharedPtr<TAstErrorNode> MyError;
 };
