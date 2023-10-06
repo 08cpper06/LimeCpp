@@ -8,11 +8,16 @@
 class TTypeInfo {
 public:
 	TTypeInfo();
-	TTypeInfo(THashString InName, Lime::size_t InAlignment);
+	TTypeInfo(THashString InName, Lime::size_t InAlignment); /* Variable Type */
+	TTypeInfo(THashString InName, Lime::size_t InAlignment, const Lime::TArray<THashString>& InMembers); /* Struct Type */
+	TTypeInfo(THashString InName, const Lime::TArray<THashString>& InArguments, THashString InReturnType); /* Function */
 	~TTypeInfo() = default;
+
+	bool IsFunction() const noexcept;
 public:
 	THashString MyName;
 	Lime::size_t MyAlignemnt;
+	TOption<THashString> MyReturnType;
 
 	Lime::TArray<THashString> MyMemberVariable;
 };
@@ -26,7 +31,7 @@ public:
 	void AddDefine(const TTypeInfo& Info);
 
 private:
-	std::map<size_t /* HashValue */, TTypeInfo> Table;
+	std::map<Lime::size_t /* HashValue */, TTypeInfo> Table;
 
 private:
 public:

@@ -1,5 +1,6 @@
 <Block Name="Global">
 	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
 		<Block Name="Block_main">
 			<VariableDefinition Type="int" Name="sum">
 				<Val Type="int">0</Val>
@@ -25,7 +26,7 @@
 						</Operator>
 					</Assign>
 				</Continus>
-				<Block Name="Anonymous_1">
+				<Block Name="Anonymous_2">
 					<Assign>
 						<Variable Type="int" Name="sum"></Variable>
 						<Operator Type="+">

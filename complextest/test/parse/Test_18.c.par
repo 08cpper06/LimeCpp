@@ -1,0 +1,20 @@
+<Block Name="Global">
+	<FunctionDefinition Name="Hoge" ReturnType="void">
+		<Arguments>
+			<Detail Type="int[]" Name="arr1" Count="3"/>
+			<Detail Type="int[]" Name="arr2" Count="3"/>
+			<Detail Type="int[]" Name="result" Count="3"/>
+		</Arguments>
+		<Block Name="Block_Hoge">
+			<Return></Return>
+		</Block>
+	</FunctionDefinition>
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
+		<Block Name="Block_main">
+			<Return>
+				<Val Type="int">0</Val>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>

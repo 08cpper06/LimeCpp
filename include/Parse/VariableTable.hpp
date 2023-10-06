@@ -83,6 +83,7 @@ public:
 
 	TSharedPtr<TBlockEntry> AddBlock(TSharedPtr<TBlockEntry> InParentBlock, THashString InAddBlockName) noexcept;
 	TSharedPtr<TBlockEntry> GetBlock(THashString InBlockName) const noexcept;
+	void RemoveBlock(THashString InBlockName) noexcept;
 	bool IsContain(THashString InBlockName) const noexcept;
 
 CLASS_PRIVATE:

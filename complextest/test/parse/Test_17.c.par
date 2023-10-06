@@ -1,0 +1,24 @@
+<Block Name="Global">
+	<FunctionDefinition Name="Hoge" ReturnType="int">
+		<Arguments>
+			<Detail Type="int" Name="a"/>
+			<Detail Type="int" Name="b"/>
+		</Arguments>
+		<Block Name="Block_Hoge">
+			<Return>
+				<Operator Type="+">
+					<Variable Type="int" Name="a"></Variable>
+					<Variable Type="int" Name="b"></Variable>
+				</Operator>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
+		<Block Name="Block_main">
+			<Return>
+				<Val Type="int">0</Val>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>

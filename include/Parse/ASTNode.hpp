@@ -224,6 +224,7 @@ CLASS_PRIVATE:
 	TTypeInfo MyReturnType;
 
 	TSharedPtr<TAstBaseNode> MyBlockExpr;
+	Lime::TArray<Lime::TPair<TTypeInfo, TVarInfo>> MyArguments;
 };
 
 class TAstVariableDefinitionNode : public TAstBaseNode {

@@ -1,11 +1,12 @@
 <Block Name="Global">
 	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
 		<Block Name="Block_main">
 			<For>
 				<Initialize></Initialize>
 				<Condition></Condition>
 				<Continus></Continus>
-				<Block Name="Anonymous_1">
+				<Block Name="Anonymous_2">
 				</Block>
 			</For>
 			<Return>

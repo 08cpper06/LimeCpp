@@ -1,13 +1,13 @@
 <Block Name="Global">
+	<FunctionDefinition Name="Hoge" ReturnType="void">
+		<Arguments></Arguments>
+		<Block Name="Block_Hoge">
+			<Return></Return>
+		</Block>
+	</FunctionDefinition>
 	<FunctionDefinition Name="main" ReturnType="int">
 		<Arguments></Arguments>
 		<Block Name="Block_main">
-			<VariableDefinition Type="int" Name="arr" ArrayCount="10">
-				<InitializerList>
-					<Val Type="int">1</Val>
-					<Val Type="int">2</Val>
-				</InitializerList>
-			</VariableDefinition>
 			<Return>
 				<Val Type="int">0</Val>
 			</Return>

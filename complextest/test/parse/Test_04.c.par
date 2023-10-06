@@ -1,5 +1,6 @@
 <Block Name="Global">
 	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
 		<Block Name="Block_main">
 			<While>
 				<Evaluation>
@@ -9,7 +10,7 @@
 					</Relational>
 				</Evaluation>
 				<Block>
-					<Block Name="Anonymous_1">
+					<Block Name="Anonymous_2">
 					</Block>
 				</Block>
 			</While>

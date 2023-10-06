@@ -450,12 +450,15 @@ PARSE_FUNCTION_IMPLEMENT(ParseReturn)
 	}
 	++TmpItr;
 	TSharedPtr<TAstReturnNode> Node = MakeShared<TAstReturnNode>();
-	Node->MyExpr = Parser::ParseExpr(OutResult, TmpItr);
 	if (TmpItr->MyLetter.MyHashValue != U';')
 	{
-		TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found semicolon");
-		InItr = TmpItr;
-		return Error;
+		Node->MyExpr = Parser::ParseExpr(OutResult, TmpItr);
+		if (TmpItr->MyLetter.MyHashValue != U';')
+		{
+			TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found semicolon");
+			InItr = TmpItr;
+			return Error;
+		}
 	}
 	InItr = ++TmpItr;
 	return Node;
@@ -651,9 +654,46 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 	{
 		return nullptr; /* Variable Definition? */
 	}
-	++TmpItr;
 
-	/* TODO : Parse Args */
+	Lime::TArray<THashString> Arguments;
+	TSharedPtr<TBlockEntry> CurrentBlock = OutResult.CurrentBlock;
+	TSharedPtr<TBlockEntry> TmpBlock = OutResult.MyVariableTable.AddBlock(CurrentBlock, U"DummyBlock" + OutResult.GenerateUniqueStr());
+	OutResult.CurrentBlock = TmpBlock;
+
+	do {
+		++TmpItr;
+		/* Is Already Defined Type? */
+		TOption<TTypeInfo> ArgumentsTypeInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
+		if (ArgumentsTypeInfo)
+		{
+			Arguments.push_back(TmpItr->MyLetter);
+			TSharedPtr<TAstBaseNode> TmpNode = DynamicCast<TAstVariableDefinitionNode>(ParseVariableDefinition(OutResult, TmpItr));
+			if (TmpNode->StaticClass() == TAstVariableDefinitionNode().StaticClass())
+			{
+				TSharedPtr<TAstVariableDefinitionNode> VarDefineNode = DynamicCast<TAstVariableDefinitionNode>(TmpNode);
+				OutResult.CurrentBlock->Define(VarDefineNode->MyName->MyLetter, *ArgumentsTypeInfo, VarDefineNode->MyIsArray, VarDefineNode->MyArrayCount);
+				TOption<TVarInfo> Info = OutResult.CurrentBlock->GetInfo(VarDefineNode->MyName->MyLetter);
+				Node->MyArguments.push_back({ *ArgumentsTypeInfo, *Info });
+			}
+			else if (TmpNode->StaticClass() == TAstErrorNode().StaticClass())
+			{
+				return TmpNode;
+			}
+			else
+			{
+				InItr = TmpItr;
+				return OutResult.MakeError(TmpItr, U"Unknown error at function definition");
+			}
+		}
+		else if (TmpItr->MyLetter != U')')
+		{
+			InItr = TmpItr;
+			return OutResult.MakeError(TmpItr, U"Invalid function arguments");
+		}
+	}
+	while (TmpItr->MyLetter.MyHashValue == U',');
+	OutResult.MyVariableTable.RemoveBlock(OutResult.CurrentBlock->BlockName());
+	OutResult.CurrentBlock = CurrentBlock;
 
 	if (TmpItr->MyLetter.MyHashValue != U')')
 	{
@@ -666,10 +706,17 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 	if (Node->MyBlockExpr && Node->MyBlockExpr->StaticClass() == TAstBlockNode().StaticClass())
 	{
 		TSharedPtr<TAstBlockNode> Block = DynamicCast<TAstBlockNode>(Node->MyBlockExpr);
-		Block->MyBlockName = TUtf32String(U"Block_") + Node->MyFunctionName->MyLetter.GetString().Bytes();
+		Block->MyBlockName = TUtf32String(U"Block_") + Node->MyFunctionName->MyLetter;
 	}
+	OutResult.MyTypeTable.AddDefine(TTypeInfo(Node->MyFunctionName->MyLetter, Arguments, Node->MyReturnType.MyName));
 
 	InItr = TmpItr;
+
+	for (Lime::TPair<THashString, TVarInfo> Var : *TmpBlock.Get())
+	{
+		// THashString InVarName, const TTypeInfo& InInfo, bool InIsArray, Lime::size_t InArrayCount) noexcept
+		OutResult.CurrentBlock->Define(Var.first, Var.second.MyType, Var.second.MyIsArray, Var.second.MyArrayCount);
+	}
 
 	return Node;
 }

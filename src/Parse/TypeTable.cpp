@@ -4,13 +4,31 @@
 TTypeInfo::TTypeInfo() :
 	MyName(U""),
 	MyAlignemnt(1),
+	MyReturnType(DefaultErrorType::Error),
 	MyMemberVariable()
 {}
 TTypeInfo::TTypeInfo(THashString InName, Lime::size_t InAlignment) :
 	MyName(InName),
 	MyAlignemnt(InAlignment),
+	MyReturnType(DefaultErrorType::Error),
 	MyMemberVariable()
 {}
+TTypeInfo::TTypeInfo(THashString InName, Lime::size_t InAlignment, const Lime::TArray<THashString>& InMembers) :
+	MyName(InName),
+	MyAlignemnt(InAlignment),
+	MyReturnType(DefaultErrorType::Error),
+	MyMemberVariable(InMembers)
+{}
+TTypeInfo::TTypeInfo(THashString InName, const Lime::TArray<THashString>& InArguments, THashString InReturnType) :
+	MyName(InName),
+	MyAlignemnt(1),
+	MyReturnType(InReturnType),
+	MyMemberVariable(InArguments)
+{}
+bool TTypeInfo::IsFunction() const noexcept
+{
+	return MyReturnType.GetStatus() != DefaultErrorType::Error;
+}
 
 
 bool TTypeTable::IsDefined(THashString InName) const
@@ -41,6 +59,7 @@ void TTypeTable::AddDefine(const TTypeInfo& Info)
 TTypeTable::TTypeTable()
 {
 	TTypeInfo BuiltInType[] = {
+		{ THashString(U"void"), 0 },
 		{ THashString(U"char"), 1 },
 		{ THashString(U"short"), 2 },
 		{ THashString(U"int"), 4 },

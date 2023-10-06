@@ -3,6 +3,7 @@
 		<Val Type="int">0</Val>
 	</VariableDefinition>
 	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
 		<Block Name="Block_main">
 			<Return>
 				<Operator Type="+">

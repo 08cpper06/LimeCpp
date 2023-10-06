@@ -1,5 +1,6 @@
 <Block Name="Global">
 	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
 		<Block Name="Block_main">
 			<Return>
 				<Val Type="int">0</Val>

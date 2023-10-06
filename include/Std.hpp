@@ -44,6 +44,9 @@ namespace Lime {
 	template <class Key, class Value>
 	using TMap = std::map<Key, Value>;
 
+	template <class First, class Second>
+	using TPair = std::pair<First, Second>;
+
 	template <class Type>
 	using TList = std::list<Type>;
 

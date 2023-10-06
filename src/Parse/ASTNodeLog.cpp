@@ -113,9 +113,12 @@ TUtf32String TAstVarNode::GetInfoString(TUtf32String InPrefix) const
 
 TUtf32String TAstReturnNode::GetInfoString(TUtf32String InPrefix) const
 {
-	TUtf32String Str = InPrefix + U"<Return>\n";
-	Str += MyExpr->GetInfoString(InPrefix + U'\t');
-	Str += InPrefix + U"</Return>\n";
+	TUtf32String Str = InPrefix + U"<Return>";
+	if (MyExpr)
+	{
+		Str += U'\n' + MyExpr->GetInfoString(InPrefix + U'\t') + InPrefix;
+	}
+	Str += U"</Return>\n";
 	return Str;
 }
 
@@ -189,6 +192,33 @@ TUtf32String TAstFunctionDefinitionNode::GetInfoString(TUtf32String InPrefix) co
 {
 	TUtf32String Str = InPrefix + U"<FunctionDefinition Name=\"";
 	Str += MyFunctionName->MyLetter + U"\" ReturnType=\"" + MyReturnType.MyName + U"\">\n";
+	Str += InPrefix + U"\t<Arguments>";
+	if (MyArguments.empty())
+	{
+		Str +=  U"</Arguments>\n";
+	}
+	else
+	{
+		Str += U'\n';
+		for (const Lime::TPair<TTypeInfo, TVarInfo>& Argument : MyArguments)
+		{
+			if (Argument.second.MyIsArray)
+			{
+				Str += InPrefix + U"\t\t<Detail Type=\"";
+				Str += Argument.first.MyName + U"[]";
+				Str += U"\" Name=\"" + Argument.second.MyName + U"\" Count=\"";
+				Str += ToUtf32String(Argument.second.MyArrayCount);
+				Str += U"\"/>\n";
+			}
+			else
+			{
+				Str += InPrefix + U"\t\t<Detail Type=\"";
+				Str += Argument.first.MyName;
+				Str += U"\" Name=\"" + Argument.second.MyName + U"\"/>\n";
+			}
+		}
+		Str += InPrefix + U'\t' + U"</Arguments>\n";
+	}
 	Str += MyBlockExpr->GetInfoString(InPrefix + U'\t');
 	Str += InPrefix + U"</FunctionDefinition>\n";
 	return Str;

@@ -109,6 +109,11 @@ TSharedPtr<TBlockEntry> TVariableTable::GetBlock(THashString InBlockName) const 
 	return Itr != MyReferenceTable.end() ? Itr->second.Lock() : nullptr;
 }
 
+void TVariableTable::RemoveBlock(THashString InBlockName) noexcept
+{
+	MyReferenceTable.erase(InBlockName);
+}
+
 bool TVariableTable::IsContain(THashString InBlockName) const noexcept
 {
 	const auto Itr = MyReferenceTable.find(InBlockName);
