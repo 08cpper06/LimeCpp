@@ -657,8 +657,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 
 	Lime::TArray<THashString> Arguments;
 	TSharedPtr<TBlockEntry> CurrentBlock = OutResult.CurrentBlock;
-	TSharedPtr<TBlockEntry> TmpBlock = OutResult.MyVariableTable.AddBlock(CurrentBlock, U"DummyBlock" + OutResult.GenerateUniqueStr());
-	OutResult.CurrentBlock = TmpBlock;
+	OutResult.CurrentBlock = OutResult.MyVariableTable.AddBlock(CurrentBlock, U"DummyBlock" + OutResult.GenerateUniqueStr());
 
 	do {
 		++TmpItr;
@@ -692,8 +691,6 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 		}
 	}
 	while (TmpItr->MyLetter.MyHashValue == U',');
-	OutResult.MyVariableTable.RemoveBlock(OutResult.CurrentBlock->BlockName());
-	OutResult.CurrentBlock = CurrentBlock;
 
 	if (TmpItr->MyLetter.MyHashValue != U')')
 	{
@@ -712,12 +709,12 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 
 	InItr = TmpItr;
 
-	for (Lime::TPair<THashString, TVarInfo> Var : *TmpBlock.Get())
+	OutResult.CurrentBlock.Swap(CurrentBlock);
+	OutResult.MyVariableTable.RemoveBlock(CurrentBlock->BlockName());
+	for (const Lime::TPair<THashString, TVarInfo>& Var : *CurrentBlock.Get())
 	{
-		// THashString InVarName, const TTypeInfo& InInfo, bool InIsArray, Lime::size_t InArrayCount) noexcept
 		OutResult.CurrentBlock->Define(Var.first, Var.second.MyType, Var.second.MyIsArray, Var.second.MyArrayCount);
 	}
-
 	return Node;
 }
 
@@ -728,6 +725,10 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 	if (!TypeInfo)
 	{
 		return nullptr;
+	}
+	if (TmpItr->MyLetter == U"void")
+	{
+		return OutResult.MakeError(TmpItr, U"`void` type variable cannot be defined");
 	}
 	++TmpItr;
 	TSharedPtr<TAstVariableDefinitionNode> Node = MakeShared<TAstVariableDefinitionNode>();

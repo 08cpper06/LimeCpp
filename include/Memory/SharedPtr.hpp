@@ -118,6 +118,16 @@ public:
 		this->_Swap(InRhs);
 	}
 
+	void Swap(TSharedPtr<Type>& InRhs) noexcept
+	{
+		this->_Swap(InRhs);
+	}
+	template <class UType>
+	void Swap(TSharedPtr<UType>& InRhs) noexcept
+	{
+		this->_Swap(InRhs);
+	}
+
 	void Reset() noexcept
 	{
 		TSharedPtr<Type>().Swap(*this);

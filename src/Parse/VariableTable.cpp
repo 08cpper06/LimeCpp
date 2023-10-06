@@ -65,6 +65,12 @@ void TBlockEntry::Define(THashString InVarName, const TTypeInfo& InInfo, bool In
 		TVarInfo(InVarName, InInfo, InIsArray, InArrayCount, MyBlockName)
 	});
 }
+
+void TBlockEntry::UnDefine(THashString InVarName) noexcept
+{
+	MyVariableTable.erase(InVarName);
+}
+
 TOption<TVarInfo> TBlockEntry::GetInfo(THashString InVarName) const noexcept
 {
 	const auto Itr = MyVariableTable.find(InVarName);

@@ -38,6 +38,7 @@ public:
 	
 	bool IsDefined(THashString InVarName) const noexcept;
 	void Define(THashString InVarName, const TTypeInfo& InInfo, bool InIsArray, Lime::size_t InArrayCount = 1) noexcept;
+	void UnDefine(THashString InVarName) noexcept;
 	TOption<TVarInfo> GetInfo(THashString InVarName) const noexcept;
 
 	THashString BlockName() const noexcept;
