@@ -4,7 +4,9 @@
 TVarInfo::TVarInfo() :
 	MyName(U""),
 	MyType(),
-	MyArrayCount(1)
+	MyArrayCount(1),
+	MyIsArray(false),
+	MyScope()
 {}
 
 TVarInfo::TVarInfo(THashString InName, const TTypeInfo& InType, bool InIsArray, Lime::size_t InArrayCount, THashString InScopeName) :

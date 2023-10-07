@@ -47,7 +47,7 @@ TUtf32String TAstValNode::GetInfoString(TUtf32String InPrefix) const
 
 TUtf32String TAstAddSubNode::GetInfoString(TUtf32String InPrefix) const
 {
-	TUtf32String Str = InPrefix + U"<Operator Type=\"" + char32_t(MyOperator->MyLetter.MyHashValue) + U"\">\n";
+	TUtf32String Str = InPrefix + U"<Operator Type=\"" + MyOperator->MyLetter + U"\">\n";
 	Str += MyLhs->GetInfoString(InPrefix + U'\t');
 	Str += MyRhs->GetInfoString(InPrefix + U'\t');
 	Str += InPrefix + U"</Operator>\n";
@@ -56,7 +56,7 @@ TUtf32String TAstAddSubNode::GetInfoString(TUtf32String InPrefix) const
 
 TUtf32String TAstMulDivNode::GetInfoString(TUtf32String InPrefix) const
 {
-	TUtf32String Str = InPrefix + U"<Operator Type=\"" + char32_t(MyOperator->MyLetter.MyHashValue) + U"\">\n";
+	TUtf32String Str = InPrefix + U"<Operator Type=\"" + MyOperator->MyLetter + U"\">\n";
 	Str += MyLhs->GetInfoString(InPrefix + U'\t');
 	Str += MyRhs->GetInfoString(InPrefix + U'\t');
 	Str += InPrefix + U"</Operator>\n";
@@ -78,7 +78,7 @@ TUtf32String TAstParenthessNode::GetInfoString(TUtf32String InPrefix) const
 
 TUtf32String TAstUnaryNode::GetInfoString(TUtf32String InPrefix) const
 {
-	TUtf32String Str = InPrefix + U"<Unary Operator=" + char32_t(MyOperator->MyLetter.MyHashValue) + U">\n";
+	TUtf32String Str = InPrefix + U"<Unary Operator=" + MyOperator->MyLetter + U">\n";
 	Str += MyExpr->GetInfoString(InPrefix + U'\t');
 	Str += InPrefix + U"</Unary>\n";
 	return Str;
@@ -86,7 +86,7 @@ TUtf32String TAstUnaryNode::GetInfoString(TUtf32String InPrefix) const
 
 TUtf32String TAstEqualityNode::GetInfoString(TUtf32String InPrefix) const
 {
-	TUtf32String Str = InPrefix + U"<Equality Type=\"" + char32_t(MyOperator->MyLetter.MyHashValue) + U"\">\n";
+	TUtf32String Str = InPrefix + U"<Equality Type=\"" + MyOperator->MyLetter + U"\">\n";
 	Str += MyLhs->GetInfoString(InPrefix + U'\t');
 	Str += MyRhs->GetInfoString(InPrefix + U'\t');
 	Str += InPrefix + U"</Equality>\n";
@@ -104,7 +104,7 @@ TUtf32String TAstAssignNode::GetInfoString(TUtf32String InPrefix) const
 
 TUtf32String TAstRelationalNode::GetInfoString(TUtf32String InPrefix) const
 {
-	TUtf32String Str = InPrefix + U"<Relational Type=\"" + char32_t(MyOperator->MyLetter.MyHashValue) + U"\">\n";
+	TUtf32String Str = InPrefix + U"<Relational Type=\"" + MyOperator->MyLetter + U"\">\n";
 	Str += MyLhs->GetInfoString(InPrefix + U'\t');
 	Str += MyRhs->GetInfoString(InPrefix + U'\t');
 	Str += InPrefix + U"</Relational>\n";
@@ -228,6 +228,10 @@ TUtf32String TAstFunctionDefinitionNode::GetInfoString(TUtf32String InPrefix) co
 			}
 		}
 		Str += InPrefix + U'\t' + U"</Arguments>\n";
+	}
+	for (TSharedPtr<TAstErrorNode> Error : MyErrors)
+	{
+		Str += Error->GetInfoString(InPrefix + U'\t');
 	}
 	Str += MyBlockExpr->GetInfoString(InPrefix + U'\t');
 	Str += InPrefix + U"</FunctionDefinition>\n";

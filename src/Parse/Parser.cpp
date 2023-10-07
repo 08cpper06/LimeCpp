@@ -50,6 +50,41 @@ PARSE_FUNCTION_IMPLEMENT(ParseBlock)
 		{
 			Block->ReturnList.push_back(StaticCast<TAstReturnNode>(Node));
 		}
+		else if (!Node->EvaluateType())
+		{
+			if (Node->StaticClass() == TAstIfNode().StaticClass())
+			{
+				TSharedPtr<TAstIfNode> IfNode = StaticCast<TAstIfNode>(Node);
+				if (IfNode->MyTrueExpr && IfNode->MyTrueExpr->StaticClass() == TAstBlockNode().StaticClass())
+				{
+					const Lime::TArray<TSharedPtr<TAstReturnNode>>& ChildReturnList = StaticCast<TAstBlockNode>(IfNode->MyTrueExpr)->ReturnList;
+					Block->ReturnList.insert(Block->ReturnList.end(), ChildReturnList.begin(), ChildReturnList.end());
+				}
+				if (IfNode->MyFalseExpr && IfNode->MyFalseExpr->StaticClass() == TAstBlockNode().StaticClass())
+				{
+					const Lime::TArray<TSharedPtr<TAstReturnNode>>& ChildReturnList = StaticCast<TAstBlockNode>(IfNode->MyTrueExpr)->ReturnList;
+					Block->ReturnList.insert(Block->ReturnList.end(), ChildReturnList.begin(), ChildReturnList.end());
+				}
+			}
+			else if (Node->StaticClass() == TAstWhileNode().StaticClass())
+			{
+				TSharedPtr<TAstWhileNode> WhileNode = StaticCast<TAstWhileNode>(Node);
+				if (WhileNode->MyBlockExpr && WhileNode->StaticClass() == TAstBlockNode().StaticClass())
+				{
+					const Lime::TArray<TSharedPtr<TAstReturnNode>>& ChildReturnList = StaticCast<TAstBlockNode>(WhileNode->MyBlockExpr)->ReturnList;
+					Block->ReturnList.insert(Block->ReturnList.end(), ChildReturnList.begin(), ChildReturnList.end());
+				}
+			}
+			else if (Node->StaticClass() == TAstForNode().StaticClass())
+			{
+				TSharedPtr<TAstForNode> ForNode = StaticCast<TAstForNode>(Node);
+				if (ForNode->MyBlockExpr && ForNode->MyBlockExpr->StaticClass() == TAstBlockNode().StaticClass())
+				{
+					const Lime::TArray<TSharedPtr<TAstReturnNode>>& ChildReturnList = StaticCast<TAstBlockNode>(ForNode->MyBlockExpr)->ReturnList;
+					Block->ReturnList.insert(Block->ReturnList.end(), ChildReturnList.begin(), ChildReturnList.end());
+				}
+			}
+		}
 	}
 	OutResult.CurrentBlock = OldBlockEntry;
 	++InItr;
@@ -784,6 +819,26 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 	{
 		TSharedPtr<TAstBlockNode> Block = StaticCast<TAstBlockNode>(Node->MyBlockExpr);
 		Block->MyBlockName = TUtf32String(U"Block_") + Node->MyFunctionName->MyLetter;
+
+		for (TSharedPtr<TAstReturnNode> ReturnTypePtr : Block->ReturnList)
+		{
+			if (!(ReturnTypePtr->MyExpr))
+			{
+				if (Node->MyReturnType.MyName != THashString(U"void"))
+				{
+					Node->MyErrors.push_back(OutResult.MakeError(ReturnTypePtr->MyPosition, U"return value is not matched"));
+				}
+			}
+			else if (TOption<THashString> ReturnType = ReturnTypePtr->MyExpr->EvaluateType())
+			{
+				CastErrorCode IsCastable = OutResult.MyTypeTable.GetInfo(*ReturnType)->IsCastable(Node->MyReturnType.MyName);
+				if ((Node->MyReturnType.MyName == THashString(U"void") && *ReturnType != THashString(U"void")) ||
+					IsCastable == CastErrorCode::NotCastable)
+				{
+					Node->MyErrors.push_back(OutResult.MakeError(ReturnTypePtr->MyPosition, U"return value is not matched"));
+				}
+			}
+		}
 	}
 	OutResult.MyTypeTable.AddDefine(TTypeInfo(Node->MyFunctionName->MyLetter, Arguments, Node->MyReturnType.MyName));
 

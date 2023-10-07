@@ -278,6 +278,7 @@ CLASS_PRIVATE:
 
 	TSharedPtr<TAstBaseNode> MyBlockExpr;
 	Lime::TArray<Lime::TPair<TTypeInfo, TVarInfo>> MyArguments;
+	Lime::TArray<TSharedPtr<TAstErrorNode>> MyErrors;
 };
 
 class TAstVariableDefinitionNode : public TAstBaseNode {
@@ -290,8 +291,8 @@ CLASS_PRIVATE:
 	Lime::TTokenIterator MyName;
 	TWeakPtr<TBlockEntry> MyBlock;
 	TTypeInfo MyType;
-	bool MyIsArray;
-	size_t MyArrayCount;
+	bool MyIsArray { false };
+	size_t MyArrayCount { 1 };
 
 	TSharedPtr<TAstBaseNode> MyInitializeExpr;
 };

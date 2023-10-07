@@ -1,0 +1,10 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
+		<Block Name="Block_main">
+			<Return>
+				<Val Type="float">2.1</Val>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>

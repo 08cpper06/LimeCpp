@@ -1,0 +1,9 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
+		<Error Line=3 Message="return value is not matched"/>
+		<Block Name="Block_main">
+			<Return></Return>
+		</Block>
+	</FunctionDefinition>
+</Block>
