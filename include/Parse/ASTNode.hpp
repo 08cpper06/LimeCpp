@@ -74,6 +74,7 @@ public:
 
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyExpr;
+	TSharedPtr<TAstWarningNode> MyWarning;
 	Lime::TTokenIterator MyPosition;
 
 	friend class TAstReturnNode;
@@ -316,7 +317,7 @@ public:
 	DEFINE_EVALUATE_TYPE(MyFunction.MyReturnType);
 
 CLASS_PRIVATE:
-	Lime::TArray<Lime::TPair<TSharedPtr<TAstBaseNode>, TSharedPtr<TAstBaseNode>>> MyArguments;
+	Lime::TArray<Lime::TPair<TSharedPtr<TAstBaseNode> /* Node */, TSharedPtr<TAstBaseNode> /* Error or Warning */>> MyArguments;
 	TTypeInfo MyFunction;
 	TSharedPtr<TAstErrorNode> MyError;
 };

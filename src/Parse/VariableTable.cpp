@@ -53,9 +53,9 @@ TBlockEntry::~TBlockEntry() noexcept {}
 bool TBlockEntry::IsDefined(THashString InVarName) const noexcept
 {
 	const auto Itr = MyVariableTable.find(InVarName);
-	if (MyParent)
+	if (TSharedPtr<TBlockEntry> Parent = MyParent.Lock())
 	{
-		return MyParent->IsDefined(InVarName) && Itr != MyVariableTable.end();
+		return Parent->IsDefined(InVarName) && Itr != MyVariableTable.end();
 	}
 	return Itr != MyVariableTable.end();
 }
@@ -80,9 +80,9 @@ TOption<TVarInfo> TBlockEntry::GetInfo(THashString InVarName) const noexcept
 	{
 		return Itr->second;
 	}
-	if (MyParent)
+	if (TSharedPtr<TBlockEntry> Parent = MyParent.Lock())
 	{
-		return MyParent->GetInfo(InVarName);
+		return Parent->GetInfo(InVarName);
 	}
 	return DefaultErrorType::Error;
 }
@@ -93,7 +93,7 @@ THashString TBlockEntry::BlockName() const noexcept
 }
 TSharedPtr<TBlockEntry> TBlockEntry::Parent() const noexcept
 {
-	return MyParent;
+	return MyParent.Lock();
 }
 
 
@@ -107,6 +107,7 @@ TSharedPtr<TBlockEntry> TVariableTable::AddBlock(TSharedPtr<TBlockEntry> InParen
 	TSharedPtr<TBlockEntry> Ret = MakeShared<TBlockEntry>();
 	Ret->MyBlockName = InAddBlockName;
 	Ret->MyParent = InParentBlock;
+	MyReferenceTable.insert({ InAddBlockName, Ret });
 	return Ret;
 }
 
@@ -114,7 +115,7 @@ TSharedPtr<TBlockEntry> TVariableTable::GetBlock(THashString InBlockName) const 
 {
 	const auto Itr = MyReferenceTable.find(InBlockName);
 
-	return Itr != MyReferenceTable.end() ? Itr->second.Lock() : nullptr;
+	return Itr != MyReferenceTable.end() ? Itr->second : nullptr;
 }
 
 void TVariableTable::RemoveBlock(THashString InBlockName) noexcept

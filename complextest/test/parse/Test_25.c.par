@@ -1,8 +1,22 @@
 <Block Name="Global">
+	<FunctionDefinition Name="sum" ReturnType="int">
+		<Arguments>
+			<Detail Type="int" Name="lhs"/>
+			<Detail Type="int" Name="rhs"/>
+		</Arguments>
+		<Block Name="Block_sum">
+			<Return>
+				<Operator Type="+">
+					<Variable Type="int" Name="lhs"></Variable>
+					<Variable Type="int" Name="rhs"></Variable>
+				</Operator>
+			</Return>
+		</Block>
+	</FunctionDefinition>
 	<FunctionDefinition Name="main" ReturnType="int">
 		<Arguments></Arguments>
 		<Block Name="Block_main">
-			<VariableDefinition Type="int" Name="sum">
+			<VariableDefinition Type="int" Name="sum_val">
 				<Val Type="int">0</Val>
 			</VariableDefinition>
 			<For>
@@ -28,16 +42,18 @@
 				</Continus>
 				<Block Name="Anonymous_0">
 					<Assign>
-						<Variable Type="int" Name="sum"></Variable>
-						<Operator Type="+">
-							<Variable Type="int" Name="sum"></Variable>
-							<Variable Type="int" Name="i"></Variable>
-						</Operator>
+						<Variable Type="int" Name="sum_val"></Variable>
+						<FunctionCall Name="sum">
+							<Arguments>
+								<Detail Type="i" Name="i"/>
+								<Detail Type="sum_val" Name="sum_val"/>
+							</Arguments>
+						</FunctionCall>
 					</Assign>
 				</Block>
 			</For>
 			<Return>
-				<Val Type="int">0</Val>
+				<Variable Type="int" Name="sum_val"></Variable>
 			</Return>
 		</Block>
 	</FunctionDefinition>

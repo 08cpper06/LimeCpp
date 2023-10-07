@@ -123,7 +123,12 @@ TUtf32String TAstVarNode::GetInfoString(TUtf32String InPrefix) const
 
 TUtf32String TAstReturnNode::GetInfoString(TUtf32String InPrefix) const
 {
-	TUtf32String Str = InPrefix + U"<Return>";
+	TUtf32String Str = InPrefix + U"<Return";
+	if (MyWarning)
+	{
+		Str += U" Warning=\"" + MyWarning->MyMessage + U'\"';
+	}
+	Str += U'>';
 	if (MyExpr)
 	{
 		Str += U'\n' + MyExpr->GetInfoString(InPrefix + U'\t') + InPrefix;
@@ -316,9 +321,12 @@ TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 			{
 				TSharedPtr<TAstVarNode> TmpNode = StaticCast<TAstVarNode>(Value.first);
 				TVarInfo Info;
+				if (TmpNode)
 				{
-					TSharedPtr<TBlockEntry> Block = TmpNode->MyBlock.Lock();
-					Info = *Block->GetInfo(TmpNode->MyName->MyLetter);
+					if (TSharedPtr<TBlockEntry> Block = TmpNode->MyBlock.Lock())
+					{
+						Info = *Block->GetInfo(TmpNode->MyName->MyLetter);
+					}
 				}
 				if (Info.MyIsArray)
 				{

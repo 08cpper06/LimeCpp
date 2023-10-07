@@ -10,7 +10,7 @@
 					</Assign>
 				</Evaluation>
 				<IfTrue>
-					<Block Name="Anonymous_2">
+					<Block Name="Anonymous_0">
 						<Operator Type="-">
 							<Operator Type="+">
 								<Val Type="int">1</Val>
@@ -24,7 +24,7 @@
 					</Block>
 				</IfTrue>
 				<IfFalse>
-					<Block Name="Anonymous_3">
+					<Block Name="Anonymous_1">
 						<Relational Type=">">
 							<Val Type="int">1</Val>
 							<Val Type="int">4</Val>

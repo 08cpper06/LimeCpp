@@ -26,12 +26,12 @@ int main(int Argc, const char** Argv)
 
 	TSourceContext Context = *Source;
 	
-	Tokenizer::Analyze(Context);
-	Parser::Analyze(Context);
-
 	std::cout << CONSOLE_COLOR(0, 164, 141)
 		<< *Source
 		<< (DEFAULT_COLOR) << std::endl;
+
+	Tokenizer::Analyze(Context);
+	Parser::Analyze(Context);
 
 	if (Context.Tokens().size() == 0 || Context.Tokens().back().MyLetter != U'\0')
 	{

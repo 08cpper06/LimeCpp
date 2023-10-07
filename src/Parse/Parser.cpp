@@ -21,6 +21,72 @@ void Parser::Analyze(TSourceContext& InContext)
 	InContext.MyParseResult.MyASTRoot = Block;
 }
 
+PARSE_FUNCTION_IMPLEMENT(ParseBlockNoCreate)
+{
+	TSharedPtr<TAstBlockNode> Block = MakeShared<TAstBlockNode>();
+	TSharedPtr<TAstBaseNode> Node = nullptr;
+	if (InItr->MyLetter.MyHashValue != U'{')
+	{
+		return nullptr;
+	}
+	++InItr;
+	while (InItr->MyLetter.MyHashValue != U'}')
+	{
+		if (InItr->MyLetter.MyHashValue == U';')
+		{
+			++InItr;
+			continue;
+		}
+		Node = Parser::ParseStmt(OutResult, InItr);
+		if (!Node)
+		{
+			return Block;
+		}
+		Block->MyNodes.push_back(Node);
+		if (Node->StaticClass() == TAstReturnNode().StaticClass())
+		{
+			Block->ReturnList.push_back(StaticCast<TAstReturnNode>(Node));
+		}
+		else if (!Node->EvaluateType())
+		{
+			if (Node->StaticClass() == TAstIfNode().StaticClass())
+			{
+				TSharedPtr<TAstIfNode> IfNode = StaticCast<TAstIfNode>(Node);
+				if (IfNode->MyTrueExpr && IfNode->MyTrueExpr->StaticClass() == TAstBlockNode().StaticClass())
+				{
+					const Lime::TArray<TSharedPtr<TAstReturnNode>>& ChildReturnList = StaticCast<TAstBlockNode>(IfNode->MyTrueExpr)->ReturnList;
+					Block->ReturnList.insert(Block->ReturnList.end(), ChildReturnList.begin(), ChildReturnList.end());
+				}
+				if (IfNode->MyFalseExpr && IfNode->MyFalseExpr->StaticClass() == TAstBlockNode().StaticClass())
+				{
+					const Lime::TArray<TSharedPtr<TAstReturnNode>>& ChildReturnList = StaticCast<TAstBlockNode>(IfNode->MyTrueExpr)->ReturnList;
+					Block->ReturnList.insert(Block->ReturnList.end(), ChildReturnList.begin(), ChildReturnList.end());
+				}
+			}
+			else if (Node->StaticClass() == TAstWhileNode().StaticClass())
+			{
+				TSharedPtr<TAstWhileNode> WhileNode = StaticCast<TAstWhileNode>(Node);
+				if (WhileNode->MyBlockExpr && WhileNode->StaticClass() == TAstBlockNode().StaticClass())
+				{
+					const Lime::TArray<TSharedPtr<TAstReturnNode>>& ChildReturnList = StaticCast<TAstBlockNode>(WhileNode->MyBlockExpr)->ReturnList;
+					Block->ReturnList.insert(Block->ReturnList.end(), ChildReturnList.begin(), ChildReturnList.end());
+				}
+			}
+			else if (Node->StaticClass() == TAstForNode().StaticClass())
+			{
+				TSharedPtr<TAstForNode> ForNode = StaticCast<TAstForNode>(Node);
+				if (ForNode->MyBlockExpr && ForNode->MyBlockExpr->StaticClass() == TAstBlockNode().StaticClass())
+				{
+					const Lime::TArray<TSharedPtr<TAstReturnNode>>& ChildReturnList = StaticCast<TAstBlockNode>(ForNode->MyBlockExpr)->ReturnList;
+					Block->ReturnList.insert(Block->ReturnList.end(), ChildReturnList.begin(), ChildReturnList.end());
+				}
+			}
+		}
+	}
+	++InItr;
+	return Block;
+}
+
 PARSE_FUNCTION_IMPLEMENT(ParseBlock)
 {
 	TSharedPtr<TAstBlockNode> Block = MakeShared<TAstBlockNode>();
@@ -114,12 +180,17 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 		TOption<TVarInfo> VarInfo = OutResult.CurrentBlock->GetInfo(TmpItr->MyLetter);
 		if (!VarInfo)
 		{
-			TUtf32String Message = U'`';
-			Message += TmpItr->MyLetter.GetString();
-			Message += U"` is not defined";
+			TSharedPtr<TAstBaseNode> CallNode = Parser::ParseFunctionCall(OutResult, TmpItr);
 			InItr = TmpItr;
-
-			return OutResult.MakeError(TmpItr, Message);
+			if (!CallNode)
+			{
+				TUtf32String Message = U'`';
+				Message += TmpItr->MyLetter.GetString();
+				Message += U"` is not defined";
+				InItr = ++TmpItr;
+				return OutResult.MakeError(TmpItr, Message);
+			}
+			return CallNode;
 		}
 		Var->MyBlock = OutResult.MyVariableTable.GetBlock(VarInfo->MyScope);
 		Var->MyType = VarInfo->MyType;
@@ -555,12 +626,18 @@ PARSE_FUNCTION_IMPLEMENT(ParseReturn)
 		if (Node->MyExpr && !Node->MyExpr->EvaluateType())
 		{
 			InItr = TmpItr;
-			return OutResult.MakeError(Node->MyPosition, U"expected expression");
+			while (InItr->MyLetter.MyHashValue != U';' && InItr->MyLetter.MyHashValue != U'\0')
+			{
+				++InItr;
+			}
+			Node->MyExpr = OutResult.MakeError(Node->MyPosition, U"expected expression");
+			return Node;
 		}
 		if (TmpItr->MyLetter.MyHashValue != U';')
 		{
 			InItr = TmpItr;
-			return OutResult.MakeError(TmpItr, U"Not found semicolon");
+			Node->MyExpr = OutResult.MakeError(TmpItr, U"Not found semicolon");
+			return Node;
 		}
 	}
 	InItr = ++TmpItr;
@@ -771,8 +848,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 	}
 
 	Lime::TArray<THashString> Arguments;
-	TSharedPtr<TBlockEntry> CurrentBlock = OutResult.CurrentBlock;
-	OutResult.CurrentBlock = OutResult.MyVariableTable.AddBlock(CurrentBlock, U"DummyBlock" + OutResult.GenerateUniqueStr());
+	OutResult.CurrentBlock = OutResult.MyVariableTable.AddBlock(OutResult.CurrentBlock, U"Block_" + Node->MyFunctionName->MyLetter);
 
 	do {
 		++TmpItr;
@@ -814,11 +890,11 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 	}
 	++TmpItr;
 
-	Node->MyBlockExpr = Parser::ParseBlock(OutResult, TmpItr);
+	Node->MyBlockExpr = Parser::ParseBlockNoCreate(OutResult, TmpItr);
 	if (Node->MyBlockExpr && Node->MyBlockExpr->StaticClass() == TAstBlockNode().StaticClass())
 	{
 		TSharedPtr<TAstBlockNode> Block = StaticCast<TAstBlockNode>(Node->MyBlockExpr);
-		Block->MyBlockName = TUtf32String(U"Block_") + Node->MyFunctionName->MyLetter;
+		Block->MyBlockName = U"Block_" + Node->MyFunctionName->MyLetter;
 
 		for (TSharedPtr<TAstReturnNode> ReturnTypePtr : Block->ReturnList)
 		{
@@ -837,19 +913,23 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 				{
 					Node->MyErrors.push_back(OutResult.MakeError(ReturnTypePtr->MyPosition, U"return value is not matched"));
 				}
+				TUtf32String Message;
+				switch (IsCastable) {
+				case CastErrorCode::LossCast:
+					Message = U"Argument type information drop cast(Expected : " + Node->MyReturnType.MyName + U", Actual : " + *ReturnType + U")";
+					ReturnTypePtr->MyWarning = OutResult.MakeWarning(ReturnTypePtr->MyPosition, Message);
+					break;
+				case CastErrorCode::ExplicitCastable:
+					Message = U"Argument type needs explicit cast(Expected : " + Node->MyReturnType.MyName + U", Actual : " + *ReturnType + U")";
+					ReturnTypePtr->MyWarning = OutResult.MakeWarning(ReturnTypePtr->MyPosition, Message);
+					break;
+				}
 			}
 		}
 	}
 	OutResult.MyTypeTable.AddDefine(TTypeInfo(Node->MyFunctionName->MyLetter, Arguments, Node->MyReturnType.MyName));
-
 	InItr = TmpItr;
 
-	OutResult.CurrentBlock.Swap(CurrentBlock);
-	OutResult.MyVariableTable.RemoveBlock(CurrentBlock->BlockName());
-	for (const Lime::TPair<THashString, TVarInfo>& Var : *CurrentBlock.Get())
-	{
-		OutResult.CurrentBlock->Define(Var.first, Var.second.MyType, Var.second.MyIsArray, Var.second.MyArrayCount);
-	}
 	return Node;
 }
 

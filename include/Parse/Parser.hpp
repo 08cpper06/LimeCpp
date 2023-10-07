@@ -19,6 +19,8 @@ public:
 CLASS_PRIVATE:
 	PARSE_FUNCTION(ParseBlock);
 
+	PARSE_FUNCTION(ParseBlockNoCreate);
+
 	PARSE_FUNCTION(ParseValue);
 
 	PARSE_FUNCTION(ParseAddSub);

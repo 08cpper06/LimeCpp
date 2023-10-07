@@ -72,7 +72,7 @@ public:
 CLASS_PRIVATE:
 	THashString MyBlockName;
 	Lime::TMap<THashString, TVarInfo> MyVariableTable;
-	TSharedPtr<TBlockEntry> MyParent;
+	TWeakPtr<TBlockEntry> MyParent;
 
 	friend class TVariableTable;
 };
@@ -90,5 +90,5 @@ public:
 CLASS_PRIVATE:
 	TSharedPtr<TBlockEntry> MyRootBlock;
 
-	Lime::TMap<THashString, TWeakPtr<TBlockEntry>> MyReferenceTable;
+	Lime::TMap<THashString, TSharedPtr<TBlockEntry>> MyReferenceTable;
 };
