@@ -569,3 +569,8 @@ inline TUtf32String operator+(const TUtf32StringView InLhs, const TUtf32StringVi
 {
 	return TUtf32String(InLhs.Bytes(), InLhs.CharCount()) + TUtf32String(InRhs.Bytes(), InRhs.CharCount());
 }
+
+inline TUtf32String operator+(bool InLhs, const TUtf32String& InRhs) noexcept = delete;
+inline TUtf32String operator+(bool InLhs, const TUtf32StringView InRhs) noexcept = delete;
+inline TUtf32String operator+(const TUtf32String& InLhs, bool InRhs) noexcept = delete;
+inline TUtf32String operator+(const TUtf32StringView InLhs, bool InRhs) noexcept = delete;
