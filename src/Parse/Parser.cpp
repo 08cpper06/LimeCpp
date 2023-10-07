@@ -46,6 +46,10 @@ PARSE_FUNCTION_IMPLEMENT(ParseBlock)
 			return Block;
 		}
 		Block->MyNodes.push_back(Node);
+		if (Node->StaticClass() == TAstReturnNode().StaticClass())
+		{
+			Block->ReturnList.push_back(StaticCast<TAstReturnNode>(Node));
+		}
 	}
 	OutResult.CurrentBlock = OldBlockEntry;
 	++InItr;
@@ -78,7 +82,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 			TUtf32String Message = U'`';
 			Message += TmpItr->MyLetter.GetString();
 			Message += U"` is not defined";
-			InItr = ++TmpItr;
+			InItr = TmpItr;
 
 			return OutResult.MakeError(TmpItr, Message);
 		}
@@ -286,11 +290,6 @@ PARSE_FUNCTION_IMPLEMENT(ParseExpr)
 		return Node;
 	}
 
-	Node = Parser::ParseVariableDefinition(OutResult, InItr);
-	if (Node)
-	{
-		return Node;
-	}
 	return Parser::ParseAssign(OutResult, InItr);
 }
 
@@ -443,6 +442,12 @@ PARSE_FUNCTION_IMPLEMENT(ParseStmt)
 		return Node;
 	}
 
+	Node = Parser::ParseVariableDefinition(OutResult, InItr);
+	if (Node)
+	{
+		return Node;
+	}
+
 	Node = Parser::ParseExpr(OutResult, InItr);
 	if (Node && Node->StaticClass() == TAstErrorNode().StaticClass())
 	{
@@ -508,9 +513,15 @@ PARSE_FUNCTION_IMPLEMENT(ParseReturn)
 	}
 	++TmpItr;
 	TSharedPtr<TAstReturnNode> Node = MakeShared<TAstReturnNode>();
+	Node->MyPosition = InItr;
 	if (TmpItr->MyLetter.MyHashValue != U';')
 	{
 		Node->MyExpr = Parser::ParseExpr(OutResult, TmpItr);
+		if (Node->MyExpr && !Node->MyExpr->EvaluateType())
+		{
+			InItr = TmpItr;
+			return OutResult.MakeError(Node->MyPosition, U"expected expression");
+		}
 		if (TmpItr->MyLetter.MyHashValue != U';')
 		{
 			InItr = TmpItr;
@@ -642,7 +653,11 @@ PARSE_FUNCTION_IMPLEMENT(ParseFor)
 	TSharedPtr<TAstBaseNode> InitializeExpr = nullptr;
 	if (TmpItr->MyLetter.MyHashValue != U';')
 	{
-		InitializeExpr = Parser::ParseExpr(OutResult, TmpItr);
+		InitializeExpr = Parser::ParseVariableDefinition(OutResult, TmpItr);
+		if (!InitializeExpr)
+		{
+			InitializeExpr = Parser::ParseExpr(OutResult, TmpItr);
+		}
 	}
 
 	if (TmpItr->MyLetter.MyHashValue != U';')
@@ -655,7 +670,11 @@ PARSE_FUNCTION_IMPLEMENT(ParseFor)
 	TSharedPtr<TAstBaseNode> ConditionExpr = nullptr;
 	if (TmpItr->MyLetter.MyHashValue != U';')
 	{
-		ConditionExpr = Parser::ParseExpr(OutResult, TmpItr);
+		ConditionExpr = Parser::ParseVariableDefinition(OutResult, TmpItr);
+		if (!ConditionExpr)
+		{
+			ConditionExpr = Parser::ParseExpr(OutResult, TmpItr);
+		}
 	}
 	if (TmpItr->MyLetter.MyHashValue != U';')
 	{
@@ -667,7 +686,11 @@ PARSE_FUNCTION_IMPLEMENT(ParseFor)
 	TSharedPtr<TAstBaseNode> UpdateExpr = nullptr;
 	if (TmpItr->MyLetter.MyHashValue != U')')
 	{
-		UpdateExpr = Parser::ParseExpr(OutResult, TmpItr);
+		UpdateExpr = Parser::ParseVariableDefinition(OutResult, TmpItr);
+		if (!UpdateExpr)
+		{
+			UpdateExpr = Parser::ParseExpr(OutResult, TmpItr);
+		}
 	}
 	if (TmpItr->MyLetter.MyHashValue != U')')
 	{

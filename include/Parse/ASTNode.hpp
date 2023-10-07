@@ -66,6 +66,19 @@ CLASS_PRIVATE:
 	friend class TAstFunctionCallNode;
 };
 
+class TAstReturnNode : public TAstBaseNode {
+public:
+	AST_BODY_CLASS(TAstReturnNode);
+
+	DEFINE_EVALUATE_TYPE(DefaultErrorType::Error);
+
+CLASS_PRIVATE:
+	TSharedPtr<TAstBaseNode> MyExpr;
+	Lime::TTokenIterator MyPosition;
+
+	friend class TAstReturnNode;
+};
+
 class TAstBlockNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstBlockNode);
@@ -74,6 +87,7 @@ public:
 
 CLASS_PRIVATE:
 	Lime::TList<TSharedPtr<TAstBaseNode>> MyNodes;
+	Lime::TArray<TSharedPtr<TAstReturnNode>> ReturnList;
 	TUtf32String MyBlockName;
 };
 
@@ -214,16 +228,6 @@ CLASS_PRIVATE:
 	TTypeInfo MyType;
 
 	friend class TAstFunctionCallNode;
-};
-
-class TAstReturnNode : public TAstBaseNode {
-public:
-	AST_BODY_CLASS(TAstReturnNode);
-
-	DEFINE_EVALUATE_TYPE(DefaultErrorType::Error);
-
-CLASS_PRIVATE:
-	TSharedPtr<TAstBaseNode> MyExpr;
 };
 
 class TAstIfNode : public TAstBaseNode {

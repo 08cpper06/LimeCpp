@@ -1,0 +1,36 @@
+<Block Name="Global">
+	<FunctionDefinition Name="sum" ReturnType="int">
+		<Arguments>
+			<Detail Type="int" Name="lhs"/>
+			<Detail Type="int" Name="rhs"/>
+		</Arguments>
+		<Block Name="Block_sum">
+			<Error Line=3 Message="expected expression"/>
+			<if>
+				<Evaluation>
+					<Equality Type="񑲹">
+						<Variable Type="int" Name="lhs"></Variable>
+						<Variable Type="int" Name="rhs"></Variable>
+					</Equality>
+				</Evaluation>
+				<IfTrue>
+					<Block Name="Anonymous_2">
+					</Block>
+				</IfTrue>
+			</If>
+		</Block>
+	</FunctionDefinition>
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
+		<Block Name="Block_main">
+			<Return>
+				<FunctionCall Name="sum">
+					<Arguments>
+						<Detail Type="int" Value="1"/>
+						<Detail Type="int" Value="2"/>
+					</Arguments>
+				</FunctionCall>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>
