@@ -898,7 +898,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 	}
 
 	Lime::size_t ArgIndex = 0;
-	const Lime::TArray<THashString>& ArgumentTypes = TypeInfo->MyMemberVariable;
+	const Lime::TArray<THashString>& DefinedArgumentTypes = TypeInfo->MyMemberVariable;
 
 	do {
 		++TmpItr;
@@ -909,46 +909,44 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 			InItr = TmpItr;
 			return OutResult.MakeError(TmpItr, U"Expected expression");
 		}
+
+		if (Argument->StaticClass() == TAstErrorNode().StaticClass())
+		{
+			Node->MyArguments.push_back({ Argument, nullptr });
+		}
 		else
 		{
-			if (Argument->StaticClass() == TAstErrorNode().StaticClass())
+			TOption<THashString> SpecifiedArgumentType = Argument->EvaluateType();
+
+			if (!SpecifiedArgumentType)
 			{
-				Node->MyArguments.push_back({ Argument, nullptr });
+				Node->MyArguments.push_back({ nullptr, OutResult.MakeError(TmpItr, U"Expected expression") });
+			}
+			else if (ArgIndex >= DefinedArgumentTypes.size())
+			{
+				Node->MyArguments.push_back({ nullptr, OutResult.MakeError(TmpItr, U"Too much arguments") });
 			}
 			else
 			{
-				TOption<THashString> DefinedArgumentType = Argument->EvaluateType();
-
-				if (!DefinedArgumentType)
-				{
-					Node->MyArguments.push_back({ nullptr, OutResult.MakeError(TmpItr, U"Expected expression") });
-				}
-				else if (ArgIndex >= ArgumentTypes.size())
-				{
-					Node->MyArguments.push_back({ nullptr, OutResult.MakeError(TmpItr, U"Too much arguments") });
-				}
-				else
-				{
-					TTypeInfo ArgumentTypeInfo = *OutResult.MyTypeTable.GetInfo(*DefinedArgumentType);
-					CastErrorCode IsCastable = ArgumentTypeInfo.IsCastable(ArgumentTypes[ArgIndex]);
-					TUtf32String Message;
-					switch (IsCastable) {
-					case CastErrorCode::NotCastable:
-						Message = U"Argument type is not matched(Expected : " + ArgumentTypes[ArgIndex] + U", Actual : " + *DefinedArgumentType + U")";
-						Node->MyArguments.push_back({ Argument, OutResult.MakeError(TmpItr, Message) });
-						break;
-					case CastErrorCode::LossCast:
-						Message = U"Argument type information drop cast(Expected : " + ArgumentTypes[ArgIndex] + U", Actual : " + *DefinedArgumentType + U")";
-						Node->MyArguments.push_back({ Argument, OutResult.MakeWarning(TmpItr, Message) });
-						break;
-					case CastErrorCode::ExplicitCastable:
-						Message = U"Argument type needs explicit cast(Expected : " + ArgumentTypes[ArgIndex] + U", Actual : " + *DefinedArgumentType + U")";
-						Node->MyArguments.push_back({ Argument, OutResult.MakeWarning(TmpItr, Message) });
-						break;
-					case CastErrorCode::Castable:
-						Node->MyArguments.push_back({ Argument, nullptr });
-						break;
-					}
+				TTypeInfo ArgumentTypeInfo = *OutResult.MyTypeTable.GetInfo(*SpecifiedArgumentType);
+				CastErrorCode IsCastable = ArgumentTypeInfo.IsCastable(DefinedArgumentTypes[ArgIndex]);
+				TUtf32String Message;
+				switch (IsCastable) {
+				case CastErrorCode::NotCastable:
+					Message = U"Argument type is not matched(Expected : " + DefinedArgumentTypes[ArgIndex] + U", Actual : " + *SpecifiedArgumentType + U")";
+					Node->MyArguments.push_back({ Argument, OutResult.MakeError(TmpItr, Message) });
+					break;
+				case CastErrorCode::LossCast:
+					Message = U"Argument type information drop cast(Expected : " + DefinedArgumentTypes[ArgIndex] + U", Actual : " + *SpecifiedArgumentType + U")";
+					Node->MyArguments.push_back({ Argument, OutResult.MakeWarning(TmpItr, Message) });
+					break;
+				case CastErrorCode::ExplicitCastable:
+					Message = U"Argument type needs explicit cast(Expected : " + DefinedArgumentTypes[ArgIndex] + U", Actual : " + *SpecifiedArgumentType + U")";
+					Node->MyArguments.push_back({ Argument, OutResult.MakeWarning(TmpItr, Message) });
+					break;
+				case CastErrorCode::Castable:
+					Node->MyArguments.push_back({ Argument, nullptr });
+					break;
 				}
 			}
 		}
@@ -962,6 +960,11 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 	}
 	++TmpItr;
 	InItr = TmpItr;
+
+	if (DefinedArgumentTypes.size() > ArgIndex)
+	{
+		Node->MyError = OutResult.MakeError(TmpItr, U"Too short aruments");
+	}
 
 	return Node;
 }

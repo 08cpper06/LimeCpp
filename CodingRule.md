@@ -15,3 +15,13 @@
 
 # File Name Rules
 - camel case
+
+# Variable Name Rules Table
+
+| Word | VariableName |
+| --- | --- |
+| Index | Idx |
+| Argument | Arg |
+| Temporary | Tmp |
+| Expression | Expr |
+| Information | Info |
