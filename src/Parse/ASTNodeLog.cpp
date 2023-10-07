@@ -12,6 +12,16 @@ TUtf32String TAstErrorNode::GetInfoString(TUtf32String InPrefix) const
 	return Str;
 }
 
+TUtf32String TAstWarningNode::GetInfoString(TUtf32String InPrefix) const
+{
+	TUtf32String Str = InPrefix + U"<Warning Line=";
+	TUtf32String LineNumber = *String::ConvertCharToUtf32(
+		reinterpret_cast<const char8_t*>(std::to_string(MyPosition->MyLine).c_str()));
+	Str += LineNumber;
+	Str += U" Message=\"" + MyMessage + U"\"/>\n";
+	return Str;
+}
+
 TUtf32String TAstBlockNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<Block Name=\"" + MyBlockName + U"\">\n";
@@ -279,11 +289,16 @@ TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 	else
 	{
 		Str += InPrefix + U"\t<Arguments>\n";
-		for (TSharedPtr<TAstBaseNode> Value : MyArguments)
+		for (Lime::TPair<TSharedPtr<TAstBaseNode>, TSharedPtr<TAstBaseNode>> Value : MyArguments)
 		{
-			if (Value->StaticClass() == TAstValNode().StaticClass())
+			if (Value.second && Value.second->StaticClass() == TAstErrorNode().StaticClass())
 			{
-				TSharedPtr<TAstValNode> TmpNode = StaticCast<TAstValNode>(Value);
+				Str += Value.second->GetInfoString(InPrefix + U"\t\t");
+				continue;
+			}
+			if (Value.first->StaticClass() == TAstValNode().StaticClass())
+			{
+				TSharedPtr<TAstValNode> TmpNode = StaticCast<TAstValNode>(Value.first);
 				Str += InPrefix + U"\t\t<Detail Type=\"";
 				Str += TmpNode->MyType.MyName;
 				TUtf32String ValueStr;
@@ -291,11 +306,11 @@ TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 				{
 					ValueStr += Itr->MyLetter.GetString();
 				}
-				Str += U"\" Value=\"" + ValueStr + U"\"/>\n";
+				Str += U"\" Value=\"" + ValueStr + U"\"";
 			}
-			else if (Value->StaticClass() == TAstVarNode().StaticClass())
+			else if (Value.first->StaticClass() == TAstVarNode().StaticClass())
 			{
-				TSharedPtr<TAstVarNode> TmpNode = StaticCast<TAstVarNode>(Value);
+				TSharedPtr<TAstVarNode> TmpNode = StaticCast<TAstVarNode>(Value.first);
 				TVarInfo Info;
 				{
 					TSharedPtr<TBlockEntry> Block = TmpNode->MyBlock.Lock();
@@ -307,19 +322,28 @@ TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 					Str += Info.MyName + U"[]";
 					Str += U"\" Name=\"" + Info.MyName + U"\" Count=\"";
 					Str += ToUtf32String(Info.MyArrayCount);
-					Str += U"\"/>\n";
+					Str += U"\"";
 				}
 				else
 				{
 					Str += InPrefix + U"\t\t<Detail Type=\"";
 					Str += Info.MyName;
-					Str += U"\" Name=\"" + Info.MyName + U"\"/>\n";
+					Str += U"\" Name=\"" + Info.MyName + U"\"";
 				}
 			}
-			else if (Value->StaticClass() == TAstErrorNode().StaticClass())
+			else if (Value.first->StaticClass() == TAstErrorNode().StaticClass() ||
+					Value.first->StaticClass() == TAstWarningNode().StaticClass())
 			{
-				Str += Value->GetInfoString(InPrefix + U"\t\t");
+				Str += Value.first->GetInfoString(InPrefix + U"\t\t");
 			}
+
+			if (Value.second)
+			{
+				TSharedPtr<TAstWarningNode> WarningNode = StaticCast<TAstWarningNode>(Value.second);
+				Str += U" Warning=\"" + WarningNode->MyMessage + U'\"';
+			}
+			Str += U"/>\n";
+
 		}
 		Str += InPrefix + U"\t</Arguments>\n";
 	}

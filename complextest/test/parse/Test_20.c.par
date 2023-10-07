@@ -20,7 +20,7 @@
 				<FunctionCall Name="sum">
 					<Arguments>
 						<Detail Type="int" Value="1"/>
-						<Error Line=8 Message="Argument type is not matched(Expected : int, Actual : float)"/>
+						<Detail Type="float" Value="2.1" Warning="Argument type information drop cast(Expected : int, Actual : float)"/>
 					</Arguments>
 				</FunctionCall>
 			</Return>

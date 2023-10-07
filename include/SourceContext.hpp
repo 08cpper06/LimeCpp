@@ -16,6 +16,14 @@ public:
 		MyErrorList.push_back(Error);
 		return Error;
 	}
+	TSharedPtr<TAstWarningNode> MakeWarning(Lime::TTokenIterator InItr, TUtf32String InMessage)
+	{
+		TSharedPtr<TAstWarningNode> Warning = MakeShared<TAstWarningNode>();
+		Warning->MyPosition = InItr;
+		Warning->MyMessage = InMessage;
+		MyWarningList.push_back(Warning);
+		return Warning;
+	}
 	TUtf32String GenerateUniqueStr()
 	{
 		return ToUtf32String(UniqueID++);
@@ -23,6 +31,7 @@ public:
 
 	TSharedPtr<TAstBaseNode> MyASTRoot;
 	Lime::TList<TSharedPtr<TAstErrorNode>> MyErrorList;
+	Lime::TList<TSharedPtr<TAstWarningNode>> MyWarningList;
 	TTypeTable MyTypeTable;
 	TVariableTable MyVariableTable;
 

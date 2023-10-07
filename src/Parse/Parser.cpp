@@ -160,6 +160,17 @@ PARSE_FUNCTION_IMPLEMENT(ParseAddSub)
 		case U'-':
 			Node = MakeShared<TAstAddSubNode>();
 			Node->MyLhs = Lhs;
+			if (TOption<THashString> LhsType = Node->MyLhs->EvaluateType())
+			{
+				Node->MyLhsType = *OutResult.MyTypeTable.GetInfo(*LhsType);
+			}
+			else
+			{
+				TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found Rhs of `*` or `/`");
+				Node->MyLhs = Error;
+				InItr = TmpItr;
+				return Node;
+			}
 			Node->MyOperator = TmpItr;
 			++TmpItr;
 			Value = Parser::ParseMulDiv(OutResult, TmpItr);
@@ -173,6 +184,18 @@ PARSE_FUNCTION_IMPLEMENT(ParseAddSub)
 			else
 			{
 				Node->MyRhs = Value;
+			}
+
+			if (TOption<THashString> RhsType = Node->MyRhs->EvaluateType())
+			{
+				Node->MyRhsType = *OutResult.MyTypeTable.GetInfo(*RhsType);
+			}
+			else
+			{
+				TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found Rhs of `*` or `/`");
+				Node->MyRhs = Error;
+				InItr = TmpItr;
+				return Node;
 			}
 			Lhs = Node;
 			break;
@@ -202,6 +225,17 @@ PARSE_FUNCTION_IMPLEMENT(ParseMulDiv)
 		case U'/':
 			Node = MakeShared<TAstMulDivNode>();
 			Node->MyLhs = Lhs;
+			if (TOption<THashString> LhsType = Node->MyLhs->EvaluateType())
+			{
+				Node->MyLhsType = *OutResult.MyTypeTable.GetInfo(*LhsType);
+			}
+			else
+			{
+				TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found Rhs of `*` or `/`");
+				Node->MyLhs = Error;
+				InItr = TmpItr;
+				return Node;
+			}
 			Node->MyOperator = TmpItr;
 			++TmpItr;
 			Value = Parser::ParseUnary(OutResult, TmpItr);
@@ -215,6 +249,18 @@ PARSE_FUNCTION_IMPLEMENT(ParseMulDiv)
 			else
 			{
 				Node->MyRhs = Value;
+			}
+
+			if (TOption<THashString> RhsType = Node->MyRhs->EvaluateType())
+			{
+				Node->MyRhsType = *OutResult.MyTypeTable.GetInfo(*RhsType);
+			}
+			else
+			{
+				TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found Rhs of `*` or `/`");
+				Node->MyRhs = Error;
+				InItr = TmpItr;
+				return Node;
 			}
 			Lhs = Node;
 			break;
@@ -467,9 +513,8 @@ PARSE_FUNCTION_IMPLEMENT(ParseReturn)
 		Node->MyExpr = Parser::ParseExpr(OutResult, TmpItr);
 		if (TmpItr->MyLetter.MyHashValue != U';')
 		{
-			TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(TmpItr, U"Not found semicolon");
 			InItr = TmpItr;
-			return Error;
+			return OutResult.MakeError(TmpItr, U"Not found semicolon");
 		}
 	}
 	InItr = ++TmpItr;
@@ -844,6 +889,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 	}
 	TSharedPtr<TAstFunctionCallNode> Node = MakeShared<TAstFunctionCallNode>();
 	Node->MyFunction = *TypeInfo;
+	
 	++TmpItr;
 
 	if (TmpItr->MyLetter.MyHashValue != U'(')
@@ -867,33 +913,41 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 		{
 			if (Argument->StaticClass() == TAstErrorNode().StaticClass())
 			{
-				Node->MyArguments.push_back(Argument);
+				Node->MyArguments.push_back({ Argument, nullptr });
 			}
 			else
 			{
-				THashString DefinedArgumentType;
-				if (Argument->StaticClass() == TAstValNode().StaticClass())
+				TOption<THashString> DefinedArgumentType = Argument->EvaluateType();
+
+				if (!DefinedArgumentType)
 				{
-					DefinedArgumentType = StaticCast<TAstValNode>(Argument)->MyType.MyName;
+					Node->MyArguments.push_back({ nullptr, OutResult.MakeError(TmpItr, U"Expected expression") });
 				}
-				else if (Argument->StaticClass() == TAstValNode().StaticClass())
+				else if (ArgIndex >= ArgumentTypes.size())
 				{
-					DefinedArgumentType = StaticCast<TAstVarNode>(Argument)->MyType.MyName;
-				}
-				if (ArgIndex >= ArgumentTypes.size())
-				{
-					Node->MyArguments.push_back(OutResult.MakeError(TmpItr, U"Too much arguments"));
+					Node->MyArguments.push_back({ nullptr, OutResult.MakeError(TmpItr, U"Too much arguments") });
 				}
 				else
 				{
-					if (ArgumentTypes[ArgIndex] != DefinedArgumentType)
-					{
-						TUtf32String Message = U"Argument type is not matched(Expected : " + ArgumentTypes[ArgIndex] + U", Actual : " + DefinedArgumentType + U")";
-						Node->MyArguments.push_back(OutResult.MakeError(TmpItr, Message));
-					}
-					else
-					{
-						Node->MyArguments.push_back(Argument);
+					TTypeInfo ArgumentTypeInfo = *OutResult.MyTypeTable.GetInfo(*DefinedArgumentType);
+					CastErrorCode IsCastable = ArgumentTypeInfo.IsCastable(ArgumentTypes[ArgIndex]);
+					TUtf32String Message;
+					switch (IsCastable) {
+					case CastErrorCode::NotCastable:
+						Message = U"Argument type is not matched(Expected : " + ArgumentTypes[ArgIndex] + U", Actual : " + *DefinedArgumentType + U")";
+						Node->MyArguments.push_back({ Argument, OutResult.MakeError(TmpItr, Message) });
+						break;
+					case CastErrorCode::LossCast:
+						Message = U"Argument type information drop cast(Expected : " + ArgumentTypes[ArgIndex] + U", Actual : " + *DefinedArgumentType + U")";
+						Node->MyArguments.push_back({ Argument, OutResult.MakeWarning(TmpItr, Message) });
+						break;
+					case CastErrorCode::ExplicitCastable:
+						Message = U"Argument type needs explicit cast(Expected : " + ArgumentTypes[ArgIndex] + U", Actual : " + *DefinedArgumentType + U")";
+						Node->MyArguments.push_back({ Argument, OutResult.MakeWarning(TmpItr, Message) });
+						break;
+					case CastErrorCode::Castable:
+						Node->MyArguments.push_back({ Argument, nullptr });
+						break;
 					}
 				}
 			}
