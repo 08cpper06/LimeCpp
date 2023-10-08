@@ -2,7 +2,7 @@
 	<FunctionDefinition Name="main" ReturnType="int">
 		<Arguments></Arguments>
 		<Block Name="Block_main">
-			<Return>
+			<Return Warning="Argument type information drop cast(Expected : int, Actual : float)">
 				<Val Type="float">2.1</Val>
 			</Return>
 		</Block>
