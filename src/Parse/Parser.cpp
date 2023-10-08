@@ -852,7 +852,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 
 	do {
 		++TmpItr;
-		/* Is Already Defined Type? */
+		/* Check whether this function is undefined */
 		TOption<TTypeInfo> ArgumentsTypeInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
 		if (ArgumentsTypeInfo)
 		{
@@ -1040,13 +1040,11 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 {
 	Lime::TTokenIterator TmpItr = InItr;
-	TOption<TTypeInfo> TypeInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
-	if (!TypeInfo || !(TypeInfo->MyReturnType))
-	{
-		return nullptr;
-	}
+	Lime::TTokenIterator SaveFunctionName = InItr;
+
+	TOption<TTypeInfo> FunctionDefineInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
 	TSharedPtr<TAstFunctionCallNode> Node = MakeShared<TAstFunctionCallNode>();
-	Node->MyFunction = *TypeInfo;
+	Node->MyFunction = *FunctionDefineInfo;
 	
 	++TmpItr;
 
@@ -1055,60 +1053,17 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 		return nullptr;
 	}
 
-	Lime::size_t ArgIndex = 0;
-	const Lime::TArray<THashString>& DefinedArgumentTypes = TypeInfo->MyMemberVariable;
-
+	Lime::TArray<TSharedPtr<TAstBaseNode>> ArgumentNodeList;
 	do {
 		++TmpItr;
-
-		TSharedPtr<TAstBaseNode> Argument = Parser::ParseValue(OutResult, TmpItr);
-		if (!Argument)
+		TSharedPtr<TAstBaseNode> ArgumentNode = Parser::ParseValue(OutResult, TmpItr);
+		if (!ArgumentNode)
 		{
 			InItr = TmpItr;
 			return OutResult.MakeError(TmpItr, U"Expected expression");
 		}
 
-		if (Argument->StaticClass() == TAstErrorNode().StaticClass())
-		{
-			Node->MyArguments.push_back({ Argument, nullptr });
-		}
-		else
-		{
-			TOption<THashString> SpecifiedArgumentType = Argument->EvaluateType();
-
-			if (!SpecifiedArgumentType)
-			{
-				Node->MyArguments.push_back({ nullptr, OutResult.MakeError(TmpItr, U"Expected expression") });
-			}
-			else if (ArgIndex >= DefinedArgumentTypes.size())
-			{
-				Node->MyArguments.push_back({ nullptr, OutResult.MakeError(TmpItr, U"Too much arguments") });
-			}
-			else
-			{
-				TTypeInfo ArgumentTypeInfo = *OutResult.MyTypeTable.GetInfo(*SpecifiedArgumentType);
-				CastErrorCode IsCastable = ArgumentTypeInfo.IsCastable(DefinedArgumentTypes[ArgIndex]);
-				TUtf32String Message;
-				switch (IsCastable) {
-				case CastErrorCode::NotCastable:
-					Message = U"Argument type is not matched(Expected : " + DefinedArgumentTypes[ArgIndex] + U", Actual : " + *SpecifiedArgumentType + U")";
-					Node->MyArguments.push_back({ Argument, OutResult.MakeError(TmpItr, Message) });
-					break;
-				case CastErrorCode::LossCast:
-					Message = U"Argument type information drop cast(Expected : " + DefinedArgumentTypes[ArgIndex] + U", Actual : " + *SpecifiedArgumentType + U")";
-					Node->MyArguments.push_back({ Argument, OutResult.MakeWarning(TmpItr, Message) });
-					break;
-				case CastErrorCode::ExplicitCastable:
-					Message = U"Argument type needs explicit cast(Expected : " + DefinedArgumentTypes[ArgIndex] + U", Actual : " + *SpecifiedArgumentType + U")";
-					Node->MyArguments.push_back({ Argument, OutResult.MakeWarning(TmpItr, Message) });
-					break;
-				case CastErrorCode::Castable:
-					Node->MyArguments.push_back({ Argument, nullptr });
-					break;
-				}
-			}
-		}
-		++ArgIndex;
+		ArgumentNodeList.push_back(ArgumentNode);
 	} while (TmpItr->MyLetter.MyHashValue == U',');
 
 	if (TmpItr->MyLetter.MyHashValue != U')')
@@ -1119,9 +1074,63 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 	++TmpItr;
 	InItr = TmpItr;
 
-	if (DefinedArgumentTypes.size() > ArgIndex)
+	/* Check whether this function is defined */
+	if (!FunctionDefineInfo  || !(FunctionDefineInfo->MyReturnType))
 	{
-		Node->MyError = OutResult.MakeError(TmpItr, U"Too short aruments");
+		return OutResult.MakeError(SaveFunctionName, U'`' + SaveFunctionName->MyLetter + U"` is not defined");
+	}
+
+	/* Check wther these argument type is matched */
+	Lime::size_t ArgIdx = 0;
+	const Lime::TArray<THashString>& ExpectArgument = FunctionDefineInfo->MyMemberVariable;
+	for (TSharedPtr<TAstBaseNode> Argument : ArgumentNodeList)
+	{
+		if (Argument->StaticClass() == TAstErrorNode().StaticClass())
+		{
+			Node->MyArguments.push_back({ nullptr, Argument });
+		}
+		else
+		{
+			TOption<THashString> ActualArgumentType = Argument->EvaluateType();
+			if (!ActualArgumentType) /* Check whether this argument is evaluatable type */
+			{
+				Node->MyArguments.push_back({ nullptr, OutResult.MakeError(TmpItr, U"Expected expression") });
+			}
+			else if (ArgIdx > FunctionDefineInfo->MyMemberVariable.size()) /* Check whether argument count is too much */
+			{
+				Node->MyArguments.push_back({ nullptr, OutResult.MakeError(TmpItr, U"Too much arguments") });
+			}
+			else /* Check whether argument is matched */
+			{
+				TTypeInfo ArgumentTypeInfo = *OutResult.MyTypeTable.GetInfo(*ActualArgumentType);
+				CastErrorCode IsCastable = ArgumentTypeInfo.IsCastable(ExpectArgument[ArgIdx]);
+				TUtf32String Message;
+				switch (IsCastable) {
+				case CastErrorCode::NotCastable:
+					Message = U"Argument type is not matched(Expected : " + ExpectArgument[ArgIdx] + U", Actual : " + *ActualArgumentType + U")";
+					Node->MyArguments.push_back({ Argument, OutResult.MakeError(TmpItr, Message) });
+					break;
+				case CastErrorCode::LossCast:
+					Message = U"Argument type information drop cast(Expected : " + ExpectArgument[ArgIdx] + U", Actual : " + *ActualArgumentType + U")";
+					Node->MyArguments.push_back({ Argument, OutResult.MakeWarning(TmpItr, Message) });
+					break;
+				case CastErrorCode::ExplicitCastable:
+					Message = U"Argument type needs explicit cast(Expected : " + ExpectArgument[ArgIdx] + U", Actual : " + *ActualArgumentType + U")";
+					Node->MyArguments.push_back({ Argument, OutResult.MakeWarning(TmpItr, Message) });
+					break;
+				case CastErrorCode::Castable:
+					Node->MyArguments.push_back({ Argument, nullptr });
+					break;
+				}
+			}
+		}
+		++ArgIdx;
+	}
+
+	/* Check whether this function argument count is matched */
+	if (Node->MyArguments.size() < FunctionDefineInfo->MyMemberVariable.size())
+	{
+		Node->MyError = OutResult.MakeError(SaveFunctionName, U'`' + SaveFunctionName->MyLetter + U"` function is too short arguments");
 	}
 
 	return Node;

@@ -1,0 +1,41 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
+		<Block Name="Block_main">
+			<VariableDefinition Type="int" Name="sum_val">
+				<Val Type="int">0</Val>
+			</VariableDefinition>
+			<For>
+				<Initialize>
+					<VariableDefinition Type="int" Name="i">
+						<Val Type="int">0</Val>
+					</VariableDefinition>
+				</Initialize>
+				<Condition>
+					<Relational Type="<">
+						<Variable Type="int" Name="i"></Variable>
+						<Val Type="int">10</Val>
+					</Relational>
+				</Condition>
+				<Continus>
+					<Assign>
+						<Variable Type="int" Name="i"></Variable>
+						<Operator Type="+">
+							<Variable Type="int" Name="i"></Variable>
+							<Val Type="int">1</Val>
+						</Operator>
+					</Assign>
+				</Continus>
+				<Block Name="Anonymous_0">
+					<Assign>
+						<Variable Type="int" Name="sum_val"></Variable>
+						<Error Line=6 Message="`sum` is not defined"/>
+					</Assign>
+				</Block>
+			</For>
+			<Return>
+				<Variable Type="int" Name="sum_val"></Variable>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>

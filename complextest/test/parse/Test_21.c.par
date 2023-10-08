@@ -18,7 +18,7 @@
 		<Block Name="Block_main">
 			<Return>
 				<FunctionCall Name="sum">
-					<Error Line=8 Message="Too short aruments"/>
+					<Error Line=8 Message="`sum` function is too short arguments"/>
 				</FunctionCall>
 			</Return>
 		</Block>
