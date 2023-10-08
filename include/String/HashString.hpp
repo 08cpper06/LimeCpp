@@ -8,8 +8,18 @@
 #include "Utf8StringView.hpp"
 #include "EncodingConverter.hpp"
 
+#include <source_location>
+
 
 class THashString {
+#if defined(_DEBUG)
+private:
+	struct DebugStr {
+		TUtf32String Str;
+		std::source_location RegisterLocation;
+	};
+#endif
+
 public:
 	THashString() :
 		MyHashValue(0),
@@ -17,10 +27,13 @@ public:
 	{}
 	~THashString() = default;
 
+	template <class Type, class UEnum>
+	THashString(TOption<Type, UEnum>) = delete;
+
 	THashString& operator=(const THashString&) = default;
 	THashString(const THashString&) = default;
 
-	THashString(const TUtf8String& InStr)
+	THashString(const TUtf8String& InStr, std::source_location InLocation = std::source_location::current())
 	{
 		CalcHashValue(InStr.begin(), InStr.end());
 		auto Itr = StringTable.find(MyHashValue);
@@ -28,7 +41,7 @@ public:
 		{
 			TOption<TUtf32String, ConvertEncodingError> ConvStr = String::ConvertToUtf32(InStr.Bytes());
 			StringTable.insert({ MyHashValue, LastIndex++ });
-			Pool.push_back(*ConvStr);
+			SetStrAtPool(*ConvStr, InLocation);
 			Index = LastIndex - 1;
 		}
 		else
@@ -36,7 +49,7 @@ public:
 			Index = Itr->second;
 		}
 	}
-	THashString(TUtf8StringView InStr)
+	THashString(TUtf8StringView InStr, std::source_location InLocation = std::source_location::current())
 	{
 		CalcHashValue(InStr.begin(), InStr.end());
 		auto Itr = StringTable.find(MyHashValue);
@@ -44,7 +57,7 @@ public:
 		{
 			TOption<TUtf32String, ConvertEncodingError> ConvStr = String::ConvertToUtf32(InStr);
 			StringTable.insert({ MyHashValue, LastIndex++ });
-			Pool.push_back(*ConvStr);
+			SetStrAtPool(*ConvStr, InLocation);
 			Index = LastIndex - 1;
 		}
 		else
@@ -52,7 +65,7 @@ public:
 			Index = Itr->second;
 		}
 	}
-	THashString(const TUtf32String& InStr)
+	THashString(const TUtf32String& InStr, std::source_location InLocation = std::source_location::current())
 	{
 		TUtf32String Str;
 		Str.Reserve(InStr.BufferSize());
@@ -65,7 +78,7 @@ public:
 		if (Itr == StringTable.end())
 		{
 			StringTable.insert({ MyHashValue, LastIndex++ });
-			Pool.push_back(Str);
+			SetStrAtPool(Str, InLocation);
 			Index = LastIndex - 1;
 		}
 		else
@@ -73,7 +86,7 @@ public:
 			Index = Itr->second;
 		}
 	}
-	THashString(TUtf32StringView InStr)
+	THashString(TUtf32StringView InStr, std::source_location InLocation = std::source_location::current())
 	{
 		TUtf32String Str;
 		Str.Reserve(InStr.BufferSize());
@@ -86,7 +99,7 @@ public:
 		if (Itr == StringTable.end())
 		{
 			StringTable.insert({ MyHashValue, LastIndex++ });
-			Pool.push_back(Str);
+			SetStrAtPool(Str, InLocation);
 			Index = LastIndex - 1;
 		}
 		else
@@ -94,7 +107,7 @@ public:
 			Index = Itr->second;
 		}
 	}
-	THashString(const char32_t* InStr)
+	THashString(const char32_t* InStr, std::source_location InLocation = std::source_location::current())
 	{
 		TOption<TUtf8String, ConvertEncodingError> Str = String::ConvertToUtf8(InStr);
 		CalcHashValue(Str->Bytes());
@@ -102,7 +115,7 @@ public:
 		if (Itr == StringTable.end())
 		{
 			StringTable.insert({ MyHashValue, LastIndex++ });
-			Pool.push_back(InStr);
+			SetStrAtPool(InStr, InLocation);
 			Index = LastIndex - 1;
 		}
 		else
@@ -110,7 +123,7 @@ public:
 			Index = Itr->second;
 		}
 	}
-	THashString(const char32_t InChar)
+	THashString(const char32_t InChar, std::source_location InLocation = std::source_location::current())
 	{
 		TChar Char = String::ConvertCharToUtf8(InChar);
 		CalcHashValue(Char.MyData);
@@ -118,7 +131,7 @@ public:
 		if (Itr == StringTable.end())
 		{
 			StringTable.insert({ MyHashValue, LastIndex++ });
-			Pool.push_back(TUtf32String(InChar));
+			SetStrAtPool(TUtf32String(InChar), InLocation);
 			Index = LastIndex - 1;
 		}
 		else
@@ -129,7 +142,11 @@ public:
 
 	TUtf32StringView GetString() const
 	{
+#if defined(_DEBUG)
+		return TUtf32StringView(Pool[Index].Str.Bytes());
+#else
 		return TUtf32StringView(Pool[Index].Bytes());
+#endif
 	}
 
 	bool operator==(const THashString& InRhs) const
@@ -167,9 +184,22 @@ private:
 	inline static Lime::TMap<Lime::size_t /* Hash Value */, Lime::size_t /* Index */> StringTable;
 
 	inline static Lime::size_t LastIndex = 0;
+#if defined(_DEBUG)
+	inline static Lime::TArray<DebugStr> Pool;
+#else
 	inline static Lime::TArray<TUtf32String> Pool;
+#endif
 
 private:
+	void SetStrAtPool(TUtf32String InStr, std::source_location InLocation)
+	{
+#if defined(_DEBUG)
+		Pool.push_back({ InStr, InLocation });
+#else
+		Pool.push_back(InStr);
+#endif
+	}
+
 	static constexpr size_t RefTable(unsigned char Index)
 	{
 		return CRC32Table[Index];

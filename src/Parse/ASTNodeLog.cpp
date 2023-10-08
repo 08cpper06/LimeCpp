@@ -35,7 +35,7 @@ TUtf32String TAstBlockNode::GetInfoString(TUtf32String InPrefix) const
 
 TUtf32String TAstValNode::GetInfoString(TUtf32String InPrefix) const
 {
-	TUtf32String Str = InPrefix + U"<Val Type=\"" + MyType.MyName + U"\">";
+	TUtf32String Str = InPrefix + U"<Val Type=\"" + MyType->MyName + U"\">";
 	for (Lime::TTokenIterator Itr = MyStartItr; Itr != MyEndItr; ++Itr)
 	{
 		Str += Itr->MyLetter.GetString();
@@ -132,7 +132,7 @@ TUtf32String TAstRelationalNode::GetInfoString(TUtf32String InPrefix) const
 TUtf32String TAstVarNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<Variable Type=\"";
-	Str += MyType.MyName.GetString();
+	Str += MyType->MyName;
 	Str += U"\" Name=\"";
 	Str += MyName->MyLetter.GetString();
 	Str += U"\"></Variable>\n";
@@ -224,7 +224,7 @@ TUtf32String TAstForNode::GetInfoString(TUtf32String InPrefix) const
 TUtf32String TAstFunctionDefinitionNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<FunctionDefinition Name=\"";
-	Str += MyFunctionName->MyLetter + U"\" ReturnType=\"" + MyReturnType.MyName + U"\">\n";
+	Str += MyFunctionName->MyLetter + U"\" ReturnType=\"" + MyReturnType->MyName + U"\">\n";
 	Str += InPrefix + U"\t<Arguments>";
 	if (MyArguments.empty())
 	{
@@ -233,12 +233,12 @@ TUtf32String TAstFunctionDefinitionNode::GetInfoString(TUtf32String InPrefix) co
 	else
 	{
 		Str += U'\n';
-		for (const Lime::TPair<TTypeInfo, TVarInfo>& Argument : MyArguments)
+		for (const Lime::TPair<TSharedPtr<TTypeInfo>, TVarInfo>& Argument : MyArguments)
 		{
 			if (Argument.second.MyIsArray)
 			{
 				Str += InPrefix + U"\t\t<Detail Type=\"";
-				Str += Argument.first.MyName + U"[]";
+				Str += Argument.first->MyName + U"[]";
 				Str += U"\" Name=\"" + Argument.second.MyName + U"\" Count=\"";
 				Str += ToUtf32String(Argument.second.MyArrayCount);
 				Str += U"\"/>\n";
@@ -246,7 +246,7 @@ TUtf32String TAstFunctionDefinitionNode::GetInfoString(TUtf32String InPrefix) co
 			else
 			{
 				Str += InPrefix + U"\t\t<Detail Type=\"";
-				Str += Argument.first.MyName;
+				Str += Argument.first->MyName;
 				Str += U"\" Name=\"" + Argument.second.MyName + U"\"/>\n";
 			}
 		}
@@ -264,7 +264,7 @@ TUtf32String TAstFunctionDefinitionNode::GetInfoString(TUtf32String InPrefix) co
 TUtf32String TAstVariableDefinitionNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<VariableDefinition Type=\"";
-	Str += MyType.MyName + U"\" Name=\"" + MyName->MyLetter;
+	Str += MyType->MyName + U"\" Name=\"" + MyName->MyLetter;
 	if (MyIsArray)
 	{
 		Str += U"\" ArrayCount=\"";
@@ -299,7 +299,7 @@ TUtf32String TAstInitializerListNode::GetInfoString(TUtf32String InPrefix) const
 TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<FunctionCall Name=\"";
-	Str += MyFunction.MyName;
+	Str += MyFunction->MyName;
 	Str += U"\">\n";
 
 	if (MyError)
@@ -327,7 +327,7 @@ TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 			{
 				TSharedPtr<TAstValNode> TmpNode = StaticCast<TAstValNode>(Value.first);
 				Str += InPrefix + U"\t\t<Detail Type=\"";
-				Str += TmpNode->MyType.MyName;
+				Str += TmpNode->MyType->MyName;
 				TUtf32String ValueStr;
 				for (Lime::TTokenIterator Itr = TmpNode->MyStartItr; Itr != TmpNode->MyEndItr; ++Itr)
 				{

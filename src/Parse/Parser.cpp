@@ -212,7 +212,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 		}
 	}
 
-	TOption<TTypeInfo> ValueType;
+	TSharedPtr<TTypeInfo> ValueType;
 	if (TmpItr->MyType == TokenType::Number)
 	{
 		IsHasNumber = true;
@@ -247,7 +247,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 	TSharedPtr<TAstValNode> Node = MakeShared<TAstValNode>();
 	Node->MyStartItr = StartItr;
 	Node->MyEndItr = TmpItr;
-	Node->MyType = *ValueType;
+	Node->MyType = ValueType;
 
 	InItr = TmpItr;
 	return Node;
@@ -272,7 +272,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseAddSub)
 			Node->MyLhs = Lhs;
 			if (TOption<THashString> LhsType = Node->MyLhs->EvaluateType())
 			{
-				Node->MyLhsType = *OutResult.MyTypeTable.GetInfo(*LhsType);
+				Node->MyLhsType = OutResult.MyTypeTable.GetInfo(*LhsType);
 			}
 			else
 			{
@@ -298,7 +298,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseAddSub)
 
 			if (TOption<THashString> RhsType = Node->MyRhs->EvaluateType())
 			{
-				Node->MyRhsType = *OutResult.MyTypeTable.GetInfo(*RhsType);
+				Node->MyRhsType = OutResult.MyTypeTable.GetInfo(*RhsType);
 			}
 			else
 			{
@@ -337,7 +337,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseMulDiv)
 			Node->MyLhs = Lhs;
 			if (TOption<THashString> LhsType = Node->MyLhs->EvaluateType())
 			{
-				Node->MyLhsType = *OutResult.MyTypeTable.GetInfo(*LhsType);
+				Node->MyLhsType = OutResult.MyTypeTable.GetInfo(*LhsType);
 			}
 			else
 			{
@@ -363,7 +363,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseMulDiv)
 
 			if (TOption<THashString> RhsType = Node->MyRhs->EvaluateType())
 			{
-				Node->MyRhsType = *OutResult.MyTypeTable.GetInfo(*RhsType);
+				Node->MyRhsType = OutResult.MyTypeTable.GetInfo(*RhsType);
 			}
 			else
 			{
@@ -469,6 +469,7 @@ PARSE_FUNCTION_IMPLEMENT(ParsePosfixUnary)
 					InItr = TmpItr;
 					return OutResult.MakeError(TmpItr, U"expected a `]`");
 				}
+				/* TODO : check index range if constant index */
 				InItr = ++TmpItr;
 				return Node;
 
@@ -886,7 +887,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 		return nullptr;
 	}
 	TSharedPtr<TAstFunctionDefinitionNode> Node = MakeShared<TAstFunctionDefinitionNode>();
-	Node->MyReturnType = *OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
+	Node->MyReturnType = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
 	++TmpItr;
 	Node->MyFunctionName = TmpItr;
 	++TmpItr;
@@ -901,7 +902,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 	do {
 		++TmpItr;
 		/* Check whether this function is undefined */
-		TOption<TTypeInfo> ArgumentsTypeInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
+		TSharedPtr<TTypeInfo> ArgumentsTypeInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
 		if (ArgumentsTypeInfo)
 		{
 			Arguments.push_back(TmpItr->MyLetter);
@@ -909,9 +910,9 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 			if (TmpNode->StaticClass() == TAstVariableDefinitionNode().StaticClass())
 			{
 				TSharedPtr<TAstVariableDefinitionNode> VarDefineNode = StaticCast<TAstVariableDefinitionNode>(TmpNode);
-				OutResult.CurrentBlock->Define(VarDefineNode->MyName->MyLetter, *ArgumentsTypeInfo, VarDefineNode->MyIsArray, VarDefineNode->MyArrayCount);
+				OutResult.CurrentBlock->Define(VarDefineNode->MyName->MyLetter, ArgumentsTypeInfo, VarDefineNode->MyIsArray, VarDefineNode->MyArrayCount);
 				TOption<TVarInfo> Info = OutResult.CurrentBlock->GetInfo(VarDefineNode->MyName->MyLetter);
-				Node->MyArguments.push_back({ *ArgumentsTypeInfo, *Info });
+				Node->MyArguments.push_back({ ArgumentsTypeInfo, *Info });
 			}
 			else if (TmpNode->StaticClass() == TAstErrorNode().StaticClass())
 			{
@@ -948,15 +949,19 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 		{
 			if (!(ReturnTypePtr->MyExpr))
 			{
-				if (Node->MyReturnType.MyName != THashString(U"void"))
+				if (Node->MyReturnType->MyName != THashString(U"void"))
 				{
 					Node->MyErrors.push_back(OutResult.MakeError(ReturnTypePtr->MyPosition, U"return value is not matched"));
 				}
 			}
 			else if (TOption<THashString> ReturnType = ReturnTypePtr->MyExpr->EvaluateType())
 			{
-				CastErrorCode IsCastable = OutResult.MyTypeTable.GetInfo(*ReturnType)->IsCastable(Node->MyReturnType.MyName);
-				if ((Node->MyReturnType.MyName == THashString(U"void") && *ReturnType != THashString(U"void")) ||
+				CastErrorCode IsCastable;
+				{
+					TSharedPtr<TTypeInfo> ReturnTypeInfo = OutResult.MyTypeTable.GetInfo(*ReturnType);
+					IsCastable = ReturnTypeInfo->IsCastable(Node->MyReturnType->MyName);
+				}
+				if ((Node->MyReturnType->MyName == THashString(U"void") && *ReturnType != THashString(U"void")) ||
 					IsCastable == CastErrorCode::NotCastable)
 				{
 					Node->MyErrors.push_back(OutResult.MakeError(ReturnTypePtr->MyPosition, U"return value is not matched"));
@@ -964,18 +969,18 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 				TUtf32String Message;
 				switch (IsCastable) {
 				case CastErrorCode::LossCast:
-					Message = U"Argument type information drop cast(Expected : " + Node->MyReturnType.MyName + U", Actual : " + *ReturnType + U")";
+					Message = U"Argument type information drop cast(Expected : " + Node->MyReturnType->MyName + U", Actual : " + *ReturnType + U")";
 					ReturnTypePtr->MyWarning = OutResult.MakeWarning(ReturnTypePtr->MyPosition, Message);
 					break;
 				case CastErrorCode::ExplicitCastable:
-					Message = U"Argument type needs explicit cast(Expected : " + Node->MyReturnType.MyName + U", Actual : " + *ReturnType + U")";
+					Message = U"Argument type needs explicit cast(Expected : " + Node->MyReturnType->MyName + U", Actual : " + *ReturnType + U")";
 					ReturnTypePtr->MyWarning = OutResult.MakeWarning(ReturnTypePtr->MyPosition, Message);
 					break;
 				}
 			}
 		}
 	}
-	OutResult.MyTypeTable.AddDefine(TTypeInfo(Node->MyFunctionName->MyLetter, Arguments, Node->MyReturnType.MyName));
+	OutResult.MyTypeTable.Define(TTypeInfo(Node->MyFunctionName->MyLetter, Arguments, Node->MyReturnType->MyName));
 	InItr = TmpItr;
 
 	return Node;
@@ -984,7 +989,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 {
 	Lime::TTokenIterator TmpItr = InItr;
-	TOption<TTypeInfo> TypeInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
+	TSharedPtr<TTypeInfo> TypeInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
 	if (!TypeInfo)
 	{
 		return nullptr;
@@ -995,7 +1000,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 	}
 	++TmpItr;
 	TSharedPtr<TAstVariableDefinitionNode> Node = MakeShared<TAstVariableDefinitionNode>();
-	Node->MyType = *TypeInfo;
+	Node->MyType = TypeInfo;
 	Node->MyName = TmpItr;
 	Node->MyBlock = OutResult.CurrentBlock;
 
@@ -1006,7 +1011,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 	}
 	++TmpItr;
 
-	Lime::size_t ArrayCount = 1;
+	Lime::size_t ArrayCount = 0;
 	bool IsArray = false;
 	if (TmpItr->MyLetter.MyHashValue == U'[')
 	{
@@ -1028,11 +1033,11 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 	}
 
 	Node->MyIsArray = IsArray;
-	Node->MyArrayCount = ArrayCount;
-	OutResult.CurrentBlock->Define(Node->MyName->MyLetter, *TypeInfo, IsArray, ArrayCount);
 
 	if (TmpItr->MyLetter.MyHashValue == U';')
 	{
+		Node->MyArrayCount = ArrayCount;
+		OutResult.CurrentBlock->Define(Node->MyName->MyLetter, TypeInfo, IsArray, ArrayCount);
 		InItr = TmpItr;
 		return Node;
 	}
@@ -1075,6 +1080,10 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 				Message += U" (expected less than " + ToUtf32String(ArrayCount) + U")";
 				InitialValues->MyError = OutResult.MakeError(InItr,  Message);
 			}
+			else if (ArrayCount == 0)
+			{
+				ArrayCount = InitialValues->MyLists.size();
+			}
 		}
 		else
 		{
@@ -1082,6 +1091,8 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 		}
 	}
 
+	Node->MyArrayCount = ArrayCount;
+	OutResult.CurrentBlock->Define(Node->MyName->MyLetter, TypeInfo, IsArray, ArrayCount);
 	return Node;
 }
 
@@ -1090,9 +1101,9 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 	Lime::TTokenIterator TmpItr = InItr;
 	Lime::TTokenIterator SaveFunctionName = InItr;
 
-	TOption<TTypeInfo> FunctionDefineInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
+	TSharedPtr<TTypeInfo> FunctionDefineInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
 	TSharedPtr<TAstFunctionCallNode> Node = MakeShared<TAstFunctionCallNode>();
-	Node->MyFunction = *FunctionDefineInfo;
+	Node->MyFunction = FunctionDefineInfo;
 	
 	++TmpItr;
 
@@ -1150,8 +1161,8 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 			}
 			else /* Check whether argument is matched */
 			{
-				TTypeInfo ArgumentTypeInfo = *OutResult.MyTypeTable.GetInfo(*ActualArgumentType);
-				CastErrorCode IsCastable = ArgumentTypeInfo.IsCastable(ExpectArgument[ArgIdx]);
+				TSharedPtr<TTypeInfo> ArgumentTypeInfo = OutResult.MyTypeTable.GetInfo(*ActualArgumentType);
+				CastErrorCode IsCastable = ArgumentTypeInfo->IsCastable(ExpectArgument[ArgIdx]);
 				TUtf32String Message;
 				switch (IsCastable) {
 				case CastErrorCode::NotCastable:

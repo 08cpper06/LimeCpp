@@ -3,13 +3,13 @@
 
 TVarInfo::TVarInfo() :
 	MyName(U""),
-	MyType(),
+	MyType(nullptr),
 	MyArrayCount(1),
 	MyIsArray(false),
 	MyScope()
 {}
 
-TVarInfo::TVarInfo(THashString InName, const TTypeInfo& InType, bool InIsArray, Lime::size_t InArrayCount, THashString InScopeName) :
+TVarInfo::TVarInfo(THashString InName, TSharedPtr<TTypeInfo> InType, bool InIsArray, Lime::size_t InArrayCount, THashString InScopeName) :
 	MyName(InName),
 	MyType(InType),
 	MyArrayCount(InArrayCount),
@@ -60,7 +60,7 @@ bool TBlockEntry::IsDefined(THashString InVarName) const noexcept
 	return Itr != MyVariableTable.end();
 }
 
-void TBlockEntry::Define(THashString InVarName, const TTypeInfo& InInfo, bool InIsArray, Lime::size_t InArrayCount) noexcept
+void TBlockEntry::Define(THashString InVarName, TSharedPtr<TTypeInfo> InInfo, bool InIsArray, Lime::size_t InArrayCount) noexcept
 {
 	MyVariableTable.insert({
 		InVarName,

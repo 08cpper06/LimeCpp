@@ -4,27 +4,34 @@
 TTypeInfo::TTypeInfo() :
 	MyName(U""),
 	MyAlignemnt(1),
+	MyByteSize(1),
 	MyReturnType(DefaultErrorType::Error),
-	MyMemberVariable()
+	MyMemberVariable(),
+	MyCastArray()
 {}
-TTypeInfo::TTypeInfo(THashString InName, Lime::size_t InAlignment, Lime::TMap<THashString, CastErrorCode> InCastArray) :
+TTypeInfo::TTypeInfo(THashString InName, Lime::size_t InAlignment, Lime::size_t InByteSize, Lime::TMap<THashString, CastErrorCode> InCastArray) :
 	MyName(InName),
 	MyAlignemnt(InAlignment),
+	MyByteSize(InByteSize),
 	MyReturnType(DefaultErrorType::Error),
 	MyMemberVariable(),
 	MyCastArray(InCastArray)
 {}
-TTypeInfo::TTypeInfo(THashString InName, Lime::size_t InAlignment, const Lime::TArray<THashString>& InMembers) :
+TTypeInfo::TTypeInfo(THashString InName, Lime::size_t InAlignment, Lime::size_t InByteSize, const Lime::TArray<THashString>& InMembers) :
 	MyName(InName),
 	MyAlignemnt(InAlignment),
+	MyByteSize(InByteSize),
 	MyReturnType(DefaultErrorType::Error),
-	MyMemberVariable(InMembers)
+	MyMemberVariable(InMembers),
+	MyCastArray()
 {}
 TTypeInfo::TTypeInfo(THashString InName, const Lime::TArray<THashString>& InArguments, THashString InReturnType) :
 	MyName(InName),
 	MyAlignemnt(1),
+	MyByteSize(1),
 	MyReturnType(InReturnType),
-	MyMemberVariable(InArguments)
+	MyMemberVariable(InArguments),
+	MyCastArray()
 {}
 bool TTypeInfo::IsFunction() const noexcept
 {
@@ -41,57 +48,59 @@ CastErrorCode TTypeInfo::IsCastable(THashString InTo) const noexcept
 	return CastErrorCode::NotCastable;
 }
 
-TOption<THashString> TTypeInfo::IsEvaluatableExpr(const TTypeInfo& InRhs) const noexcept
+TOption<THashString> TTypeInfo::IsEvaluatableExpr(TSharedPtr<TTypeInfo> InRhs) const noexcept
 {
-	switch (IsCastable(InRhs.MyName)){
+	switch (IsCastable(InRhs->MyName)) {
 	case CastErrorCode::NotCastable:
 		return DefaultErrorType::Error;
 	case CastErrorCode::LossCast:
 		return MyName;
 	}
-	return InRhs.MyName;
+	return InRhs->MyName;
 }
 
 
 bool TTypeTable::IsDefined(THashString InName) const
 {
-	Lime::TMap<size_t, TTypeInfo>::const_iterator Itr = Table.find(InName.MyHashValue);
-	return Itr != Table.end();
+	Lime::TMap<size_t, TSharedPtr<TTypeInfo>>::const_iterator Itr = MyTable.find(InName.MyHashValue);
+	return Itr != MyTable.end();
 }
 
 
-TOption<TTypeInfo> TTypeTable::GetInfo(THashString InName) const
+TSharedPtr<TTypeInfo> TTypeTable::GetInfo(THashString InName) const
 {
-	Lime::TMap<size_t, TTypeInfo>::const_iterator Itr = Table.find(InName.MyHashValue);
-	if (Itr == Table.end())
+	Lime::TMap<size_t, TSharedPtr<TTypeInfo>>::const_iterator Itr = MyTable.find(InName.MyHashValue);
+	if (Itr == MyTable.end())
 	{
-		return DefaultErrorType::Error;
+		return nullptr;
 	}
 	return Itr->second;
 }
 
-void TTypeTable::AddDefine(const TTypeInfo& Info)
+void TTypeTable::Define(const TTypeInfo& InInfo)
 {
-	if (!IsDefined(Info.MyName))
+	if (!IsDefined(InInfo.MyName))
 	{
-		Table.insert(std::pair<size_t, TTypeInfo>(Info.MyName.MyHashValue, Info));
+		TSharedPtr<TTypeInfo> Info = MakeShared<TTypeInfo>();
+		*Info = InInfo;
+		MyTable.insert({ InInfo.MyName.MyHashValue, Info });
 	}
 }
 
 TTypeTable::TTypeTable()
 {
 	TTypeInfo BuiltInType[] = {
-		{ THashString(U"void"),				0, Lime::TMap<THashString, CastErrorCode>() },
-		{ THashString(U"char"),				1, Lime::TMap<THashString, CastErrorCode>() },
-		{ THashString(U"short"),			2, Lime::TMap<THashString, CastErrorCode>() },
-		{ THashString(U"int"),				4, Lime::TMap<THashString, CastErrorCode>() },
-		{ THashString(U"long"),				4, Lime::TMap<THashString, CastErrorCode>() },
-		{ THashString(U"unsigned char"),	1, Lime::TMap<THashString, CastErrorCode>() },
-		{ THashString(U"unsigned short"),	2, Lime::TMap<THashString, CastErrorCode>() },
-		{ THashString(U"unsigned int"),		4, Lime::TMap<THashString, CastErrorCode>() },
-		{ THashString(U"unsigned long"),	4, Lime::TMap<THashString, CastErrorCode>() },
-		{ THashString(U"float"),			4, Lime::TMap<THashString, CastErrorCode>() },
-		{ THashString(U"double"),			8, Lime::TMap<THashString, CastErrorCode>() }
+		{ THashString(U"void"),				0, 0, Lime::TMap<THashString, CastErrorCode>() },
+		{ THashString(U"char"),				1, 1, Lime::TMap<THashString, CastErrorCode>() },
+		{ THashString(U"short"),			2, 2, Lime::TMap<THashString, CastErrorCode>() },
+		{ THashString(U"int"),				4, 4, Lime::TMap<THashString, CastErrorCode>() },
+		{ THashString(U"long"),				4, 4, Lime::TMap<THashString, CastErrorCode>() },
+		{ THashString(U"unsigned char"),	1, 1, Lime::TMap<THashString, CastErrorCode>() },
+		{ THashString(U"unsigned short"),	2, 2, Lime::TMap<THashString, CastErrorCode>() },
+		{ THashString(U"unsigned int"),		4, 4, Lime::TMap<THashString, CastErrorCode>() },
+		{ THashString(U"unsigned long"),	4, 4, Lime::TMap<THashString, CastErrorCode>() },
+		{ THashString(U"float"),			4, 4, Lime::TMap<THashString, CastErrorCode>() },
+		{ THashString(U"double"),			8, 4, Lime::TMap<THashString, CastErrorCode>() }
 	};
 
 	/* char */
@@ -217,7 +226,7 @@ TTypeTable::TTypeTable()
 
 	for (const TTypeInfo& Info : BuiltInType)
 	{
-		Table.insert(std::pair<size_t, TTypeInfo>(Info.MyName.MyHashValue, Info));
+		this->Define(Info);
 	}
 }
 

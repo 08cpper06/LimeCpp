@@ -24,6 +24,7 @@ public:
 	virtual TAstBaseNode* StaticClass() const = 0;
 	virtual TUtf32String GetInfoString(TUtf32String InPrefix) const = 0;	
 	virtual TOption<THashString> EvaluateType() const noexcept = 0;
+	virtual bool IsStaticEvaluatable() const noexcept = 0;
 };
 
 #define AST_BODY_CLASS(ClassName) ~ClassName() = default; \
@@ -38,12 +39,16 @@ friend class Parser
 #define DEFINE_EVALUATE_TYPE(Value) TOption<THashString> EvaluateType() const noexcept override { return Value; }
 #define IMPLEMENT_EVALUATE_TYPE() TOption<THashString> EvaluateType() const noexcept override
 
+#define DEFINE_STATIC_EVALUATABLE(Value) bool IsStaticEvaluatable() const noexcept override { return Value; }
+#define IMPLEMENT_STATIC_EVALUATABLE() bool IsStaticEvaluatable() const noexcept override
 
 class TAstErrorNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstErrorNode);
 
-	DEFINE_EVALUATE_TYPE(DefaultErrorType::Error);
+	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+
+	DEFINE_STATIC_EVALUATABLE(true);
 
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyPosition;
@@ -56,13 +61,17 @@ class TAstWarningNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstWarningNode);
 
-	DEFINE_EVALUATE_TYPE(DefaultErrorType::Error);
+	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+
+	DEFINE_STATIC_EVALUATABLE(true);
 
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyPosition;
 	TUtf32String MyMessage;
 
 	friend class TParseResult;
+
+	friend class TAstReturnNode;
 	friend class TAstFunctionCallNode;
 };
 
@@ -70,7 +79,16 @@ class TAstReturnNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstReturnNode);
 
-	DEFINE_EVALUATE_TYPE(DefaultErrorType::Error);
+	IMPLEMENT_EVALUATE_TYPE()
+	{
+		if (MyExpr)
+		{
+			return MyExpr->EvaluateType();
+		}
+		return THashString(U"void");
+	}
+
+	DEFINE_STATIC_EVALUATABLE(MyExpr->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyExpr;
@@ -84,7 +102,17 @@ class TAstBlockNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstBlockNode);
 
-	DEFINE_EVALUATE_TYPE(DefaultErrorType::Error);
+	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+
+	IMPLEMENT_STATIC_EVALUATABLE()
+	{
+		bool Ret = true;
+		for (TSharedPtr<TAstBaseNode> Node : MyNodes)
+		{
+			Ret &= Node->IsStaticEvaluatable();
+		}
+		return Ret;
+	}
 
 CLASS_PRIVATE:
 	Lime::TList<TSharedPtr<TAstBaseNode>> MyNodes;
@@ -96,12 +124,14 @@ class TAstValNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstValNode);
 
-	DEFINE_EVALUATE_TYPE(MyType.MyName);
+	DEFINE_EVALUATE_TYPE(MyType->MyName);
+
+	DEFINE_STATIC_EVALUATABLE(true);
 
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyStartItr;
 	Lime::TTokenIterator MyEndItr;
-	TTypeInfo MyType;
+	TSharedPtr<TTypeInfo> MyType;
 
 	friend class TAstFunctionCallNode;
 };
@@ -115,16 +145,18 @@ public:
 		if ((!MyLhs || !MyLhs->EvaluateType()) ||
 			(!MyRhs || !MyRhs->EvaluateType()))
 		{
-			return DefaultErrorType::Error;
+			return TOption<THashString>(DefaultErrorType::Error);
 		}
-		return MyLhsType.IsEvaluatableExpr(MyRhsType);
+		return MyLhsType->IsEvaluatableExpr(MyRhsType);
 	}
+
+	DEFINE_STATIC_EVALUATABLE(MyLhs->IsStaticEvaluatable() && MyRhs->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyLhs;
-	TTypeInfo MyLhsType;
+	TSharedPtr<TTypeInfo> MyLhsType;
 	TSharedPtr<TAstBaseNode> MyRhs;
-	TTypeInfo MyRhsType;
+	TSharedPtr<TTypeInfo> MyRhsType;
 	Lime::TTokenIterator MyOperator;
 };
 
@@ -137,16 +169,18 @@ public:
 		if ((!MyLhs || !MyLhs->EvaluateType()) ||
 			(!MyRhs || !MyRhs->EvaluateType()))
 		{
-			return DefaultErrorType::Error;
+			return TOption<THashString>(DefaultErrorType::Error);
 		}
-		return MyLhsType.IsEvaluatableExpr(MyRhsType);
+		return MyLhsType->IsEvaluatableExpr(MyRhsType);
 	}
+
+	DEFINE_STATIC_EVALUATABLE(MyLhs->IsStaticEvaluatable() && MyRhs->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyLhs;
-	TTypeInfo MyLhsType;
+	TSharedPtr<TTypeInfo> MyLhsType;
 	TSharedPtr<TAstBaseNode> MyRhs;
-	TTypeInfo MyRhsType;
+	TSharedPtr<TTypeInfo> MyRhsType;
 	Lime::TTokenIterator MyOperator;
 };
 
@@ -154,7 +188,16 @@ class TAstExprNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstExprNode);
 
-	DEFINE_EVALUATE_TYPE(MyNode ? MyNode->EvaluateType() : DefaultErrorType::Error);
+	IMPLEMENT_EVALUATE_TYPE()
+	{
+		if (MyNode)
+		{
+			return MyNode->EvaluateType();
+		}
+		return DefaultErrorType::Error;
+	}
+
+	DEFINE_STATIC_EVALUATABLE(MyNode->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyNode;
@@ -164,7 +207,16 @@ class TAstParenthessNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstParenthessNode);
 
-	DEFINE_EVALUATE_TYPE(MyExpr && !MyError ? MyExpr->EvaluateType() : DefaultErrorType::Error);
+	IMPLEMENT_EVALUATE_TYPE()
+	{
+		if (MyExpr && !MyError)
+		{
+			return MyExpr->EvaluateType();
+		}
+		return DefaultErrorType::Error;
+	}
+
+	DEFINE_STATIC_EVALUATABLE(MyExpr ? MyExpr->IsStaticEvaluatable() : true);
 
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyExpr;
@@ -175,7 +227,16 @@ class TAstPrefixUnaryNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstPrefixUnaryNode);
 
-	DEFINE_EVALUATE_TYPE(MyExpr ? MyExpr->EvaluateType() : DefaultErrorType::Error);
+	IMPLEMENT_EVALUATE_TYPE()
+	{
+		if (MyExpr)
+		{
+			return MyExpr->EvaluateType();
+		}
+		return DefaultErrorType::Error;
+	}
+
+	DEFINE_STATIC_EVALUATABLE(MyExpr->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyExpr;
@@ -186,7 +247,16 @@ class TAstPostfixUnaryNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstPostfixUnaryNode );
 
-	DEFINE_EVALUATE_TYPE(MyExpr ? MyExpr->EvaluateType() : DefaultErrorType::Error);
+	IMPLEMENT_EVALUATE_TYPE()
+	{
+		if (MyExpr)
+		{
+			return MyExpr->EvaluateType();
+		}
+		return DefaultErrorType::Error;
+	}
+
+	DEFINE_STATIC_EVALUATABLE(MyExpr->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyOperator;
@@ -197,7 +267,9 @@ class TAstArrayReference : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstArrayReference);
 
-	DEFINE_EVALUATE_TYPE(MyArrayInfo.MyType.MyName);
+	DEFINE_EVALUATE_TYPE(MyArrayInfo.MyType->MyName);
+
+	DEFINE_STATIC_EVALUATABLE(MyIndex->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
 	TVarInfo MyArrayInfo;
@@ -210,6 +282,8 @@ public:
 
 	DEFINE_EVALUATE_TYPE(U"bool");
 
+	DEFINE_STATIC_EVALUATABLE(MyLhs->IsStaticEvaluatable() && MyRhs->IsStaticEvaluatable());
+
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyLhs;
 	TSharedPtr<TAstBaseNode> MyRhs;
@@ -220,7 +294,16 @@ class TAstAssignNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstAssignNode);
 
-	DEFINE_EVALUATE_TYPE(MyLhs ? MyLhs->EvaluateType() : DefaultErrorType::Error);
+	IMPLEMENT_EVALUATE_TYPE()
+	{
+		if (MyLhs)
+		{
+			return MyLhs->EvaluateType();
+		}
+		return DefaultErrorType::Error;
+	}
+
+	DEFINE_STATIC_EVALUATABLE(MyRhs->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyLhs;
@@ -233,6 +316,8 @@ public:
 
 	DEFINE_EVALUATE_TYPE(U"bool");
 
+	DEFINE_STATIC_EVALUATABLE(MyLhs->IsStaticEvaluatable() && MyRhs->IsStaticEvaluatable());
+
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyLhs;
 	TSharedPtr<TAstBaseNode> MyRhs;
@@ -243,12 +328,14 @@ class TAstVarNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstVarNode);
 
-	DEFINE_EVALUATE_TYPE(MyType.MyName);
+	DEFINE_EVALUATE_TYPE(MyType->MyName);
+
+	DEFINE_STATIC_EVALUATABLE(false); /* TODO : Check whether variable is constant? */
 
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyName;
 	TWeakPtr<TBlockEntry> MyBlock;
-	TTypeInfo MyType;
+	TSharedPtr<TTypeInfo> MyType;
 
 	friend class TAstFunctionCallNode;
 };
@@ -257,7 +344,9 @@ class TAstIfNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstIfNode);
 
-	DEFINE_EVALUATE_TYPE(DefaultErrorType::Error);
+	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+
+	DEFINE_STATIC_EVALUATABLE(false);
 
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyEvalExpr;
@@ -269,7 +358,9 @@ class TAstWhileNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstWhileNode);
 
-	DEFINE_EVALUATE_TYPE(DefaultErrorType::Error);
+	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+
+	DEFINE_STATIC_EVALUATABLE(false);
 
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyEvalExpr;
@@ -280,7 +371,9 @@ class TAstForNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstForNode);
 
-	DEFINE_EVALUATE_TYPE(DefaultErrorType::Error);
+	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+
+	DEFINE_STATIC_EVALUATABLE(false);
 
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyInitExpr;
@@ -293,14 +386,16 @@ class TAstFunctionDefinitionNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstFunctionDefinitionNode);
 
-	DEFINE_EVALUATE_TYPE(DefaultErrorType::Error);
+	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+
+	DEFINE_STATIC_EVALUATABLE(true);
 
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyFunctionName;
-	TTypeInfo MyReturnType;
+	TSharedPtr<TTypeInfo> MyReturnType;
 
 	TSharedPtr<TAstBaseNode> MyBlockExpr;
-	Lime::TArray<Lime::TPair<TTypeInfo, TVarInfo>> MyArguments;
+	Lime::TArray<Lime::TPair<TSharedPtr<TTypeInfo>, TVarInfo>> MyArguments;
 	Lime::TArray<TSharedPtr<TAstErrorNode>> MyErrors;
 };
 
@@ -308,12 +403,14 @@ class TAstVariableDefinitionNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstVariableDefinitionNode);
 
-	DEFINE_EVALUATE_TYPE(DefaultErrorType::Error);
+	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+
+	DEFINE_STATIC_EVALUATABLE(true);
 
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyName;
 	TWeakPtr<TBlockEntry> MyBlock;
-	TTypeInfo MyType;
+	TSharedPtr<TTypeInfo> MyType;
 	bool MyIsArray { false };
 	size_t MyArrayCount { 1 };
 
@@ -324,10 +421,20 @@ class TAstInitializerListNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstInitializerListNode);
 
-	DEFINE_EVALUATE_TYPE(MyType.MyName);
+	DEFINE_EVALUATE_TYPE(MyType->MyName);
+
+	IMPLEMENT_STATIC_EVALUATABLE()
+	{
+		bool Ret = true;
+		for (TSharedPtr<TAstBaseNode> Node : MyLists)
+		{
+			Ret &= Node->IsStaticEvaluatable();
+		}
+		return Ret;
+	}
 
 CLASS_PRIVATE:
-	TTypeInfo MyType;
+	TSharedPtr<TTypeInfo> MyType;
 	Lime::TArray<TSharedPtr<TAstBaseNode>> MyLists;
 	TSharedPtr<TAstErrorNode> MyError;
 };
@@ -336,10 +443,12 @@ class TAstFunctionCallNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstFunctionCallNode);
 
-	DEFINE_EVALUATE_TYPE(MyFunction.MyReturnType);
+	DEFINE_EVALUATE_TYPE(MyFunction->MyReturnType->GetString());
+
+	DEFINE_STATIC_EVALUATABLE(false);
 
 CLASS_PRIVATE:
 	Lime::TArray<Lime::TPair<TSharedPtr<TAstBaseNode> /* Node */, TSharedPtr<TAstBaseNode> /* Error or Warning */>> MyArguments;
-	TTypeInfo MyFunction;
+	TSharedPtr<TTypeInfo> MyFunction;
 	TSharedPtr<TAstErrorNode> MyError;
 };

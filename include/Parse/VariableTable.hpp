@@ -12,7 +12,7 @@ class TBlocKEntry;
 class TVarInfo {
 public:
 	TVarInfo();
-	TVarInfo(THashString InName, const TTypeInfo& InType, bool InIsArray, Lime::size_t InArrayCount, THashString InScopeName);
+	TVarInfo(THashString InName, TSharedPtr<TTypeInfo> InType, bool InIsArray, Lime::size_t InArrayCount, THashString InScopeName);
 	~TVarInfo() = default;
 
 	bool operator==(const TVarInfo& InRhs) const noexcept;
@@ -23,7 +23,7 @@ public:
 	bool operator<=(const TVarInfo& InRhs) const noexcept;
 public:
 	THashString MyName;
-	TTypeInfo MyType;
+	TSharedPtr<TTypeInfo> MyType;
 	THashString MyScope;
 	bool MyIsArray;
 	Lime::size_t MyArrayCount;
@@ -37,7 +37,7 @@ public:
 	~TBlockEntry() noexcept;
 	
 	bool IsDefined(THashString InVarName) const noexcept;
-	void Define(THashString InVarName, const TTypeInfo& InInfo, bool InIsArray, Lime::size_t InArrayCount = 1) noexcept;
+	void Define(THashString InVarName, TSharedPtr<TTypeInfo> InInfo, bool InIsArray, Lime::size_t InArrayCount = 1) noexcept;
 	void UnDefine(THashString InVarName) noexcept;
 	TOption<TVarInfo> GetInfo(THashString InVarName) const noexcept;
 
