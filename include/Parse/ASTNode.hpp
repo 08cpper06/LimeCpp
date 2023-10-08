@@ -171,15 +171,37 @@ CLASS_PRIVATE:
 	TSharedPtr<TAstErrorNode> MyError;
 };
 
-class TAstUnaryNode : public TAstBaseNode {
+class TAstPrefixUnaryNode : public TAstBaseNode {
 public:
-	AST_BODY_CLASS(TAstUnaryNode);
+	AST_BODY_CLASS(TAstPrefixUnaryNode);
 
 	DEFINE_EVALUATE_TYPE(MyExpr ? MyExpr->EvaluateType() : DefaultErrorType::Error);
 
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyExpr;
 	Lime::TTokenIterator MyOperator;
+};
+
+class TAstPostfixUnaryNode : public TAstBaseNode {
+public:
+	AST_BODY_CLASS(TAstPostfixUnaryNode );
+
+	DEFINE_EVALUATE_TYPE(MyExpr ? MyExpr->EvaluateType() : DefaultErrorType::Error);
+
+CLASS_PRIVATE:
+	Lime::TTokenIterator MyOperator;
+	TSharedPtr<TAstBaseNode> MyExpr;
+};
+
+class TAstArrayReference : public TAstBaseNode {
+public:
+	AST_BODY_CLASS(TAstArrayReference);
+
+	DEFINE_EVALUATE_TYPE(MyArrayInfo.MyType.MyName);
+
+CLASS_PRIVATE:
+	TVarInfo MyArrayInfo;
+	TSharedPtr<TAstBaseNode> MyIndex;
 };
 
 class TAstEqualityNode : public TAstBaseNode {

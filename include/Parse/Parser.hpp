@@ -33,6 +33,8 @@ CLASS_PRIVATE:
 
 	PARSE_FUNCTION(ParseUnary);
 
+	PARSE_FUNCTION(ParsePosfixUnary);
+
 	PARSE_FUNCTION(ParseEquality);
 
 	PARSE_FUNCTION(ParseAssign);

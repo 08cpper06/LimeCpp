@@ -424,14 +424,62 @@ PARSE_FUNCTION_IMPLEMENT(ParseParenthess)
 PARSE_FUNCTION_IMPLEMENT(ParseUnary)
 {
 	if (InItr->MyLetter.MyHashValue != U'+' &&
-		InItr->MyLetter.MyHashValue != U'-')
+		InItr->MyLetter.MyHashValue != U'-' &&
+		InItr->MyLetter != U"++" &&
+		InItr->MyLetter != U"--")
 	{
-		return Parser::ParseValue(OutResult, InItr);
+		return Parser::ParsePosfixUnary(OutResult, InItr);
 	}
-	TSharedPtr<TAstUnaryNode> Node = MakeShared<TAstUnaryNode>();
+	TSharedPtr<TAstPrefixUnaryNode> Node = MakeShared<TAstPrefixUnaryNode>();
 	Node->MyOperator = InItr;
 	Node->MyExpr = Parser::ParseValue(OutResult, ++InItr);
 	return Node;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParsePosfixUnary)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	TSharedPtr<TAstBaseNode> Value = Parser::ParseValue(OutResult, TmpItr);
+	if (TmpItr->MyLetter == U"++" ||
+		TmpItr->MyLetter == U"--")
+	{
+		TSharedPtr<TAstPostfixUnaryNode> Node = MakeShared<TAstPostfixUnaryNode>();
+		Node->MyExpr = Value;
+		Node->MyOperator = TmpItr;
+		InItr = ++TmpItr;
+		return Node;
+	}
+	/* array index reference */
+	if ((Value && Value->StaticClass() == TAstVarNode().StaticClass()) &&
+		TmpItr->MyLetter.MyHashValue == U'[')
+	{
+		++TmpItr;
+		TSharedPtr<TAstArrayReference> Node = MakeShared<TAstArrayReference>();
+		TSharedPtr<TAstVarNode> VarNode = StaticCast<TAstVarNode>(Value);
+		if (TSharedPtr<TBlockEntry> BlockEntry = VarNode->MyBlock.Lock())
+		{
+			TOption<TVarInfo> VarInfo = BlockEntry->GetInfo(VarNode->MyName->MyLetter);
+			if (VarInfo && VarInfo->MyIsArray)
+			{
+				Node->MyArrayInfo = *VarInfo;
+				Node->MyIndex = Parser::ParseExpr(OutResult, TmpItr);
+				
+				if (TmpItr->MyLetter.MyHashValue != U']')
+				{
+					InItr = TmpItr;
+					return OutResult.MakeError(TmpItr, U"expected a `]`");
+				}
+				InItr = ++TmpItr;
+				return Node;
+
+			}
+		}
+	}
+
+	/* TODO : `.` or `->` */
+
+	InItr = TmpItr;
+	return Value;
 }
 
 PARSE_FUNCTION_IMPLEMENT(ParseEquality)

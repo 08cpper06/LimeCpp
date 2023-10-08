@@ -76,11 +76,29 @@ TUtf32String TAstParenthessNode::GetInfoString(TUtf32String InPrefix) const
 	return Str;
 }
 
-TUtf32String TAstUnaryNode::GetInfoString(TUtf32String InPrefix) const
+TUtf32String TAstPrefixUnaryNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<Unary Operator=" + MyOperator->MyLetter + U">\n";
 	Str += MyExpr->GetInfoString(InPrefix + U'\t');
 	Str += InPrefix + U"</Unary>\n";
+	return Str;
+}
+
+TUtf32String TAstPostfixUnaryNode::GetInfoString(TUtf32String InPrefix) const
+{
+	TUtf32String Str = InPrefix + U"<PosifixUnary Operator=" + MyOperator->MyLetter + U">\n";
+	Str += MyExpr->GetInfoString(InPrefix + U'\t');
+	Str += InPrefix + U"</PosifixUnary>\n";
+	return Str;
+}
+
+TUtf32String TAstArrayReference::GetInfoString(TUtf32String InPrefix) const
+{
+	TUtf32String Str = InPrefix + U"<ArrayReference>\n";
+	Str += InPrefix + U"\t<Index>\n";
+	Str += MyIndex->GetInfoString(InPrefix + U"\t\t");
+	Str += InPrefix + U"\t</Index>\n";
+	Str += InPrefix + U"</ArrayReference>\n";
 	return Str;
 }
 
