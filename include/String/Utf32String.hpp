@@ -307,7 +307,7 @@ public:
 	constexpr TUtf32String(const TUtf32String& InRhs) :
 		MyData(InRhs.MyData)
 	{}
-	constexpr TUtf32String(TUtf32String&& InRhs) :
+	constexpr TUtf32String(TUtf32String&& InRhs) noexcept :
 		MyData(std::exchange(InRhs.MyData, {}))
 	{}
 
@@ -323,13 +323,13 @@ public:
 		return *this;
 	}
 
-	constexpr TUtf32String& operator=(const TUtf32String& InRhs)
+	constexpr TUtf32String& operator=(const TUtf32String& InRhs) noexcept
 	{
 		MyData = InRhs.MyData;
 		return *this;
 	}
 
-	constexpr TUtf32String& operator=(TUtf32String&& InRhs)
+	constexpr TUtf32String& operator=(TUtf32String&& InRhs) noexcept
 	{
 		MyData = std::exchange(InRhs.MyData, {});
 		return *this;

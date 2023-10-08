@@ -24,7 +24,7 @@ namespace Lime {
 		while (Itr != InStr.end())
 		{
 			Ret *= 10;
-			Ret += *Itr - U'0';
+			Ret += static_cast<size_t>(*Itr) - U'0';
 			++Itr;
 		}
 		return Ret;
@@ -40,7 +40,7 @@ namespace Lime {
 		while (Itr != InStr.end())
 		{
 			Ret *= 10;
-			Ret += *Itr - U'0';
+			Ret += static_cast<size_t>(*Itr) - U'0';
 			++Itr;
 		}
 		return Ret;

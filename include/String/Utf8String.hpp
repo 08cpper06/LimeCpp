@@ -378,11 +378,11 @@ public:
 
 	constexpr ~TUtf8String() {}
 
-	constexpr TUtf8String(const TUtf8String& InRhs) :
+	constexpr TUtf8String(const TUtf8String& InRhs) noexcept :
 		MyData(InRhs.MyData),
 		MyCodePointCount(InRhs.MyCodePointCount)
 	{}
-	constexpr TUtf8String(TUtf8String&& InRhs) :
+	constexpr TUtf8String(TUtf8String&& InRhs) noexcept :
 		MyData(std::exchange(InRhs.MyData, {})),
 		MyCodePointCount(std::exchange(InRhs.MyCodePointCount, {}))
 	{}
@@ -393,7 +393,7 @@ public:
 		return *this;
 	}
 
-	constexpr TUtf8String& operator=(TUtf8String&& InRhs)
+	constexpr TUtf8String& operator=(TUtf8String&& InRhs) noexcept
 	{
 		MyData = std::exchange(InRhs.MyData, {});
 		return *this;
