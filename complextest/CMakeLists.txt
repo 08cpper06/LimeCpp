@@ -20,6 +20,8 @@ add_executable(${PROJECT_NAME}
 	../src/Parse/ASTNodeLog.cpp
 	../src/Parse/TypeTable.cpp
 	../src/Parse/VariableTable.cpp
+	../src/Parse/ASTNodeEvaluate.cpp
+	../src/Parse/Object.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)

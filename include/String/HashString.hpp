@@ -8,8 +8,6 @@
 #include "Utf8StringView.hpp"
 #include "EncodingConverter.hpp"
 
-#include <source_location>
-
 
 class THashString {
 #if defined(_DEBUG)

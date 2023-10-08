@@ -23,8 +23,9 @@ public:
 
 	virtual TAstBaseNode* StaticClass() const = 0;
 	virtual TUtf32String GetInfoString(TUtf32String InPrefix) const = 0;	
-	virtual TOption<THashString> EvaluateType() const noexcept = 0;
+	virtual TSharedPtr<TTypeInfo> EvaluateType() const noexcept = 0;
 	virtual bool IsStaticEvaluatable() const noexcept = 0;
+	virtual TSharedPtr<TObject> Evaluate() const noexcept = 0;
 };
 
 #define AST_BODY_CLASS(ClassName) ~ClassName() = default; \
@@ -34,10 +35,11 @@ virtual TAstBaseNode* StaticClass() const override \
 	return &StaticInstance; \
 } \
 TUtf32String GetInfoString(TUtf32String InPrefix) const override; \
+TSharedPtr<TObject> Evaluate() const noexcept override; \
 friend class Parser
 
-#define DEFINE_EVALUATE_TYPE(Value) TOption<THashString> EvaluateType() const noexcept override { return Value; }
-#define IMPLEMENT_EVALUATE_TYPE() TOption<THashString> EvaluateType() const noexcept override
+#define DEFINE_EVALUATE_TYPE(Value) TSharedPtr<TTypeInfo> EvaluateType() const noexcept override { return Value; }
+#define IMPLEMENT_EVALUATE_TYPE() TSharedPtr<TTypeInfo> EvaluateType() const noexcept override
 
 #define DEFINE_STATIC_EVALUATABLE(Value) bool IsStaticEvaluatable() const noexcept override { return Value; }
 #define IMPLEMENT_STATIC_EVALUATABLE() bool IsStaticEvaluatable() const noexcept override
@@ -46,7 +48,7 @@ class TAstErrorNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstErrorNode);
 
-	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+	DEFINE_EVALUATE_TYPE(nullptr);
 
 	DEFINE_STATIC_EVALUATABLE(true);
 
@@ -61,7 +63,7 @@ class TAstWarningNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstWarningNode);
 
-	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+	DEFINE_EVALUATE_TYPE(nullptr);
 
 	DEFINE_STATIC_EVALUATABLE(true);
 
@@ -85,7 +87,7 @@ public:
 		{
 			return MyExpr->EvaluateType();
 		}
-		return THashString(U"void");
+		return TTypeTable::GetGlobalTable()->GetInfo(THashString(U"void"));
 	}
 
 	DEFINE_STATIC_EVALUATABLE(MyExpr->IsStaticEvaluatable());
@@ -102,7 +104,7 @@ class TAstBlockNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstBlockNode);
 
-	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+	DEFINE_EVALUATE_TYPE(nullptr);
 
 	IMPLEMENT_STATIC_EVALUATABLE()
 	{
@@ -124,7 +126,7 @@ class TAstValNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstValNode);
 
-	DEFINE_EVALUATE_TYPE(MyType->MyName);
+	DEFINE_EVALUATE_TYPE(MyType);
 
 	DEFINE_STATIC_EVALUATABLE(true);
 
@@ -145,9 +147,13 @@ public:
 		if ((!MyLhs || !MyLhs->EvaluateType()) ||
 			(!MyRhs || !MyRhs->EvaluateType()))
 		{
-			return TOption<THashString>(DefaultErrorType::Error);
+			return nullptr;
 		}
-		return MyLhsType->IsEvaluatableExpr(MyRhsType);
+		if (TOption<THashString> TypeName = MyLhsType->IsEvaluatableExpr(MyRhs->EvaluateType()))
+		{
+			return TTypeTable::GetGlobalTable()->GetInfo(*TypeName);
+		}
+		return nullptr;
 	}
 
 	DEFINE_STATIC_EVALUATABLE(MyLhs->IsStaticEvaluatable() && MyRhs->IsStaticEvaluatable());
@@ -169,9 +175,13 @@ public:
 		if ((!MyLhs || !MyLhs->EvaluateType()) ||
 			(!MyRhs || !MyRhs->EvaluateType()))
 		{
-			return TOption<THashString>(DefaultErrorType::Error);
+			return nullptr;
 		}
-		return MyLhsType->IsEvaluatableExpr(MyRhsType);
+		if (TOption<THashString> TypeName = MyLhsType->IsEvaluatableExpr(MyRhs->EvaluateType()))
+		{
+			return TTypeTable::GetGlobalTable()->GetInfo(*TypeName);
+		}
+		return nullptr;
 	}
 
 	DEFINE_STATIC_EVALUATABLE(MyLhs->IsStaticEvaluatable() && MyRhs->IsStaticEvaluatable());
@@ -194,7 +204,7 @@ public:
 		{
 			return MyNode->EvaluateType();
 		}
-		return DefaultErrorType::Error;
+		return nullptr;
 	}
 
 	DEFINE_STATIC_EVALUATABLE(MyNode->IsStaticEvaluatable());
@@ -213,7 +223,7 @@ public:
 		{
 			return MyExpr->EvaluateType();
 		}
-		return DefaultErrorType::Error;
+		return nullptr;
 	}
 
 	DEFINE_STATIC_EVALUATABLE(MyExpr ? MyExpr->IsStaticEvaluatable() : true);
@@ -233,7 +243,7 @@ public:
 		{
 			return MyExpr->EvaluateType();
 		}
-		return DefaultErrorType::Error;
+		return nullptr;
 	}
 
 	DEFINE_STATIC_EVALUATABLE(MyExpr->IsStaticEvaluatable());
@@ -253,7 +263,7 @@ public:
 		{
 			return MyExpr->EvaluateType();
 		}
-		return DefaultErrorType::Error;
+		return nullptr;
 	}
 
 	DEFINE_STATIC_EVALUATABLE(MyExpr->IsStaticEvaluatable());
@@ -267,20 +277,21 @@ class TAstArrayReference : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstArrayReference);
 
-	DEFINE_EVALUATE_TYPE(MyArrayInfo.MyType->MyName);
+	DEFINE_EVALUATE_TYPE(MyArrayInfo->MyType);
 
 	DEFINE_STATIC_EVALUATABLE(MyIndex->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
-	TVarInfo MyArrayInfo;
+	TSharedPtr<TVarInfo> MyArrayInfo;
 	TSharedPtr<TAstBaseNode> MyIndex;
+	TSharedPtr<TAstBaseNode> MyError;
 };
 
 class TAstEqualityNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstEqualityNode);
 
-	DEFINE_EVALUATE_TYPE(U"bool");
+	DEFINE_EVALUATE_TYPE(TTypeTable::GetGlobalTable()->GetInfo(U"bool"));
 
 	DEFINE_STATIC_EVALUATABLE(MyLhs->IsStaticEvaluatable() && MyRhs->IsStaticEvaluatable());
 
@@ -300,7 +311,7 @@ public:
 		{
 			return MyLhs->EvaluateType();
 		}
-		return DefaultErrorType::Error;
+		return nullptr;
 	}
 
 	DEFINE_STATIC_EVALUATABLE(MyRhs->IsStaticEvaluatable());
@@ -314,7 +325,7 @@ class TAstRelationalNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstRelationalNode);
 
-	DEFINE_EVALUATE_TYPE(U"bool");
+	DEFINE_EVALUATE_TYPE(TTypeTable::GetGlobalTable()->GetInfo(U"bool"));
 
 	DEFINE_STATIC_EVALUATABLE(MyLhs->IsStaticEvaluatable() && MyRhs->IsStaticEvaluatable());
 
@@ -328,7 +339,7 @@ class TAstVarNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstVarNode);
 
-	DEFINE_EVALUATE_TYPE(MyType->MyName);
+	DEFINE_EVALUATE_TYPE(MyType);
 
 	DEFINE_STATIC_EVALUATABLE(false); /* TODO : Check whether variable is constant? */
 
@@ -344,7 +355,7 @@ class TAstIfNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstIfNode);
 
-	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+	DEFINE_EVALUATE_TYPE(nullptr);
 
 	DEFINE_STATIC_EVALUATABLE(false);
 
@@ -358,7 +369,7 @@ class TAstWhileNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstWhileNode);
 
-	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+	DEFINE_EVALUATE_TYPE(nullptr);
 
 	DEFINE_STATIC_EVALUATABLE(false);
 
@@ -371,7 +382,7 @@ class TAstForNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstForNode);
 
-	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+	DEFINE_EVALUATE_TYPE(nullptr);
 
 	DEFINE_STATIC_EVALUATABLE(false);
 
@@ -386,7 +397,7 @@ class TAstFunctionDefinitionNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstFunctionDefinitionNode);
 
-	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+	DEFINE_EVALUATE_TYPE(nullptr);
 
 	DEFINE_STATIC_EVALUATABLE(true);
 
@@ -395,7 +406,7 @@ CLASS_PRIVATE:
 	TSharedPtr<TTypeInfo> MyReturnType;
 
 	TSharedPtr<TAstBaseNode> MyBlockExpr;
-	Lime::TArray<Lime::TPair<TSharedPtr<TTypeInfo>, TVarInfo>> MyArguments;
+	Lime::TArray<Lime::TPair<TSharedPtr<TTypeInfo>, TSharedPtr<TVarInfo>>> MyArguments;
 	Lime::TArray<TSharedPtr<TAstErrorNode>> MyErrors;
 };
 
@@ -403,7 +414,7 @@ class TAstVariableDefinitionNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstVariableDefinitionNode);
 
-	DEFINE_EVALUATE_TYPE(TOption<THashString>(DefaultErrorType::Error));
+	DEFINE_EVALUATE_TYPE(nullptr);
 
 	DEFINE_STATIC_EVALUATABLE(true);
 
@@ -421,7 +432,7 @@ class TAstInitializerListNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstInitializerListNode);
 
-	DEFINE_EVALUATE_TYPE(MyType->MyName);
+	DEFINE_EVALUATE_TYPE(MyType);
 
 	IMPLEMENT_STATIC_EVALUATABLE()
 	{
@@ -443,7 +454,14 @@ class TAstFunctionCallNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstFunctionCallNode);
 
-	DEFINE_EVALUATE_TYPE(MyFunction->MyReturnType->GetString());
+	IMPLEMENT_EVALUATE_TYPE()
+	{
+		if (MyFunction->MyReturnType)
+		{
+			return TTypeTable::GetGlobalTable()->GetInfo(*MyFunction->MyReturnType);
+		}
+		return nullptr;
+	}
 
 	DEFINE_STATIC_EVALUATABLE(false);
 

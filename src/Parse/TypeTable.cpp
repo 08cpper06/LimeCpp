@@ -1,4 +1,5 @@
 #include "Parse/TypeTable.hpp"
+#include "Std.hpp"
 
 
 TTypeInfo::TTypeInfo() :
@@ -89,7 +90,19 @@ void TTypeTable::Define(const TTypeInfo& InInfo)
 
 TTypeTable::TTypeTable()
 {
-	TTypeInfo BuiltInType[] = {
+	for (Lime::TPair<Lime::size_t, TSharedPtr<TTypeInfo>> TypeInfo : GetGlobalTable()->MyTable)
+	{
+		Define(*TypeInfo.second);
+	}
+}
+TTypeTable::TTypeTable(nullptr_t) {}
+
+TTypeTable* TTypeTable::GetGlobalTable() noexcept
+{
+	static TTypeTable Table(nullptr);
+	static std::once_flag OnceFlag;
+	static TTypeInfo BuiltInType[] =
+	{
 		{ THashString(U"void"),				0, 0, Lime::TMap<THashString, CastErrorCode>() },
 		{ THashString(U"char"),				1, 1, Lime::TMap<THashString, CastErrorCode>() },
 		{ THashString(U"short"),			2, 2, Lime::TMap<THashString, CastErrorCode>() },
@@ -100,133 +113,162 @@ TTypeTable::TTypeTable()
 		{ THashString(U"unsigned int"),		4, 4, Lime::TMap<THashString, CastErrorCode>() },
 		{ THashString(U"unsigned long"),	4, 4, Lime::TMap<THashString, CastErrorCode>() },
 		{ THashString(U"float"),			4, 4, Lime::TMap<THashString, CastErrorCode>() },
-		{ THashString(U"double"),			8, 4, Lime::TMap<THashString, CastErrorCode>() }
+		{ THashString(U"double"),			8, 4, Lime::TMap<THashString, CastErrorCode>() },
+		{ THashString(U"bool"),				1, 1, Lime::TMap<THashString, CastErrorCode>() }
 	};
 
-	/* char */
-	BuiltInType[1].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
-	BuiltInType[1].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::Castable });
-	BuiltInType[1].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::Castable });
-	BuiltInType[1].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
-	BuiltInType[1].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
-	BuiltInType[1].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[1].MyCastArray.insert({ THashString(U"unsigned short"), CastErrorCode::ExplicitCastable });
-	BuiltInType[1].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[1].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[1].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
-	BuiltInType[1].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
-	/* short */
-	BuiltInType[2].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
-	BuiltInType[2].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::ExplicitCastable });
-	BuiltInType[2].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::Castable });
-	BuiltInType[2].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
-	BuiltInType[2].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
-	BuiltInType[2].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[2].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[2].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[2].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[2].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
-	BuiltInType[2].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
-	/* int */
-	BuiltInType[3].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
-	BuiltInType[3].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::ExplicitCastable });
-	BuiltInType[3].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::ExplicitCastable });
-	BuiltInType[3].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
-	BuiltInType[3].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
-	BuiltInType[3].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[3].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[3].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[3].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[3].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
-	BuiltInType[3].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
-	/* long */
-	BuiltInType[4].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
-	BuiltInType[4].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::ExplicitCastable });
-	BuiltInType[4].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::ExplicitCastable });
-	BuiltInType[4].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
-	BuiltInType[4].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
-	BuiltInType[4].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[4].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[4].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[4].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[4].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
-	BuiltInType[4].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
-	/* unsigned char */
-	BuiltInType[5].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
-	BuiltInType[5].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::Castable });
-	BuiltInType[5].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::Castable });
-	BuiltInType[5].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
-	BuiltInType[5].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
-	BuiltInType[5].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::Castable });
-	BuiltInType[5].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[5].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[5].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[5].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
-	BuiltInType[5].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
-	/* unsigned short */
-	BuiltInType[6].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
-	BuiltInType[6].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::ExplicitCastable });
-	BuiltInType[6].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::ExplicitCastable });
-	BuiltInType[6].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::ExplicitCastable });
-	BuiltInType[6].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::ExplicitCastable });
-	BuiltInType[6].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[6].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::Castable });
-	BuiltInType[6].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::Castable });
-	BuiltInType[6].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::Castable });
-	BuiltInType[6].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
-	BuiltInType[6].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
-	/* unsigned int */
-	BuiltInType[7].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
-	BuiltInType[7].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::ExplicitCastable });
-	BuiltInType[7].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::ExplicitCastable });
-	BuiltInType[7].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
-	BuiltInType[7].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
-	BuiltInType[7].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[7].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[7].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::Castable });
-	BuiltInType[7].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::Castable });
-	BuiltInType[7].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
-	BuiltInType[7].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
-	/* unsigned long */
-	BuiltInType[8].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
-	BuiltInType[8].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::ExplicitCastable });
-	BuiltInType[8].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::ExplicitCastable });
-	BuiltInType[8].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
-	BuiltInType[8].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
-	BuiltInType[8].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[8].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::ExplicitCastable });
-	BuiltInType[8].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::Castable });
-	BuiltInType[8].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::Castable });
-	BuiltInType[8].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
-	BuiltInType[8].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
-	/* float */
-	BuiltInType[9].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
-	BuiltInType[9].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::LossCast });
-	BuiltInType[9].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::LossCast });
-	BuiltInType[9].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::LossCast });
-	BuiltInType[9].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::LossCast });
-	BuiltInType[9].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::LossCast });
-	BuiltInType[9].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::LossCast });
-	BuiltInType[9].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::LossCast });
-	BuiltInType[9].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::LossCast });
-	BuiltInType[9].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
-	BuiltInType[9].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
-	/* double */
-	BuiltInType[10].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
-	BuiltInType[10].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::LossCast });
-	BuiltInType[10].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::LossCast });
-	BuiltInType[10].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::LossCast });
-	BuiltInType[10].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::LossCast });
-	BuiltInType[10].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::LossCast });
-	BuiltInType[10].MyCastArray.insert({ THashString(U"unsigned short"),CastErrorCode::LossCast });
-	BuiltInType[10].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::LossCast });
-	BuiltInType[10].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::LossCast });
-	BuiltInType[10].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::LossCast });
-	BuiltInType[10].MyCastArray.insert({ THashString(U"double"),		CastErrorCode::Castable });
+	std::call_once(OnceFlag, []()
+	{
+		/* char */
+		BuiltInType[1].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
+		BuiltInType[1].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::Castable });
+		BuiltInType[1].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::Castable });
+		BuiltInType[1].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
+		BuiltInType[1].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
+		BuiltInType[1].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[1].MyCastArray.insert({ THashString(U"unsigned short"), CastErrorCode::ExplicitCastable });
+		BuiltInType[1].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[1].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[1].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
+		BuiltInType[1].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
+		BuiltInType[1].MyCastArray.insert({ THashString(U"bool"),			CastErrorCode::Castable });
+		/* short */
+		BuiltInType[2].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
+		BuiltInType[2].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::ExplicitCastable });
+		BuiltInType[2].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::Castable });
+		BuiltInType[2].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
+		BuiltInType[2].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
+		BuiltInType[2].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[2].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[2].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[2].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[2].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
+		BuiltInType[2].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
+		BuiltInType[2].MyCastArray.insert({ THashString(U"bool"),			CastErrorCode::Castable });
+		/* int */
+		BuiltInType[3].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
+		BuiltInType[3].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::ExplicitCastable });
+		BuiltInType[3].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::ExplicitCastable });
+		BuiltInType[3].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
+		BuiltInType[3].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
+		BuiltInType[3].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[3].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[3].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[3].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[3].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
+		BuiltInType[3].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
+		BuiltInType[3].MyCastArray.insert({ THashString(U"bool"),			CastErrorCode::Castable });
+		/* long */
+		BuiltInType[4].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
+		BuiltInType[4].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::ExplicitCastable });
+		BuiltInType[4].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::ExplicitCastable });
+		BuiltInType[4].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
+		BuiltInType[4].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
+		BuiltInType[4].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[4].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[4].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[4].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[4].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
+		BuiltInType[4].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
+		BuiltInType[4].MyCastArray.insert({ THashString(U"bool"),			CastErrorCode::Castable });
+		/* unsigned char */
+		BuiltInType[5].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
+		BuiltInType[5].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::Castable });
+		BuiltInType[5].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::Castable });
+		BuiltInType[5].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
+		BuiltInType[5].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
+		BuiltInType[5].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::Castable });
+		BuiltInType[5].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[5].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[5].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[5].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
+		BuiltInType[5].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
+		BuiltInType[5].MyCastArray.insert({ THashString(U"bool"),			CastErrorCode::Castable });
+		/* unsigned short */
+		BuiltInType[6].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
+		BuiltInType[6].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::ExplicitCastable });
+		BuiltInType[6].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::ExplicitCastable });
+		BuiltInType[6].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::ExplicitCastable });
+		BuiltInType[6].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::ExplicitCastable });
+		BuiltInType[6].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[6].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::Castable });
+		BuiltInType[6].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::Castable });
+		BuiltInType[6].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::Castable });
+		BuiltInType[6].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
+		BuiltInType[6].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
+		BuiltInType[6].MyCastArray.insert({ THashString(U"bool"),			CastErrorCode::Castable });
+		/* unsigned int */
+		BuiltInType[7].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
+		BuiltInType[7].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::ExplicitCastable });
+		BuiltInType[7].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::ExplicitCastable });
+		BuiltInType[7].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
+		BuiltInType[7].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
+		BuiltInType[7].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[7].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[7].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::Castable });
+		BuiltInType[7].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::Castable });
+		BuiltInType[7].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
+		BuiltInType[7].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
+		BuiltInType[7].MyCastArray.insert({ THashString(U"bool"),			CastErrorCode::Castable });
+		/* unsigned long */
+		BuiltInType[8].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
+		BuiltInType[8].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::ExplicitCastable });
+		BuiltInType[8].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::ExplicitCastable });
+		BuiltInType[8].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::Castable });
+		BuiltInType[8].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::Castable });
+		BuiltInType[8].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[8].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::ExplicitCastable });
+		BuiltInType[8].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::Castable });
+		BuiltInType[8].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::Castable });
+		BuiltInType[8].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
+		BuiltInType[8].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
+		BuiltInType[8].MyCastArray.insert({ THashString(U"bool"),			CastErrorCode::Castable });
+		/* float */
+		BuiltInType[9].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
+		BuiltInType[9].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::LossCast });
+		BuiltInType[9].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::LossCast });
+		BuiltInType[9].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::LossCast });
+		BuiltInType[9].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::LossCast });
+		BuiltInType[9].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::LossCast });
+		BuiltInType[9].MyCastArray.insert({ THashString(U"unsigned short"),	CastErrorCode::LossCast });
+		BuiltInType[9].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::LossCast });
+		BuiltInType[9].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::LossCast });
+		BuiltInType[9].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::Castable });
+		BuiltInType[9].MyCastArray.insert({ THashString(U"double"),			CastErrorCode::Castable });
+		BuiltInType[9].MyCastArray.insert({ THashString(U"bool"),			CastErrorCode::NotCastable });
+		/* double */
+		BuiltInType[10].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::Castable });
+		BuiltInType[10].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::LossCast });
+		BuiltInType[10].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::LossCast });
+		BuiltInType[10].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::LossCast });
+		BuiltInType[10].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::LossCast });
+		BuiltInType[10].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::LossCast });
+		BuiltInType[10].MyCastArray.insert({ THashString(U"unsigned short"),CastErrorCode::LossCast });
+		BuiltInType[10].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::LossCast });
+		BuiltInType[10].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::LossCast });
+		BuiltInType[10].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::LossCast });
+		BuiltInType[10].MyCastArray.insert({ THashString(U"double"),		CastErrorCode::Castable });
+		BuiltInType[10].MyCastArray.insert({ THashString(U"bool"),			CastErrorCode::NotCastable });
+		/* bool */
+		BuiltInType[11].MyCastArray.insert({ THashString(U"void"),			CastErrorCode::NotCastable });
+		BuiltInType[11].MyCastArray.insert({ THashString(U"char"),			CastErrorCode::NotCastable });
+		BuiltInType[11].MyCastArray.insert({ THashString(U"short"),			CastErrorCode::NotCastable });
+		BuiltInType[11].MyCastArray.insert({ THashString(U"int"),			CastErrorCode::NotCastable });
+		BuiltInType[11].MyCastArray.insert({ THashString(U"long"),			CastErrorCode::NotCastable });
+		BuiltInType[11].MyCastArray.insert({ THashString(U"unsigned char"),	CastErrorCode::NotCastable });
+		BuiltInType[11].MyCastArray.insert({ THashString(U"unsigned short"),CastErrorCode::NotCastable });
+		BuiltInType[11].MyCastArray.insert({ THashString(U"unsigned int"),	CastErrorCode::NotCastable });
+		BuiltInType[11].MyCastArray.insert({ THashString(U"unsigned long"),	CastErrorCode::NotCastable });
+		BuiltInType[11].MyCastArray.insert({ THashString(U"float"),			CastErrorCode::NotCastable });
+		BuiltInType[11].MyCastArray.insert({ THashString(U"double"),		CastErrorCode::NotCastable });
+		BuiltInType[11].MyCastArray.insert({ THashString(U"bool"),			CastErrorCode::Castable });
+	});
 
 	for (const TTypeInfo& Info : BuiltInType)
 	{
-		this->Define(Info);
+		Table.Define(Info);
 	}
-}
 
+	return &Table;
+
+}

@@ -5,6 +5,7 @@
 #include "../Std.hpp"
 
 #include "TypeTable.hpp"
+#include "Object.hpp"
 
 
 class TBlocKEntry;
@@ -27,6 +28,7 @@ public:
 	THashString MyScope;
 	bool MyIsArray;
 	Lime::size_t MyArrayCount;
+	Lime::TArray<TSharedPtr<TObject>> MyObject;
 };
 
 
@@ -39,7 +41,7 @@ public:
 	bool IsDefined(THashString InVarName) const noexcept;
 	void Define(THashString InVarName, TSharedPtr<TTypeInfo> InInfo, bool InIsArray, Lime::size_t InArrayCount = 1) noexcept;
 	void UnDefine(THashString InVarName) noexcept;
-	TOption<TVarInfo> GetInfo(THashString InVarName) const noexcept;
+	TSharedPtr<TVarInfo> GetInfo(THashString InVarName) const noexcept;
 
 	THashString BlockName() const noexcept;
 	TSharedPtr<TBlockEntry> Parent() const noexcept;
@@ -71,7 +73,7 @@ public:
 
 CLASS_PRIVATE:
 	THashString MyBlockName;
-	Lime::TMap<THashString, TVarInfo> MyVariableTable;
+	Lime::TMap<THashString, TSharedPtr<TVarInfo>> MyVariableTable;
 	TWeakPtr<TBlockEntry> MyParent;
 
 	friend class TVariableTable;

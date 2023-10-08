@@ -98,6 +98,10 @@ TUtf32String TAstArrayReference::GetInfoString(TUtf32String InPrefix) const
 	Str += InPrefix + U"\t<Index>\n";
 	Str += MyIndex->GetInfoString(InPrefix + U"\t\t");
 	Str += InPrefix + U"\t</Index>\n";
+	if (MyError)
+	{
+		Str += MyError->GetInfoString(InPrefix + U'\t');
+	}
 	Str += InPrefix + U"</ArrayReference>\n";
 	return Str;
 }
@@ -233,21 +237,21 @@ TUtf32String TAstFunctionDefinitionNode::GetInfoString(TUtf32String InPrefix) co
 	else
 	{
 		Str += U'\n';
-		for (const Lime::TPair<TSharedPtr<TTypeInfo>, TVarInfo>& Argument : MyArguments)
+		for (const Lime::TPair<TSharedPtr<TTypeInfo>, TSharedPtr<TVarInfo>>& Argument : MyArguments)
 		{
-			if (Argument.second.MyIsArray)
+			if (Argument.second->MyIsArray)
 			{
 				Str += InPrefix + U"\t\t<Detail Type=\"";
 				Str += Argument.first->MyName + U"[]";
-				Str += U"\" Name=\"" + Argument.second.MyName + U"\" Count=\"";
-				Str += ToUtf32String(Argument.second.MyArrayCount);
+				Str += U"\" Name=\"" + Argument.second->MyName + U"\" Count=\"";
+				Str += ToUtf32String(Argument.second->MyArrayCount);
 				Str += U"\"/>\n";
 			}
 			else
 			{
 				Str += InPrefix + U"\t\t<Detail Type=\"";
 				Str += Argument.first->MyName;
-				Str += U"\" Name=\"" + Argument.second.MyName + U"\"/>\n";
+				Str += U"\" Name=\"" + Argument.second->MyName + U"\"/>\n";
 			}
 		}
 		Str += InPrefix + U'\t' + U"</Arguments>\n";

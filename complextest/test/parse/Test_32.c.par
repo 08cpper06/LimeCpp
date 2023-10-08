@@ -1,0 +1,20 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
+		<Block Name="Block_main">
+			<VariableDefinition Type="int" Name="arr" ArrayCount="2"></VariableDefinition>
+			<Assign>
+				<ArrayReference>
+					<Index>
+						<Val Type="int">2</Val>
+					</Index>
+					<Error Line=4 Message="out of range"/>
+				</ArrayReference>
+				<Val Type="int">0</Val>
+			</Assign>
+			<Return>
+				<Val Type="int">0</Val>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>

@@ -1,5 +1,6 @@
 #include "Parse/Parser.hpp"
 #include "String/StringUtility.hpp"
+#include "Parse/Object.hpp"
 
 
 void Parser::Analyze(TSourceContext& InContext)
@@ -177,7 +178,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 	{
 		TSharedPtr<TAstVarNode> Var = MakeShared<TAstVarNode>();
 		Var->MyName = TmpItr;
-		TOption<TVarInfo> VarInfo = OutResult.CurrentBlock->GetInfo(TmpItr->MyLetter);
+		TSharedPtr<TVarInfo> VarInfo = OutResult.CurrentBlock->GetInfo(TmpItr->MyLetter);
 		if (!VarInfo)
 		{
 			TSharedPtr<TAstBaseNode> CallNode = Parser::ParseFunctionCall(OutResult, TmpItr);
@@ -270,9 +271,9 @@ PARSE_FUNCTION_IMPLEMENT(ParseAddSub)
 		case U'-':
 			Node = MakeShared<TAstAddSubNode>();
 			Node->MyLhs = Lhs;
-			if (TOption<THashString> LhsType = Node->MyLhs->EvaluateType())
+			if (TSharedPtr<TTypeInfo> LhsType = Node->MyLhs->EvaluateType())
 			{
-				Node->MyLhsType = OutResult.MyTypeTable.GetInfo(*LhsType);
+				Node->MyLhsType = LhsType;
 			}
 			else
 			{
@@ -296,9 +297,9 @@ PARSE_FUNCTION_IMPLEMENT(ParseAddSub)
 				Node->MyRhs = Value;
 			}
 
-			if (TOption<THashString> RhsType = Node->MyRhs->EvaluateType())
+			if (TSharedPtr<TTypeInfo> RhsType = Node->MyRhs->EvaluateType())
 			{
-				Node->MyRhsType = OutResult.MyTypeTable.GetInfo(*RhsType);
+				Node->MyRhsType = RhsType;
 			}
 			else
 			{
@@ -335,9 +336,9 @@ PARSE_FUNCTION_IMPLEMENT(ParseMulDiv)
 		case U'/':
 			Node = MakeShared<TAstMulDivNode>();
 			Node->MyLhs = Lhs;
-			if (TOption<THashString> LhsType = Node->MyLhs->EvaluateType())
+			if (TSharedPtr<TTypeInfo> LhsType = Node->MyLhs->EvaluateType())
 			{
-				Node->MyLhsType = OutResult.MyTypeTable.GetInfo(*LhsType);
+				Node->MyLhsType = LhsType;
 			}
 			else
 			{
@@ -361,9 +362,9 @@ PARSE_FUNCTION_IMPLEMENT(ParseMulDiv)
 				Node->MyRhs = Value;
 			}
 
-			if (TOption<THashString> RhsType = Node->MyRhs->EvaluateType())
+			if (TSharedPtr<TTypeInfo> RhsType = Node->MyRhs->EvaluateType())
 			{
-				Node->MyRhsType = OutResult.MyTypeTable.GetInfo(*RhsType);
+				Node->MyRhsType = RhsType;
 			}
 			else
 			{
@@ -458,10 +459,10 @@ PARSE_FUNCTION_IMPLEMENT(ParsePosfixUnary)
 		TSharedPtr<TAstVarNode> VarNode = StaticCast<TAstVarNode>(Value);
 		if (TSharedPtr<TBlockEntry> BlockEntry = VarNode->MyBlock.Lock())
 		{
-			TOption<TVarInfo> VarInfo = BlockEntry->GetInfo(VarNode->MyName->MyLetter);
+			TSharedPtr<TVarInfo> VarInfo = BlockEntry->GetInfo(VarNode->MyName->MyLetter);
 			if (VarInfo && VarInfo->MyIsArray)
 			{
-				Node->MyArrayInfo = *VarInfo;
+				Node->MyArrayInfo = VarInfo;
 				Node->MyIndex = Parser::ParseExpr(OutResult, TmpItr);
 				
 				if (TmpItr->MyLetter.MyHashValue != U']')
@@ -469,8 +470,24 @@ PARSE_FUNCTION_IMPLEMENT(ParsePosfixUnary)
 					InItr = TmpItr;
 					return OutResult.MakeError(TmpItr, U"expected a `]`");
 				}
-				/* TODO : check index range if constant index */
 				InItr = ++TmpItr;
+				/* Check index range if constant index */
+				if (TSharedPtr<TObject> IndexObject = Node->MyIndex->Evaluate())
+				{
+					if (int64_t* Index = IndexObject->GetInteger())
+					{
+						if (*Index < 0 || *Index >= VarInfo->MyArrayCount)
+						{
+							InItr = TmpItr;
+							Node->MyError = OutResult.MakeError(TmpItr, U"out of range");
+						}
+					}
+					else
+					{
+						InItr = TmpItr;
+						Node->MyError = OutResult.MakeError(TmpItr, U"array index should be integer");
+					}
+				}
 				return Node;
 
 			}
@@ -911,8 +928,8 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 			{
 				TSharedPtr<TAstVariableDefinitionNode> VarDefineNode = StaticCast<TAstVariableDefinitionNode>(TmpNode);
 				OutResult.CurrentBlock->Define(VarDefineNode->MyName->MyLetter, ArgumentsTypeInfo, VarDefineNode->MyIsArray, VarDefineNode->MyArrayCount);
-				TOption<TVarInfo> Info = OutResult.CurrentBlock->GetInfo(VarDefineNode->MyName->MyLetter);
-				Node->MyArguments.push_back({ ArgumentsTypeInfo, *Info });
+				TSharedPtr<TVarInfo> Info = OutResult.CurrentBlock->GetInfo(VarDefineNode->MyName->MyLetter);
+				Node->MyArguments.push_back({ ArgumentsTypeInfo, Info });
 			}
 			else if (TmpNode->StaticClass() == TAstErrorNode().StaticClass())
 			{
@@ -954,14 +971,13 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 					Node->MyErrors.push_back(OutResult.MakeError(ReturnTypePtr->MyPosition, U"return value is not matched"));
 				}
 			}
-			else if (TOption<THashString> ReturnType = ReturnTypePtr->MyExpr->EvaluateType())
+			else if (TSharedPtr<TTypeInfo> ReturnType = ReturnTypePtr->MyExpr->EvaluateType())
 			{
 				CastErrorCode IsCastable;
 				{
-					TSharedPtr<TTypeInfo> ReturnTypeInfo = OutResult.MyTypeTable.GetInfo(*ReturnType);
-					IsCastable = ReturnTypeInfo->IsCastable(Node->MyReturnType->MyName);
+					IsCastable = ReturnType->IsCastable(Node->MyReturnType->MyName);
 				}
-				if ((Node->MyReturnType->MyName == THashString(U"void") && *ReturnType != THashString(U"void")) ||
+				if ((Node->MyReturnType->MyName == THashString(U"void") && ReturnType->MyName != THashString(U"void")) ||
 					IsCastable == CastErrorCode::NotCastable)
 				{
 					Node->MyErrors.push_back(OutResult.MakeError(ReturnTypePtr->MyPosition, U"return value is not matched"));
@@ -969,11 +985,11 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 				TUtf32String Message;
 				switch (IsCastable) {
 				case CastErrorCode::LossCast:
-					Message = U"Argument type information drop cast(Expected : " + Node->MyReturnType->MyName + U", Actual : " + *ReturnType + U")";
+					Message = U"Argument type information drop cast(Expected : " + Node->MyReturnType->MyName + U", Actual : " + ReturnType->MyName + U")";
 					ReturnTypePtr->MyWarning = OutResult.MakeWarning(ReturnTypePtr->MyPosition, Message);
 					break;
 				case CastErrorCode::ExplicitCastable:
-					Message = U"Argument type needs explicit cast(Expected : " + Node->MyReturnType->MyName + U", Actual : " + *ReturnType + U")";
+					Message = U"Argument type needs explicit cast(Expected : " + Node->MyReturnType->MyName + U", Actual : " + ReturnType->MyName + U")";
 					ReturnTypePtr->MyWarning = OutResult.MakeWarning(ReturnTypePtr->MyPosition, Message);
 					break;
 				}
@@ -1043,6 +1059,10 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 	}
 
 	InItr = TmpItr;
+	OutResult.CurrentBlock->Define(Node->MyName->MyLetter, TypeInfo, IsArray, ArrayCount);
+	TSharedPtr<TVarInfo> VariableInfo = OutResult.CurrentBlock->GetInfo(Node->MyName->MyLetter);
+
+	/* Check whether value initialize */
 	if (TmpItr->MyLetter.MyHashValue == U'=')
 	{
 		if (IsArray)
@@ -1062,6 +1082,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 				if (TmpItr->MyLetter.MyHashValue == U'}')
 				{
 					InitialValues->MyLists.push_back(ElementNode);
+					VariableInfo->MyObject.push_back(MakeShared<TObject>(Node->MyType, ElementNode->Evaluate()));
 					break;
 				}
 				if (TmpItr->MyLetter.MyHashValue != U',' || !ElementNode.Get())
@@ -1070,6 +1091,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 					return OutResult.MakeError(TmpItr, U"invalid expression was found in `{ }`");
 				}
 				InitialValues->MyLists.push_back(ElementNode);
+				VariableInfo->MyObject.push_back(MakeShared<TObject>(Node->MyType, ElementNode->Evaluate()));
 				++TmpItr;
 			}
 			Node->MyInitializeExpr = InitialValues;
@@ -1088,11 +1110,12 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 		else
 		{
 			Node->MyInitializeExpr = Parser::ParseExpr(OutResult, ++InItr);
+			VariableInfo->MyObject.push_back(MakeShared<TObject>(Node->MyType, Node->MyInitializeExpr->Evaluate()));
 		}
 	}
 
 	Node->MyArrayCount = ArrayCount;
-	OutResult.CurrentBlock->Define(Node->MyName->MyLetter, TypeInfo, IsArray, ArrayCount);
+	VariableInfo->MyIsArray = ArrayCount;
 	return Node;
 }
 
@@ -1134,7 +1157,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 	InItr = TmpItr;
 
 	/* Check whether this function is defined */
-	if (!FunctionDefineInfo  || !(FunctionDefineInfo->MyReturnType))
+	if (!FunctionDefineInfo  || !(FunctionDefineInfo->IsFunction()))
 	{
 		return OutResult.MakeError(SaveFunctionName, U'`' + SaveFunctionName->MyLetter + U"` is not defined");
 	}
@@ -1150,7 +1173,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 		}
 		else
 		{
-			TOption<THashString> ActualArgumentType = Argument->EvaluateType();
+			TSharedPtr<TTypeInfo> ActualArgumentType = Argument->EvaluateType();
 			if (!ActualArgumentType) /* Check whether this argument is evaluatable type */
 			{
 				Node->MyArguments.push_back({ nullptr, OutResult.MakeError(TmpItr, U"Expected expression") });
@@ -1161,20 +1184,19 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 			}
 			else /* Check whether argument is matched */
 			{
-				TSharedPtr<TTypeInfo> ArgumentTypeInfo = OutResult.MyTypeTable.GetInfo(*ActualArgumentType);
-				CastErrorCode IsCastable = ArgumentTypeInfo->IsCastable(ExpectArgument[ArgIdx]);
+				CastErrorCode IsCastable = ActualArgumentType->IsCastable(ExpectArgument[ArgIdx]);
 				TUtf32String Message;
 				switch (IsCastable) {
 				case CastErrorCode::NotCastable:
-					Message = U"Argument type is not matched(Expected : " + ExpectArgument[ArgIdx] + U", Actual : " + *ActualArgumentType + U")";
+					Message = U"Argument type is not matched(Expected : " + ExpectArgument[ArgIdx] + U", Actual : " + ActualArgumentType->MyName + U")";
 					Node->MyArguments.push_back({ Argument, OutResult.MakeError(TmpItr, Message) });
 					break;
 				case CastErrorCode::LossCast:
-					Message = U"Argument type information drop cast(Expected : " + ExpectArgument[ArgIdx] + U", Actual : " + *ActualArgumentType + U")";
+					Message = U"Argument type information drop cast(Expected : " + ExpectArgument[ArgIdx] + U", Actual : " + ActualArgumentType->MyName + U")";
 					Node->MyArguments.push_back({ Argument, OutResult.MakeWarning(TmpItr, Message) });
 					break;
 				case CastErrorCode::ExplicitCastable:
-					Message = U"Argument type needs explicit cast(Expected : " + ExpectArgument[ArgIdx] + U", Actual : " + *ActualArgumentType + U")";
+					Message = U"Argument type needs explicit cast(Expected : " + ExpectArgument[ArgIdx] + U", Actual : " + ActualArgumentType->MyName + U")";
 					Node->MyArguments.push_back({ Argument, OutResult.MakeWarning(TmpItr, Message) });
 					break;
 				case CastErrorCode::Castable:

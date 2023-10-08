@@ -1,0 +1,23 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
+		<Block Name="Block_main">
+			<VariableDefinition Type="int" Name="arr" ArrayCount="3"></VariableDefinition>
+			<Assign>
+				<ArrayReference>
+					<Index>
+						<Operator Type="*">
+							<Val Type="int">1</Val>
+							<Val Type="int">4</Val>
+						</Operator>
+					</Index>
+					<Error Line=4 Message="out of range"/>
+				</ArrayReference>
+				<Val Type="int">0</Val>
+			</Assign>
+			<Return>
+				<Val Type="int">0</Val>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>

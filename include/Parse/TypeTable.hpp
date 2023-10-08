@@ -45,10 +45,12 @@ public:
 	
 	void Define(const TTypeInfo& Info);
 
+	static TTypeTable* GetGlobalTable() noexcept;
 private:
 	Lime::TMap<Lime::size_t /* HashValue */, TSharedPtr<TTypeInfo>> MyTable;
 
 public:
 	TTypeTable();
+	TTypeTable(nullptr_t); /* dummy constructor for GlobalTable */
 	~TTypeTable() = default;
 };

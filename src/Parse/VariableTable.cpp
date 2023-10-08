@@ -6,7 +6,8 @@ TVarInfo::TVarInfo() :
 	MyType(nullptr),
 	MyArrayCount(1),
 	MyIsArray(false),
-	MyScope()
+	MyScope(),
+	MyObject()
 {}
 
 TVarInfo::TVarInfo(THashString InName, TSharedPtr<TTypeInfo> InType, bool InIsArray, Lime::size_t InArrayCount, THashString InScopeName) :
@@ -14,7 +15,8 @@ TVarInfo::TVarInfo(THashString InName, TSharedPtr<TTypeInfo> InType, bool InIsAr
 	MyType(InType),
 	MyArrayCount(InArrayCount),
 	MyIsArray(InIsArray),
-	MyScope(InScopeName)
+	MyScope(InScopeName),
+	MyObject()
 {}
 
 bool TVarInfo::operator==(const TVarInfo& InRhs) const noexcept
@@ -64,7 +66,7 @@ void TBlockEntry::Define(THashString InVarName, TSharedPtr<TTypeInfo> InInfo, bo
 {
 	MyVariableTable.insert({
 		InVarName,
-		TVarInfo(InVarName, InInfo, InIsArray, InArrayCount, MyBlockName)
+		MakeShared<TVarInfo>(InVarName, InInfo, InIsArray, InArrayCount, MyBlockName)
 	});
 }
 
@@ -73,7 +75,7 @@ void TBlockEntry::UnDefine(THashString InVarName) noexcept
 	MyVariableTable.erase(InVarName);
 }
 
-TOption<TVarInfo> TBlockEntry::GetInfo(THashString InVarName) const noexcept
+TSharedPtr<TVarInfo> TBlockEntry::GetInfo(THashString InVarName) const noexcept
 {
 	const auto Itr = MyVariableTable.find(InVarName);
 	if (Itr != MyVariableTable.end())
@@ -84,7 +86,7 @@ TOption<TVarInfo> TBlockEntry::GetInfo(THashString InVarName) const noexcept
 	{
 		return Parent->GetInfo(InVarName);
 	}
-	return DefaultErrorType::Error;
+	return nullptr;
 }
 
 THashString TBlockEntry::BlockName() const noexcept

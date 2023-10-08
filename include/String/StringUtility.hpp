@@ -13,7 +13,7 @@
 
 namespace Lime {
 
-	TOption<size_t> ToUInt(const TUtf32String& InStr) noexcept
+	inline TOption<size_t> ToUInt(const TUtf32String& InStr) noexcept
 	{
 		auto Itr = InStr.begin();
 		if (!Syntax::IsDigit(*Itr))
@@ -29,7 +29,7 @@ namespace Lime {
 		}
 		return Ret;
 	}
-	TOption<size_t> ToUInt(TUtf32StringView InStr) noexcept
+	inline TOption<size_t> ToUInt(TUtf32StringView InStr) noexcept
 	{
 		auto Itr = InStr.begin();
 		if (!Syntax::IsDigit(*Itr))
@@ -46,7 +46,7 @@ namespace Lime {
 		return Ret;
 	}
 
-	TOption<int> ToInt(const TUtf32String& InStr) noexcept
+	inline TOption<int> ToInt(const TUtf32String& InStr) noexcept
 	{
 		auto Itr = InStr.begin();
 		bool IsNegative = false;
@@ -73,7 +73,7 @@ namespace Lime {
 		}
 		return IsNegative ? -Ret : Ret;
 	}
-	TOption<int> ToInt(TUtf32StringView InStr) noexcept
+	inline TOption<int> ToInt(TUtf32StringView InStr) noexcept
 	{
 		auto Itr = InStr.begin();
 		bool IsNegative = false;
@@ -99,6 +99,52 @@ namespace Lime {
 			++Itr;
 		}
 		return IsNegative ? -Ret : Ret;
+	}
+
+	inline TVariant<int64_t, double, bool> Eval(TUtf32String InStr) noexcept
+	{
+		bool IsDot = false;
+		int64_t IntValue = 0;
+		double DoubleValue = 0;
+		double Digit = 10;
+
+		for (char32_t Char : InStr)
+		{
+			if (!Syntax::IsDigit(Char))
+			{
+				break;
+			}
+			else if (Char == U'.')
+			{
+				if (IsDot)
+				{
+					break;
+				}
+				IsDot = true;
+				DoubleValue = static_cast<double>(IntValue);
+			}
+			if (IsDot)
+			{
+				DoubleValue = Digit * (static_cast<int64_t>(Char) - U'0');
+				Digit /= 10;
+			}
+			else
+			{
+				IntValue *= 10;
+				IntValue += static_cast<int64_t>(Char) - U'0';
+			}
+		}
+
+		TVariant<int64_t, double, bool> Value;
+		if (IsDot)
+		{
+			Value = DoubleValue;
+		}
+		else
+		{
+			Value = IntValue;
+		}
+		return Value;
 	}
 
 }

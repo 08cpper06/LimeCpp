@@ -9,10 +9,13 @@
 #include <memory>
 #include <list>
 #include <set>
+#include <variant>
+#include <mutex>
 
 /* non-override */
 #include <initializer_list>
 #include <type_traits>
+#include <source_location>
 
 
 #include "Memory/SharedPtr.hpp"
@@ -52,6 +55,9 @@ namespace Lime {
 
 	template <class Type>
 	using TSet = std::set<Type>;
+
+	template <class... Types>
+	using TVariant = std::variant<Types...>;
 
 	template <class... TArgs>
 	void LimeLog(LimeLogType InLogType, const char8_t* InMessage, TArgs&&... InArgs)
