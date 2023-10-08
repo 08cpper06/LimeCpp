@@ -177,7 +177,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 	{
 		TSharedPtr<TAstVarNode> Var = MakeShared<TAstVarNode>();
 		Var->MyName = TmpItr;
-		TOption<TVarInfo> VarInfo = OutResult.CurrentBlock->GetInfo(TmpItr->MyLetter);
+		TSharedPtr<TVarInfo> VarInfo = OutResult.CurrentBlock->GetInfo(TmpItr->MyLetter);
 		if (!VarInfo)
 		{
 			TSharedPtr<TAstBaseNode> CallNode = Parser::ParseFunctionCall(OutResult, TmpItr);
@@ -458,10 +458,10 @@ PARSE_FUNCTION_IMPLEMENT(ParsePosfixUnary)
 		TSharedPtr<TAstVarNode> VarNode = StaticCast<TAstVarNode>(Value);
 		if (TSharedPtr<TBlockEntry> BlockEntry = VarNode->MyBlock.Lock())
 		{
-			TOption<TVarInfo> VarInfo = BlockEntry->GetInfo(VarNode->MyName->MyLetter);
+			TSharedPtr<TVarInfo> VarInfo = BlockEntry->GetInfo(VarNode->MyName->MyLetter);
 			if (VarInfo && VarInfo->MyIsArray)
 			{
-				Node->MyArrayInfo = *VarInfo;
+				Node->MyArrayInfo = VarInfo;
 				Node->MyIndex = Parser::ParseExpr(OutResult, TmpItr);
 				
 				if (TmpItr->MyLetter.MyHashValue != U']')
@@ -911,8 +911,8 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 			{
 				TSharedPtr<TAstVariableDefinitionNode> VarDefineNode = StaticCast<TAstVariableDefinitionNode>(TmpNode);
 				OutResult.CurrentBlock->Define(VarDefineNode->MyName->MyLetter, ArgumentsTypeInfo, VarDefineNode->MyIsArray, VarDefineNode->MyArrayCount);
-				TOption<TVarInfo> Info = OutResult.CurrentBlock->GetInfo(VarDefineNode->MyName->MyLetter);
-				Node->MyArguments.push_back({ ArgumentsTypeInfo, *Info });
+				TSharedPtr<TVarInfo> Info = OutResult.CurrentBlock->GetInfo(VarDefineNode->MyName->MyLetter);
+				Node->MyArguments.push_back({ ArgumentsTypeInfo, Info });
 			}
 			else if (TmpNode->StaticClass() == TAstErrorNode().StaticClass())
 			{

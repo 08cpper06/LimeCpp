@@ -64,7 +64,7 @@ void TBlockEntry::Define(THashString InVarName, TSharedPtr<TTypeInfo> InInfo, bo
 {
 	MyVariableTable.insert({
 		InVarName,
-		TVarInfo(InVarName, InInfo, InIsArray, InArrayCount, MyBlockName)
+		MakeShared<TVarInfo>(InVarName, InInfo, InIsArray, InArrayCount, MyBlockName)
 	});
 }
 
@@ -73,7 +73,7 @@ void TBlockEntry::UnDefine(THashString InVarName) noexcept
 	MyVariableTable.erase(InVarName);
 }
 
-TOption<TVarInfo> TBlockEntry::GetInfo(THashString InVarName) const noexcept
+TSharedPtr<TVarInfo> TBlockEntry::GetInfo(THashString InVarName) const noexcept
 {
 	const auto Itr = MyVariableTable.find(InVarName);
 	if (Itr != MyVariableTable.end())
@@ -84,7 +84,7 @@ TOption<TVarInfo> TBlockEntry::GetInfo(THashString InVarName) const noexcept
 	{
 		return Parent->GetInfo(InVarName);
 	}
-	return DefaultErrorType::Error;
+	return nullptr;
 }
 
 THashString TBlockEntry::BlockName() const noexcept

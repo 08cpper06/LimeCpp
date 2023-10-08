@@ -267,12 +267,12 @@ class TAstArrayReference : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstArrayReference);
 
-	DEFINE_EVALUATE_TYPE(MyArrayInfo.MyType->MyName);
+	DEFINE_EVALUATE_TYPE(MyArrayInfo->MyType->MyName);
 
 	DEFINE_STATIC_EVALUATABLE(MyIndex->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
-	TVarInfo MyArrayInfo;
+	TSharedPtr<TVarInfo> MyArrayInfo;
 	TSharedPtr<TAstBaseNode> MyIndex;
 };
 
@@ -395,7 +395,7 @@ CLASS_PRIVATE:
 	TSharedPtr<TTypeInfo> MyReturnType;
 
 	TSharedPtr<TAstBaseNode> MyBlockExpr;
-	Lime::TArray<Lime::TPair<TSharedPtr<TTypeInfo>, TVarInfo>> MyArguments;
+	Lime::TArray<Lime::TPair<TSharedPtr<TTypeInfo>, TSharedPtr<TVarInfo>>> MyArguments;
 	Lime::TArray<TSharedPtr<TAstErrorNode>> MyErrors;
 };
 
