@@ -6,7 +6,7 @@ TTypeInfo::TTypeInfo() :
 	MyName(U""),
 	MyAlignemnt(1),
 	MyByteSize(1),
-	MyReturnType(DefaultErrorType::Error),
+	MyReturnType(nullptr),
 	MyMemberVariable(),
 	MyCastArray()
 {}
@@ -14,7 +14,7 @@ TTypeInfo::TTypeInfo(THashString InName, Lime::size_t InAlignment, Lime::size_t 
 	MyName(InName),
 	MyAlignemnt(InAlignment),
 	MyByteSize(InByteSize),
-	MyReturnType(DefaultErrorType::Error),
+	MyReturnType(nullptr),
 	MyMemberVariable(),
 	MyCastArray(InCastArray)
 {}
@@ -22,11 +22,11 @@ TTypeInfo::TTypeInfo(THashString InName, Lime::size_t InAlignment, Lime::size_t 
 	MyName(InName),
 	MyAlignemnt(InAlignment),
 	MyByteSize(InByteSize),
-	MyReturnType(DefaultErrorType::Error),
+	MyReturnType(nullptr),
 	MyMemberVariable(InMembers),
 	MyCastArray()
 {}
-TTypeInfo::TTypeInfo(THashString InName, const Lime::TArray<THashString>& InArguments, THashString InReturnType) :
+TTypeInfo::TTypeInfo(THashString InName, const Lime::TArray<THashString>& InArguments, TSharedPtr<TTypeInfo> InReturnType) :
 	MyName(InName),
 	MyAlignemnt(1),
 	MyByteSize(1),
@@ -36,7 +36,7 @@ TTypeInfo::TTypeInfo(THashString InName, const Lime::TArray<THashString>& InArgu
 {}
 bool TTypeInfo::IsFunction() const noexcept
 {
-	return MyReturnType.GetStatus() != DefaultErrorType::Error;
+	return MyReturnType;
 }
 
 CastErrorCode TTypeInfo::IsCastable(THashString InTo) const noexcept

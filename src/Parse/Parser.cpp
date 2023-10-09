@@ -996,7 +996,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 			}
 		}
 	}
-	OutResult.MyTypeTable.Define(TTypeInfo(Node->MyFunctionName->MyLetter, Arguments, Node->MyReturnType->MyName));
+	OutResult.MyTypeTable.Define(TTypeInfo(Node->MyFunctionName->MyLetter, Arguments, Node->MyReturnType));
 	InItr = TmpItr;
 
 	return Node;

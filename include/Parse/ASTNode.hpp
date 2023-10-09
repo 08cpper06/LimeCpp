@@ -111,7 +111,7 @@ public:
 		bool Ret = true;
 		for (TSharedPtr<TAstBaseNode> Node : MyNodes)
 		{
-			Ret &= Node->IsStaticEvaluatable();
+			Ret = Ret && Node->IsStaticEvaluatable();
 		}
 		return Ret;
 	}
@@ -190,15 +190,8 @@ class TAstExprNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstExprNode);
 
-	IMPLEMENT_EVALUATE_TYPE()
-	{
-		if (MyNode)
-		{
-			return MyNode->EvaluateType();
-		}
-		return nullptr;
-	}
-
+	DEFINE_EVALUATE_TYPE(MyNode ? MyNode->EvaluateType() : nullptr);
+	
 	DEFINE_STATIC_EVALUATABLE(MyNode->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
@@ -209,14 +202,7 @@ class TAstParenthessNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstParenthessNode);
 
-	IMPLEMENT_EVALUATE_TYPE()
-	{
-		if (MyExpr && !MyError)
-		{
-			return MyExpr->EvaluateType();
-		}
-		return nullptr;
-	}
+	DEFINE_EVALUATE_TYPE((MyExpr && !MyError) ? MyExpr->EvaluateType() : nullptr);
 
 	DEFINE_STATIC_EVALUATABLE(MyExpr ? MyExpr->IsStaticEvaluatable() : true);
 
@@ -229,15 +215,8 @@ class TAstPrefixUnaryNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstPrefixUnaryNode);
 
-	IMPLEMENT_EVALUATE_TYPE()
-	{
-		if (MyExpr)
-		{
-			return MyExpr->EvaluateType();
-		}
-		return nullptr;
-	}
-
+	DEFINE_EVALUATE_TYPE(MyExpr ? MyExpr->EvaluateType() : nullptr);
+	
 	DEFINE_STATIC_EVALUATABLE(MyExpr->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
@@ -249,15 +228,8 @@ class TAstPostfixUnaryNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstPostfixUnaryNode );
 
-	IMPLEMENT_EVALUATE_TYPE()
-	{
-		if (MyExpr)
-		{
-			return MyExpr->EvaluateType();
-		}
-		return nullptr;
-	}
-
+	DEFINE_EVALUATE_TYPE(MyExpr ? MyExpr->EvaluateType() : nullptr);
+	
 	DEFINE_STATIC_EVALUATABLE(MyExpr->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
@@ -297,15 +269,8 @@ class TAstAssignNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstAssignNode);
 
-	IMPLEMENT_EVALUATE_TYPE()
-	{
-		if (MyLhs)
-		{
-			return MyLhs->EvaluateType();
-		}
-		return nullptr;
-	}
-
+	DEFINE_EVALUATE_TYPE(MyLhs ? MyLhs->EvaluateType() : nullptr);
+	
 	DEFINE_STATIC_EVALUATABLE(MyRhs->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
@@ -431,7 +396,7 @@ public:
 		bool Ret = true;
 		for (TSharedPtr<TAstBaseNode> Node : MyLists)
 		{
-			Ret &= Node->IsStaticEvaluatable();
+			Ret = Ret && Node->IsStaticEvaluatable();
 		}
 		return Ret;
 	}
@@ -446,14 +411,7 @@ class TAstFunctionCallNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstFunctionCallNode);
 
-	IMPLEMENT_EVALUATE_TYPE()
-	{
-		if (MyFunction->MyReturnType)
-		{
-			return TTypeTable::GetGlobalTable()->GetInfo(*MyFunction->MyReturnType);
-		}
-		return nullptr;
-	}
+	DEFINE_EVALUATE_TYPE(MyFunction->MyReturnType);
 
 	DEFINE_STATIC_EVALUATABLE(false);
 

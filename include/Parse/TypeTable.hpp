@@ -17,7 +17,7 @@ public:
 	TTypeInfo();
 	TTypeInfo(THashString InName, Lime::size_t InAlignment, Lime::size_t InByteSize, Lime::TMap<THashString, CastErrorCode> InCastArray); /* Variable Type */
 	TTypeInfo(THashString InName, Lime::size_t InAlignment, Lime::size_t InByteSize, const Lime::TArray<THashString>& InMembers); /* Struct Type */
-	TTypeInfo(THashString InName, const Lime::TArray<THashString>& InArguments, THashString InReturnType); /* Function */
+	TTypeInfo(THashString InName, const Lime::TArray<THashString>& InArguments, TSharedPtr<TTypeInfo> InReturnType); /* Function */
 	~TTypeInfo() = default;
 
 	bool IsFunction() const noexcept;
@@ -29,7 +29,7 @@ public:
 	THashString MyName;
 	Lime::size_t MyAlignemnt;
 	Lime::size_t MyByteSize;
-	TOption<THashString> MyReturnType;
+	TSharedPtr<TTypeInfo> MyReturnType;
 
 	Lime::TArray<THashString> MyMemberVariable;
 	/* need explicit cast if value invalid value */
