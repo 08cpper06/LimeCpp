@@ -99,7 +99,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseBlock)
 	{
 		return nullptr;
 	}
-	++InItr;
+	Block->MyStartItr = InItr++;
 	while (InItr->MyLetter.MyHashValue != U'}')
 	{
 		if (InItr->MyLetter.MyHashValue == U';')
@@ -153,8 +153,8 @@ PARSE_FUNCTION_IMPLEMENT(ParseBlock)
 			}
 		}
 	}
+	Block->MyEndItr = InItr++;
 	OutResult.CurrentBlock = OldBlockEntry;
-	++InItr;
 	return Block;
 }
 
@@ -404,20 +404,22 @@ PARSE_FUNCTION_IMPLEMENT(ParseParenthess)
 {
 	Lime::TTokenIterator TmpItr = InItr;
 	Lime::TTokenIterator StartItr = TmpItr;
+	TSharedPtr<TAstParenthessNode> ParenthessNode = MakeShared<TAstParenthessNode>();
+	ParenthessNode->MyStartItr = TmpItr;
 	if (TmpItr->MyLetter.MyHashValue == U'(')
 	{
 		++TmpItr;
 		TSharedPtr<TAstBaseNode> Node = Parser::ParseExpr(OutResult, TmpItr);
 		if (TmpItr->MyLetter.MyHashValue == U')')
 		{
+			ParenthessNode->MyEndItr = TmpItr;
 			InItr = ++TmpItr;
 			return Node;
 		}
-		TSharedPtr<TAstParenthessNode> Error = MakeShared<TAstParenthessNode>();
-		Error->MyError = OutResult.MakeError(StartItr, U"Not found `)`");
-		Error->MyExpr = Node;
+		ParenthessNode->MyError = OutResult.MakeError(StartItr, U"Not found `)`");
+		ParenthessNode->MyExpr = Node;
 		InItr = TmpItr;
-		return Error;
+		return ParenthessNode;
 	}
 	return nullptr;
 }
@@ -454,9 +456,9 @@ PARSE_FUNCTION_IMPLEMENT(ParsePosfixUnary)
 	if ((Value && Value->StaticClass() == TAstVarNode().StaticClass()) &&
 		TmpItr->MyLetter.MyHashValue == U'[')
 	{
-		++TmpItr;
 		TSharedPtr<TAstArrayReference> Node = MakeShared<TAstArrayReference>();
 		TSharedPtr<TAstVarNode> VarNode = StaticCast<TAstVarNode>(Value);
+		Node->MyStartItr = TmpItr++;
 		if (TSharedPtr<TBlockEntry> BlockEntry = VarNode->MyBlock.Lock())
 		{
 			TSharedPtr<TVarInfo> VarInfo = BlockEntry->GetInfo(VarNode->MyName->MyLetter);
@@ -470,6 +472,7 @@ PARSE_FUNCTION_IMPLEMENT(ParsePosfixUnary)
 					InItr = TmpItr;
 					return OutResult.MakeError(TmpItr, U"expected a `]`");
 				}
+				Node->MyEndItr = TmpItr;
 				InItr = ++TmpItr;
 				/* Check index range if constant index */
 				if (TSharedPtr<TObject> IndexObject = Node->MyIndex->Evaluate())
@@ -547,7 +550,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseAssign)
 		case U'=':
 			Node = MakeShared<TAstAssignNode>();
 			Node->MyLhs = Lhs;
-			++TmpItr;
+			Node->MyOperator = TmpItr++;
 			Value = Parser::ParseAssign(OutResult, TmpItr);
 			if (!Value)
 			{
@@ -717,7 +720,8 @@ PARSE_FUNCTION_IMPLEMENT(ParseIf)
 	{
 		return nullptr;
 	}
-	++TmpItr;
+	TSharedPtr<TAstIfNode> Node = MakeShared<TAstIfNode>();
+	Node->MyIfPosition = TmpItr++;
 	if (TmpItr->MyLetter.MyHashValue != U'(')
 	{
 		InItr = TmpItr;
@@ -731,7 +735,6 @@ PARSE_FUNCTION_IMPLEMENT(ParseIf)
 		return OutResult.MakeError(TmpItr, U"Expect expression `)`");
 	}
 	++TmpItr;
-	TSharedPtr<TAstIfNode> Node = MakeShared<TAstIfNode>();
 	Node->MyEvalExpr = Eval;
 	Node->MyTrueExpr = Parser::ParseBlock(OutResult, TmpItr);
 	if (!(Node->MyTrueExpr))
@@ -748,7 +751,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseIf)
 		InItr = TmpItr;
 		return Node;
 	}
-	++TmpItr;
+	Node->MyElsePosition = TmpItr++;
 	Node->MyFalseExpr = Parser::ParseBlock(OutResult, TmpItr);
 	if (!(Node->MyFalseExpr))
 	{
@@ -770,7 +773,8 @@ PARSE_FUNCTION_IMPLEMENT(ParseWhile)
 	{
 		return nullptr;
 	}
-	++TmpItr;
+	TSharedPtr<TAstWhileNode> Node = MakeShared<TAstWhileNode>();
+	Node->MyPosition = TmpItr++;
 	if (TmpItr->MyLetter.MyHashValue != U'(')
 	{
 		InItr = TmpItr;
@@ -784,7 +788,6 @@ PARSE_FUNCTION_IMPLEMENT(ParseWhile)
 		InItr = TmpItr;
 		return OutResult.MakeError(InItr, U"Expect expression `)`");
 	}
-	TSharedPtr<TAstWhileNode> Node = MakeShared<TAstWhileNode>();
 	Node->MyEvalExpr = Eval;
 	++TmpItr;
 
@@ -878,6 +881,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseFor)
 	++TmpItr;
 
 	TSharedPtr<TAstForNode> Node = MakeShared<TAstForNode>();
+	Node->MyPosition = InItr;
 	Node->MyInitExpr = InitializeExpr;
 	Node->MyCondExpr = ConditionExpr;
 	Node->MyUpdateExpr = UpdateExpr;
@@ -1074,8 +1078,8 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 				InItr = TmpItr;
 				return OutResult.MakeError(TmpItr, U"InitializerList should be start `{`");
 			}
-			++TmpItr;
 			TSharedPtr<TAstInitializerListNode> InitialValues = MakeShared<TAstInitializerListNode>();
+			InitialValues->MyStartItr = TmpItr++;
 			while (TmpItr->MyLetter.MyHashValue != U'}')
 			{
 				TSharedPtr<TAstBaseNode> ElementNode = Parser::ParseExpr(OutResult, TmpItr);
@@ -1083,6 +1087,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 				{
 					InitialValues->MyLists.push_back(ElementNode);
 					VariableInfo->MyObject.push_back(MakeShared<TObject>(Node->MyType, ElementNode->Evaluate()));
+					InitialValues->MyEndItr = TmpItr;
 					break;
 				}
 				if (TmpItr->MyLetter.MyHashValue != U',' || !ElementNode.Get())
@@ -1127,9 +1132,8 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 	TSharedPtr<TTypeInfo> FunctionDefineInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
 	TSharedPtr<TAstFunctionCallNode> Node = MakeShared<TAstFunctionCallNode>();
 	Node->MyFunction = FunctionDefineInfo;
+	Node->MyPosition = TmpItr++;
 	
-	++TmpItr;
-
 	if (TmpItr->MyLetter.MyHashValue != U'(')
 	{
 		return nullptr;

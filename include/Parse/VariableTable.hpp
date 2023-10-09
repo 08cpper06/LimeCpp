@@ -10,7 +10,7 @@
 
 class TBlocKEntry;
 
-class TVarInfo {
+struct TVarInfo {
 public:
 	TVarInfo();
 	TVarInfo(THashString InName, TSharedPtr<TTypeInfo> InType, bool InIsArray, Lime::size_t InArrayCount, THashString InScopeName);
@@ -22,6 +22,7 @@ public:
 	bool operator<(const TVarInfo& InRhs) const noexcept;
 	bool operator>=(const TVarInfo& InRhs) const noexcept;
 	bool operator<=(const TVarInfo& InRhs) const noexcept;
+
 public:
 	THashString MyName;
 	TSharedPtr<TTypeInfo> MyType;

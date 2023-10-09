@@ -117,6 +117,8 @@ public:
 	}
 
 CLASS_PRIVATE:
+	Lime::TTokenIterator MyStartItr;
+	Lime::TTokenIterator MyEndItr;
 	Lime::TList<TSharedPtr<TAstBaseNode>> MyNodes;
 	Lime::TArray<TSharedPtr<TAstReturnNode>> ReturnList;
 	TUtf32String MyBlockName;
@@ -207,6 +209,8 @@ public:
 	DEFINE_STATIC_EVALUATABLE(MyExpr ? MyExpr->IsStaticEvaluatable() : true);
 
 CLASS_PRIVATE:
+	Lime::TTokenIterator MyStartItr;
+	Lime::TTokenIterator MyEndItr;
 	TSharedPtr<TAstBaseNode> MyExpr;
 	TSharedPtr<TAstErrorNode> MyError;
 };
@@ -246,6 +250,8 @@ public:
 	DEFINE_STATIC_EVALUATABLE(MyIndex->IsStaticEvaluatable());
 
 CLASS_PRIVATE:
+	Lime::TTokenIterator MyStartItr;
+	Lime::TTokenIterator MyEndItr;
 	TSharedPtr<TVarInfo> MyArrayInfo;
 	TSharedPtr<TAstBaseNode> MyIndex;
 	TSharedPtr<TAstBaseNode> MyError;
@@ -276,6 +282,7 @@ public:
 CLASS_PRIVATE:
 	TSharedPtr<TAstBaseNode> MyLhs;
 	TSharedPtr<TAstBaseNode> MyRhs;
+	Lime::TTokenIterator MyOperator;
 };
 
 class TAstRelationalNode : public TAstBaseNode {
@@ -317,6 +324,8 @@ public:
 	DEFINE_STATIC_EVALUATABLE(false);
 
 CLASS_PRIVATE:
+	Lime::TTokenIterator MyIfPosition;
+	Lime::TTokenIterator MyElsePosition;
 	TSharedPtr<TAstBaseNode> MyEvalExpr;
 	TSharedPtr<TAstBaseNode> MyTrueExpr;
 	TSharedPtr<TAstBaseNode> MyFalseExpr;
@@ -331,6 +340,7 @@ public:
 	DEFINE_STATIC_EVALUATABLE(false);
 
 CLASS_PRIVATE:
+	Lime::TTokenIterator MyPosition;
 	TSharedPtr<TAstBaseNode> MyEvalExpr;
 	TSharedPtr<TAstBaseNode> MyBlockExpr;
 };
@@ -344,6 +354,7 @@ public:
 	DEFINE_STATIC_EVALUATABLE(false);
 
 CLASS_PRIVATE:
+	Lime::TTokenIterator MyPosition;
 	TSharedPtr<TAstBaseNode> MyInitExpr;
 	TSharedPtr<TAstBaseNode> MyCondExpr;
 	TSharedPtr<TAstBaseNode> MyUpdateExpr;
@@ -402,6 +413,8 @@ public:
 	}
 
 CLASS_PRIVATE:
+	Lime::TTokenIterator MyStartItr;
+	Lime::TTokenIterator MyEndItr;
 	TSharedPtr<TTypeInfo> MyType;
 	Lime::TArray<TSharedPtr<TAstBaseNode>> MyLists;
 	TSharedPtr<TAstErrorNode> MyError;
@@ -416,6 +429,7 @@ public:
 	DEFINE_STATIC_EVALUATABLE(false);
 
 CLASS_PRIVATE:
+	Lime::TTokenIterator MyPosition;
 	Lime::TArray<Lime::TPair<TSharedPtr<TAstBaseNode> /* Node */, TSharedPtr<TAstBaseNode> /* Error or Warning */>> MyArguments;
 	TSharedPtr<TTypeInfo> MyFunction;
 	TSharedPtr<TAstErrorNode> MyError;
