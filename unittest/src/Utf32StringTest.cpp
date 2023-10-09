@@ -1,9 +1,9 @@
 #pragma once
 
 
-#include "String/Utf32String.hpp"
-
 #include "TestFramework.hpp"
+
+#include "String/Utf32String.hpp"
 
 
 auto ConvertChar = [](char32_t InChar) -> TChar {

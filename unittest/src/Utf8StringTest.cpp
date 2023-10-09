@@ -1,9 +1,9 @@
 #pragma once
 
 
-#include "String/Utf8String.hpp"
-
 #include "TestFramework.hpp"
+
+#include "String/Utf8String.hpp"
 
 
 IMPLEMENT_TEST_CLASS(Utf8String)
