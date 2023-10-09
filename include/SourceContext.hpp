@@ -44,13 +44,12 @@ private:
 
 class TSourceContext {
 public:
-	TSourceContext(const TUtf32String& InSource) : 
+	TSourceContext() noexcept = default;
+	TSourceContext(const TUtf32String& InSource) noexcept :
 		MySource(InSource)
 	{}
 	TSourceContext(const TSourceContext&) = delete;
-	~TSourceContext() = default;
-	
-	TSourceContext& operator=(const TSourceContext&) = delete;
+	~TSourceContext() noexcept = default;
 	
 	TUtf32StringView Source() const
 	{

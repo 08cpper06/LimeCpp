@@ -10,6 +10,8 @@
 # Build files
 /build/
 /unittest/build/
+/complextest/build/
+/debugger/build/
 
 # Precompiled Headers
 *.gch

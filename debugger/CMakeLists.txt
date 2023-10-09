@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.8)
+
+
+project(debugger)
+
+if (MSVC)
+	set(CMAKE_CXX_FLAGS "/std:c++20 /EHsc")
+else()
+	set(CMAKE_CXX_FLAGS "-std=c++20 -Wall")
+endif()
+
+add_executable(${PROJECT_NAME}
+	src/Main.cpp
+	src/CommandParser.cpp
+	src/CommandImpl.cpp
+	../src/Tokenize/Tokenizer.cpp
+	../src/Parse/Parser.cpp
+	../src/Parse/ASTNodeLog.cpp
+	../src/Parse/TypeTable.cpp
+	../src/Parse/VariableTable.cpp
+	../src/Parse/ASTNodeEvaluate.cpp
+	../src/Parse/Object.cpp
+)
+
+target_include_directories(${PROJECT_NAME} PUBLIC ./include)
+target_include_directories(${PROJECT_NAME} PUBLIC ../include)

@@ -11,6 +11,7 @@
 #include <set>
 #include <variant>
 #include <mutex>
+#include <functional>
 
 /* non-override */
 #include <initializer_list>
@@ -32,6 +33,9 @@ enum class LimeLogType {
 #else
 #define CLASS_PRIVATE private
 #endif
+
+#define CONSOLE_COLOR(R, G, B) "\x1b[38;2;" #R ";" #G ";" #B "m"
+#define DEFAULT_COLOR CONSOLE_COLOR(200, 200, 200)
 
 namespace Lime {
 
