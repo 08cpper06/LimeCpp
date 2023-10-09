@@ -42,9 +42,9 @@ TSharedPtr<TObject> TAstAddSubNode::Evaluate() const noexcept
 		return nullptr;
 	}
 	TSharedPtr<TObject> Ret = MakeShared<TObject>();
-	if (TOption<THashString> RetType = Lhs->MyType->IsEvaluatableExpr(Rhs->MyType))
+	if (TSharedPtr<TTypeInfo> RetType = Lhs->MyType->EvaluateExprType(Rhs->MyType))
 	{
-		if (Lhs->MyType->MyName == *RetType)
+		if (Lhs->MyType->MyName == RetType->MyName)
 		{
 			Ret->MyType = Lhs->MyType;
 		}
@@ -71,9 +71,9 @@ TSharedPtr<TObject> TAstMulDivNode::Evaluate() const noexcept
 		return nullptr;
 	}
 	TSharedPtr<TObject> Ret = MakeShared<TObject>();
-	if (TOption<THashString> RetType = Lhs->MyType->IsEvaluatableExpr(Rhs->MyType))
+	if (TSharedPtr<TTypeInfo> RetType = Lhs->MyType->EvaluateExprType(Rhs->MyType))
 	{
-		if (Lhs->MyType->MyName == *RetType)
+		if (Lhs->MyType->MyName == RetType->MyName)
 		{
 			Ret->MyType = Lhs->MyType;
 		}

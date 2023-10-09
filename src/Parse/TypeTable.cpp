@@ -49,15 +49,15 @@ CastErrorCode TTypeInfo::IsCastable(THashString InTo) const noexcept
 	return CastErrorCode::NotCastable;
 }
 
-TOption<THashString> TTypeInfo::IsEvaluatableExpr(TSharedPtr<TTypeInfo> InRhs) const noexcept
+TSharedPtr<TTypeInfo> TTypeInfo::EvaluateExprType(TSharedPtr<TTypeInfo> InRhs) const noexcept
 {
 	switch (IsCastable(InRhs->MyName)) {
 	case CastErrorCode::NotCastable:
-		return DefaultErrorType::Error;
+		return nullptr;
 	case CastErrorCode::LossCast:
-		return MyName;
+		return TSharedPtr<TTypeInfo>(const_cast<TTypeInfo*>(this));
 	}
-	return InRhs->MyName;
+	return InRhs;
 }
 
 

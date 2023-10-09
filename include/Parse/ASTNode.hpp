@@ -149,11 +149,7 @@ public:
 		{
 			return nullptr;
 		}
-		if (TOption<THashString> TypeName = MyLhsType->IsEvaluatableExpr(MyRhs->EvaluateType()))
-		{
-			return TTypeTable::GetGlobalTable()->GetInfo(*TypeName);
-		}
-		return nullptr;
+		return MyLhsType->EvaluateExprType(MyRhs->EvaluateType());
 	}
 
 	DEFINE_STATIC_EVALUATABLE(MyLhs->IsStaticEvaluatable() && MyRhs->IsStaticEvaluatable());
@@ -177,11 +173,7 @@ public:
 		{
 			return nullptr;
 		}
-		if (TOption<THashString> TypeName = MyLhsType->IsEvaluatableExpr(MyRhs->EvaluateType()))
-		{
-			return TTypeTable::GetGlobalTable()->GetInfo(*TypeName);
-		}
-		return nullptr;
+		return MyLhsType->EvaluateExprType(MyRhs->EvaluateType());
 	}
 
 	DEFINE_STATIC_EVALUATABLE(MyLhs->IsStaticEvaluatable() && MyRhs->IsStaticEvaluatable());

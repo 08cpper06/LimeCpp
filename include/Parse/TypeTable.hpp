@@ -23,7 +23,7 @@ public:
 	bool IsFunction() const noexcept;
 
 	CastErrorCode IsCastable(THashString InTo) const noexcept;
-	TOption<THashString> IsEvaluatableExpr(TSharedPtr<TTypeInfo> InRhs) const noexcept;
+	TSharedPtr<TTypeInfo> EvaluateExprType(TSharedPtr<TTypeInfo> InRhs) const noexcept;
 
 public:
 	THashString MyName;
