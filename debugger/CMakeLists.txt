@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.8)
 project(debugger)
 
 if (MSVC)
-	set(CMAKE_CXX_FLAGS "/std:c++20 /EHsc")
+	set(CMAKE_CXX_FLAGS "/std:c++20 /EHsc /DWIN64")
 else()
 	set(CMAKE_CXX_FLAGS "-std=c++20 -Wall")
 endif()
@@ -13,6 +13,7 @@ add_executable(${PROJECT_NAME}
 	src/Main.cpp
 	src/CommandParser.cpp
 	src/CommandImpl.cpp
+	src/Debugger.cpp
 	../src/Tokenize/Tokenizer.cpp
 	../src/Parse/Parser.cpp
 	../src/Parse/ASTNodeLog.cpp

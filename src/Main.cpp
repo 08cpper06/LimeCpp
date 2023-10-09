@@ -6,6 +6,7 @@
 #define CONSOLE_COLOR(R, G, B) "\x1b[38;2;" #R ";" #G ";" #B "m"
 #define DEFAULT_COLOR CONSOLE_COLOR(200, 200, 200)
 
+
 int main(int Argc, const char** Argv)
 {
 	if (Argc == 1)

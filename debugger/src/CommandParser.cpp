@@ -1,4 +1,5 @@
 #include "CommandParser.hpp"
+#include "Tokenize/SyntaxFunction.hpp"
 
 
 TCommandParser* TCommandParser::Get()
@@ -14,7 +15,7 @@ void TCommandParser::AddCommand(THashString InCommand, std::function<TUtf32Strin
 
 TUtf32String TCommandParser::Parse(const Lime::TArray<THashString>& InArgs) const noexcept
 {
-	if (InArgs.size() < 2)
+	if (InArgs.empty())
 	{
 		return U"argument too short";
 	}
@@ -26,3 +27,19 @@ TUtf32String TCommandParser::Parse(const Lime::TArray<THashString>& InArgs) cons
 	return Itr->second(InArgs);
 }
 
+Lime::TArray<THashString> TCommandParser::GetCandiateCommand(THashString InCommand) const noexcept
+{
+	Lime::TArray<THashString> Out;
+	for (const Lime::TPair<THashString, std::function<TUtf32String(Lime::TArray<THashString>)>> Item : MyCallbackList)
+	{
+		if (InCommand == Item.first.GetString())
+		{
+			return { InCommand };
+		}
+		if (Item.first.GetString().StartWith(InCommand.GetString()))
+		{
+			Out.push_back(Item.first);
+		}
+	}
+	return Out;
+}

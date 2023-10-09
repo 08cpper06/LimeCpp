@@ -10,6 +10,10 @@ static TSourceContext Context;
 IMPLEMENT_COMMAND_FUNCTION(SourceLoader, "source")
 TUtf32String SourceLoaderCommand::Execute(const Lime::TArray<THashString>& InArgs)
 {
+	if (InArgs.size() < 2)
+	{
+		return U"source ...";
+	}
 	TUtf32String Output;
 	TOption<TUtf8String, ConvertEncodingError> FilePath = String::ConvertToUtf8(InArgs[1].GetString());
 	TOption<TUtf32String, FileIOError> Source = FileIO::ReadFile(reinterpret_cast<const char*>(FilePath->Bytes()));
@@ -20,7 +24,7 @@ TUtf32String SourceLoaderCommand::Execute(const Lime::TArray<THashString>& InArg
 		return U"encoding error expect UTF-8";
 	}
 	Context = *Source;
-	return *Source;
+	return *Source + U'\n';
 }
 
 IMPLEMENT_COMMAND_FUNCTION(Tokenize, "tokenize")

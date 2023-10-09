@@ -14,6 +14,8 @@ public:
 
 	TUtf32String Parse(const Lime::TArray<THashString>& InArgs) const noexcept;
 
+	/* perfect match if return array count is 1 */
+	Lime::TArray<THashString> GetCandiateCommand(THashString InCommand) const noexcept;
 private:
 	TCommandParser() noexcept = default;
 	~TCommandParser() noexcept = default;
