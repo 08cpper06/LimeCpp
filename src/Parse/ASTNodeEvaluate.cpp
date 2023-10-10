@@ -29,7 +29,24 @@ TSharedPtr<TObject> TAstValNode::Evaluate() const noexcept
 	}
 
 	Object->MyType = MyType;
-	Object->MyValue = Lime::Eval(Str);
+	Lime::TVariant<int64_t, double> Value = Lime::EvalNumeric(Str);
+	switch (Value.index()) {
+		case 0:
+			Object->MyValue = std::get<0>(Value);
+			break;
+		case 1:
+			Object->MyValue = std::get<1>(Value);
+			break;
+	}
+	return Object;
+}
+
+TSharedPtr<TObject> TAstStringValNode::Evaluate() const noexcept
+{
+	TSharedPtr<TObject> Object = MakeShared<TObject>();
+	Object->MyType = TTypeTable::GetGlobalTable()->GetInfo(U"char");
+	const char32_t* ConstString = MyPosition->MyLetter.GetString().Bytes();
+	Object->MyValue = int64_t(ConstString[MyOffset]);
 	return Object;
 }
 

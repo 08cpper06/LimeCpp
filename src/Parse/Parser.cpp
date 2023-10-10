@@ -1006,6 +1006,34 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionDefinition)
 	return Node;
 }
 
+PARSE_FUNCTION_IMPLEMENT(ParseStringInitialization)
+{
+	if (InItr->MyType != TokenType::StringLiteral)
+	{
+		return nullptr;
+	}
+	TSharedPtr<TAstInitializerListNode> Node = MakeShared<TAstInitializerListNode>();
+	Node->MyType = TTypeTable::GetGlobalTable()->GetInfo(U"char");
+	Node->MyStartItr = Node->MyEndItr = InItr;
+
+	Lime::size_t Index = 0;
+	TSharedPtr<TAstStringValNode> CharNode;
+	for (char32_t Char : InItr->MyLetter.GetString())
+	{
+		CharNode = MakeShared<TAstStringValNode>();
+		CharNode->MyOffset = Index++;
+		CharNode->MyPosition = InItr;
+		Node->MyLists.push_back(CharNode);
+	}
+	/* Insert null character */
+	CharNode = MakeShared<TAstStringValNode>();
+	CharNode->MyOffset = -1;
+	CharNode->MyPosition = InItr;
+	Node->MyLists.push_back(CharNode);
+	++InItr;
+	return Node;
+}
+
 PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 {
 	Lime::TTokenIterator TmpItr = InItr;
@@ -1071,8 +1099,40 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 	{
 		if (IsArray)
 		{
-			Lime::TArray<TSharedPtr<TAstBaseNode>> List(ArrayCount);
 			++TmpItr;
+			if (Node->MyType->MyName == U"char")
+			{
+				if (TSharedPtr<TAstInitializerListNode> StringNode = StaticCast<TAstInitializerListNode>(ParseStringInitialization(OutResult, TmpItr)))
+				{
+					Node->MyInitializeExpr = StringNode;
+					Lime::size_t ParseArrayCount = 0;
+					for (TSharedPtr<TAstBaseNode> Element : StringNode->MyLists)
+					{
+						TSharedPtr<TAstStringValNode> CharItem = StaticCast<TAstStringValNode>(Element);
+						VariableInfo->MyObject.push_back(MakeShared<TObject>(Node->MyType, CharItem->Evaluate()));
+						++ParseArrayCount;
+					}
+					if (!ArrayCount)
+					{
+						Node->MyArrayCount = ParseArrayCount;
+						VariableInfo->MyIsArray = ParseArrayCount;
+					}
+					else
+					{
+						if (ArrayCount < ParseArrayCount)
+						{
+							TUtf32String Message = U"InitializerList too much elements : " + ToUtf32String(ParseArrayCount);
+							Message += U" (expected less than " + ToUtf32String(ArrayCount) + U")";
+							StringNode->MyError = OutResult.MakeError(InItr, Message);
+						}
+
+					}
+					Node->MyInitializeExpr = StringNode;
+					InItr = TmpItr;
+					return Node;
+				}
+			}
+			Lime::TArray<TSharedPtr<TAstBaseNode>> List(ArrayCount);
 			if (TmpItr->MyLetter.MyHashValue != U'{')
 			{
 				InItr = TmpItr;

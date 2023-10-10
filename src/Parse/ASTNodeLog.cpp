@@ -45,6 +45,22 @@ TUtf32String TAstValNode::GetInfoString(TUtf32String InPrefix) const
 	return Str;
 }
 
+TUtf32String TAstStringValNode::GetInfoString(TUtf32String InPrefix) const
+{
+	TUtf32String Str = InPrefix + U"<Val Type=\"char\">";
+	const char32_t* TokenStr = MyPosition->MyLetter.GetString().Bytes();
+	if (MyOffset >= 0)
+	{
+		Str += TokenStr[MyOffset];
+	}
+	else
+	{
+		Str += U"\\0";
+	}
+	Str += U"</Val>\n";
+	return Str;
+}
+
 TUtf32String TAstAddSubNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<Operator Type=\"" + MyOperator->MyLetter + U"\">\n";

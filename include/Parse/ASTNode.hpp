@@ -140,6 +140,21 @@ CLASS_PRIVATE:
 	friend class TAstFunctionCallNode;
 };
 
+class TAstStringValNode : public TAstBaseNode {
+public:
+	AST_BODY_CLASS(TAstStringValNode);
+
+	DEFINE_EVALUATE_TYPE(TTypeTable::GetGlobalTable()->GetInfo(U"char"));
+
+	DEFINE_STATIC_EVALUATABLE(true);
+
+CLASS_PRIVATE:
+	Lime::TTokenIterator MyPosition;
+	int64_t MyOffset { -1 };
+
+	friend class TAstFunctionCallNode;
+};
+
 class TAstAddSubNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstAddSubNode);

@@ -1,0 +1,26 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
+		<Block Name="Block_main">
+			<VariableDefinition Type="char" Name="buffer" ArrayCount="1">
+				<InitializerList>
+					<Val Type="char">H</Val>
+					<Val Type="char">e</Val>
+					<Val Type="char">l</Val>
+					<Val Type="char">l</Val>
+					<Val Type="char">o</Val>
+					<Val Type="char">W</Val>
+					<Val Type="char">o</Val>
+					<Val Type="char">r</Val>
+					<Val Type="char">l</Val>
+					<Val Type="char">d</Val>
+					<Val Type="char">\0</Val>
+				</InitializerList>
+				<Error Line=3 Message="InitializerList too much elements : 11 (expected less than 8)"/>
+			</VariableDefinition>
+			<Return>
+				<Val Type="int">0</Val>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>

@@ -56,7 +56,7 @@ void Tokenizer::Analyze(TSourceContext& InContext)
 		if (Itr.StartWith(U"//"))
 		{
 			Itr += 2;
-			while (*Itr != U'\n')
+			while (*Itr != U'\n' && *Itr != U'\0')
 			{
 				++Itr;
 			}
@@ -65,6 +65,20 @@ void Tokenizer::Analyze(TSourceContext& InContext)
 		}
 
 		/* parse string */
+		if (Itr.StartWith(U'\"'))
+		{
+			++Itr;
+			BaseItr = Itr;
+			while (*Itr != U'\"' && *Itr != U'\0')
+			{
+				++Itr;
+			}
+			InContext.MyTokens.emplace_back(TUtf32StringView(BaseItr, Itr), BaseItr, Itr, Line, TokenType::StringLiteral);
+			++Itr;
+			continue;
+		}
+
+		/* parse char */
 
 		/* parse keyword */
 		Token = FindKeyword(KeywordList, Itr, [](char32_t InChar) -> bool {

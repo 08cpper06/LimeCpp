@@ -101,7 +101,7 @@ namespace Lime {
 		return IsNegative ? -Ret : Ret;
 	}
 
-	inline TVariant<int64_t, double, bool> Eval(TUtf32String InStr) noexcept
+	inline TVariant<int64_t, double> EvalNumeric(TUtf32String InStr) noexcept
 	{
 		bool IsDot = false;
 		int64_t IntValue = 0;
@@ -135,7 +135,7 @@ namespace Lime {
 			}
 		}
 
-		TVariant<int64_t, double, bool> Value;
+		TVariant<int64_t, double> Value;
 		if (IsDot)
 		{
 			Value = DoubleValue;
