@@ -1199,9 +1199,10 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 		}
 		else /* if (IsArray) */
 		{
-			if (!(Node->MyInitializeExpr = ParseCharInitialization(OutResult, ++InItr)))
+			++InItr;
+			if (!(Node->MyInitializeExpr = ParseCharInitialization(OutResult, InItr)))
 			{
-				Node->MyInitializeExpr = Parser::ParseExpr(OutResult, ++InItr);
+				Node->MyInitializeExpr = Parser::ParseExpr(OutResult, InItr);
 			}
 			VariableInfo->MyObject.push_back(MakeShared<TObject>(Node->MyType, Node->MyInitializeExpr->Evaluate()));
 		}
