@@ -36,9 +36,16 @@ TUtf32String TAstBlockNode::GetInfoString(TUtf32String InPrefix) const
 TUtf32String TAstValNode::GetInfoString(TUtf32String InPrefix) const
 {
 	TUtf32String Str = InPrefix + U"<Val Type=\"" + MyType->MyName + U"\">";
-	for (Lime::TTokenIterator Itr = MyStartItr; Itr != MyEndItr; ++Itr)
+	if (MyType->MyName == U"char")
 	{
-		Str += Itr->MyLetter.GetString();
+		Str += MyStartItr->MyLetter;
+	}
+	else
+	{
+		for (Lime::TTokenIterator Itr = MyStartItr; Itr != MyEndItr; ++Itr)
+		{
+			Str += Itr->MyLetter;
+		}
 	}
 	// Str += *ConvertToUtf32(*EndItr->Letter.GetString());
 	Str += U"</Val>\n";

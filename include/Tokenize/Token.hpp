@@ -12,7 +12,8 @@ enum class TokenType {
 	Sign,
 	Number,
 	Ident,
-	StringLiteral
+	StringLiteral,
+	CharLiteral,
 };
 
 inline TUtf32String ToUtf32String(TokenType InType) noexcept
@@ -28,6 +29,8 @@ inline TUtf32String ToUtf32String(TokenType InType) noexcept
 		return U"Ident";
 	case TokenType::StringLiteral:
 		return U"StringLiteral";
+	case TokenType::CharLiteral:
+		return U"CharLiteral";
 	}
 	return U"Unknown";
 }
@@ -45,6 +48,8 @@ inline TUtf8String ToUtf8String(TokenType InType) noexcept
 		return u8"Ident";
 	case TokenType::StringLiteral:
 		return u8"StringLiteral";
+	case TokenType::CharLiteral:
+		return u8"CharLiteral";
 	}
 	return u8"Unknown";
 }

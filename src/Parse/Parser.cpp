@@ -1034,6 +1034,31 @@ PARSE_FUNCTION_IMPLEMENT(ParseStringInitialization)
 	return Node;
 }
 
+PARSE_FUNCTION_IMPLEMENT(ParseCharInitialization)
+{
+	if (InItr->MyType != TokenType::CharLiteral)
+	{
+		return nullptr;
+	}
+	if (InItr->MyLetter.GetString().CharCount() > 1)
+	{
+		TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(InItr, U"multi-character character constant");
+		++InItr;
+		return Error;
+	}
+	if (InItr->MyLetter.GetString().CharCount() == 0)
+	{
+		TSharedPtr<TAstErrorNode> Error = OutResult.MakeError(InItr, U"empty character constant");
+		++InItr;
+		return Error;
+	}
+	TSharedPtr<TAstValNode> Node = MakeShared<TAstValNode>();
+	Node->MyType = TTypeTable::GetGlobalTable()->GetInfo(U"char");
+	Node->MyStartItr = InItr;
+	Node->MyEndItr = ++InItr;
+	return Node;
+}
+
 PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 {
 	Lime::TTokenIterator TmpItr = InItr;
@@ -1131,7 +1156,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 					InItr = TmpItr;
 					return Node;
 				}
-			}
+			} /* end of `if (Node->MyType->MyName == U"char")` */
 			Lime::TArray<TSharedPtr<TAstBaseNode>> List(ArrayCount);
 			if (TmpItr->MyLetter.MyHashValue != U'{')
 			{
@@ -1172,9 +1197,12 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 				ArrayCount = InitialValues->MyLists.size();
 			}
 		}
-		else
+		else /* if (IsArray) */
 		{
-			Node->MyInitializeExpr = Parser::ParseExpr(OutResult, ++InItr);
+			if (!(Node->MyInitializeExpr = ParseCharInitialization(OutResult, ++InItr)))
+			{
+				Node->MyInitializeExpr = Parser::ParseExpr(OutResult, ++InItr);
+			}
 			VariableInfo->MyObject.push_back(MakeShared<TObject>(Node->MyType, Node->MyInitializeExpr->Evaluate()));
 		}
 	}
