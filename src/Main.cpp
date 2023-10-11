@@ -32,7 +32,6 @@ int main(int Argc, const char** Argv)
 		<< (DEFAULT_COLOR) << std::endl;
 
 	Tokenizer::Analyze(Context);
-	Parser::Analyze(Context);
 
 	if (Context.Tokens().size() == 0 || Context.Tokens().back().MyLetter != U'\0')
 	{
@@ -47,6 +46,7 @@ int main(int Argc, const char** Argv)
 	}
 	std::cout << DEFAULT_COLOR << std::endl;
 
+	Parser::Analyze(Context);
 	TSharedPtr<TAstBaseNode> Root = Context.ASTRoot();
 	if (!Root)
 	{
