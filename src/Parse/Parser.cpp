@@ -391,7 +391,13 @@ PARSE_FUNCTION_IMPLEMENT(ParseExpr)
 		return OutResult.MakeError(InItr, U"Eof detected");
 	}
 	TSharedPtr<TAstBaseNode> Node;
-	Node = ParseFunctionCall(OutResult, InItr);
+	Node = Parser::ParseFunctionCall(OutResult, InItr);
+	if (Node)
+	{
+		return Node;
+	}
+
+	Node = Parser::ParseCharInitialization(OutResult, InItr);
 	if (Node)
 	{
 		return Node;
@@ -1186,21 +1192,21 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 			}
 			Node->MyInitializeExpr = InitialValues;
 			InItr = ++TmpItr;
-			if (InitialValues->MyLists.size() > ArrayCount)
+			if (!ArrayCount)
+			{
+				ArrayCount = InitialValues->MyLists.size();
+			}
+			else if (InitialValues->MyLists.size() > ArrayCount)
 			{
 				TUtf32String Message = U"InitializerList too much elements : " + ToUtf32String(InitialValues->MyLists.size());
 				Message += U" (expected less than " + ToUtf32String(ArrayCount) + U")";
 				InitialValues->MyError = OutResult.MakeError(InItr,  Message);
 			}
-			else if (ArrayCount == 0)
-			{
-				ArrayCount = InitialValues->MyLists.size();
-			}
 		}
 		else /* if (IsArray) */
 		{
 			++InItr;
-			if (!(Node->MyInitializeExpr = ParseCharInitialization(OutResult, InItr)))
+			if (!(Node->MyInitializeExpr = Parser::ParseCharInitialization(OutResult, InItr)))
 			{
 				Node->MyInitializeExpr = Parser::ParseExpr(OutResult, InItr);
 			}

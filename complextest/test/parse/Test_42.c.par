@@ -1,0 +1,16 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
+		<Block Name="Block_main">
+			<VariableDefinition Type="char" Name="str" ArrayCount="2">
+				<InitializerList>
+					<Val Type="char">H</Val>
+					<Val Type="char">i</Val>
+				</InitializerList>
+			</VariableDefinition>
+			<Return>
+				<Val Type="int">0</Val>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>
