@@ -1253,7 +1253,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseAsm)
 	Lime::size_t Index = 0;
 	for (char32_t Char : TmpItr->MyLetter.GetString())
 	{
-		if (Syntax::IsSpace(Char))
+		if (Syntax::IsSpace(Char) || Char == U'\n')
 		{
 			switch (Index) {
 				case 0:
