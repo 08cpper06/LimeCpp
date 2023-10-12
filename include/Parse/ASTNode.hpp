@@ -449,3 +449,16 @@ CLASS_PRIVATE:
 	TSharedPtr<TTypeInfo> MyFunction;
 	TSharedPtr<TAstErrorNode> MyError;
 };
+
+class TAstAsmNode : public TAstBaseNode {
+public:
+	AST_BODY_CLASS(TAstAsmNode);
+
+	DEFINE_EVALUATE_TYPE(nullptr);
+
+	DEFINE_STATIC_EVALUATABLE(false);
+
+CLASS_PRIVATE:
+	Lime::TTokenIterator MyPosition;
+	Lime::TArray<Lime::TTuple<THashString, THashString, THashString>> MyOrders;
+};

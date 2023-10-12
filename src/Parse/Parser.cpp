@@ -391,6 +391,12 @@ PARSE_FUNCTION_IMPLEMENT(ParseExpr)
 		return OutResult.MakeError(InItr, U"Eof detected");
 	}
 	TSharedPtr<TAstBaseNode> Node;
+	Node = Parser::ParseAsm(OutResult, InItr);
+	if (Node)
+	{
+		return Node;
+	}
+
 	Node = Parser::ParseFunctionCall(OutResult, InItr);
 	if (Node)
 	{
@@ -1216,6 +1222,92 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 
 	Node->MyArrayCount = ArrayCount;
 	VariableInfo->MyIsArray = ArrayCount;
+	return Node;
+}
+
+PARSE_FUNCTION_IMPLEMENT(ParseAsm)
+{
+	Lime::TTokenIterator TmpItr = InItr;
+	if (TmpItr->MyLetter != U"asm")
+	{
+		return nullptr;
+	}
+	++TmpItr;
+	if (TmpItr->MyLetter.MyHashValue != U'(')
+	{
+		InItr = TmpItr;
+		return OutResult.MakeError(InItr++, U"not found `(`");
+	}
+	++TmpItr;
+	if (TmpItr->MyType != TokenType::StringLiteral)
+	{
+		InItr = TmpItr;
+		return OutResult.MakeError(InItr++, U"asm keyword needs string literal");
+	}
+	TSharedPtr<TAstAsmNode> Node = MakeShared<TAstAsmNode>();
+	Node->MyPosition = InItr;
+
+	/* parse 3-orders */
+	TUtf32String Text;
+	Lime::TTuple<THashString, THashString, THashString> Element { U"", U"", U"" };
+	Lime::size_t Index = 0;
+	for (char32_t Char : TmpItr->MyLetter.GetString())
+	{
+		if (Syntax::IsSpace(Char))
+		{
+			switch (Index) {
+				case 0:
+					std::get<0>(Element) = Text;
+					Text = U"";
+					Index = 1;
+					break;
+				case 1:
+					std::get<1>(Element) = Text;
+					Text = U"";
+					Index = 2;
+					break;
+				case 2:
+					std::get<2>(Element) = Text;
+					Node->MyOrders.push_back(Element);
+					std::get<0>(Element) = U"";
+					std::get<1>(Element) = U"";
+					std::get<2>(Element) = U"";
+					Index = 0;
+					Text = U"";
+					break;
+			}
+			continue;
+		}
+		Text += Char;
+	}
+
+	if (!Text.IsEmpty())
+	{
+		switch (Index) {
+		case 0:
+			std::get<0>(Element) = Text;
+			Index = 1;
+			break;
+		case 1:
+			std::get<1>(Element) = Text;
+			Index = 2;
+			break;
+		case 2:
+			std::get<2>(Element) = Text;
+			break;
+		}
+		Node->MyOrders.push_back(Element);
+	}
+
+	++TmpItr;
+
+	if (TmpItr->MyLetter.MyHashValue != U')')
+	{
+		InItr = TmpItr;
+		return OutResult.MakeError(InItr, U"expected `)`");
+	}
+	InItr = ++TmpItr;
+
 	return Node;
 }
 

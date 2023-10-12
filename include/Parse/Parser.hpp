@@ -59,5 +59,7 @@ CLASS_PRIVATE:
 
 	PARSE_FUNCTION(ParseVariableDefinition);
 
+	PARSE_FUNCTION(ParseAsm);
+
 	PARSE_FUNCTION(ParseFunctionCall);
 };

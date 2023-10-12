@@ -45,6 +45,9 @@ namespace Lime {
 	template <class Type, class TAllocator = std::allocator<Type>>
 	using TArray = std::vector<Type, TAllocator>;
 
+	template <class... TArgs>
+	using TTuple = std::tuple<TArgs...>;
+
 	template <class Type, Lime::size_t Extent = std::dynamic_extent>
 	using TSpan = std::span<Type, Extent>;
 

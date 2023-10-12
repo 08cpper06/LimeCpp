@@ -291,3 +291,7 @@ TSharedPtr<TObject> TAstFunctionCallNode::Evaluate() const noexcept
 	return nullptr; /* not evauatable */
 }
 
+TSharedPtr<TObject> TAstAsmNode::Evaluate() const noexcept
+{
+	return nullptr; /* not evauatable */
+}

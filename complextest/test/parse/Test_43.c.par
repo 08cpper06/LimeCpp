@@ -1,0 +1,13 @@
+<Block Name="Global">
+	<FunctionDefinition Name="main" ReturnType="int">
+		<Arguments></Arguments>
+		<Block Name="Block_main">
+				<Asm Order="pushl">
+				<Argument>%ebp</Argument>
+			</Asm>
+			<Return>
+				<Val Type="int">0</Val>
+			</Return>
+		</Block>
+	</FunctionDefinition>
+</Block>

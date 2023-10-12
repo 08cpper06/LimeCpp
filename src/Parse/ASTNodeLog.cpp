@@ -408,3 +408,32 @@ TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 	Str += InPrefix + U"</FunctionCall>\n";
 	return Str;
 }
+
+TUtf32String TAstAsmNode::GetInfoString(TUtf32String InPrefix) const
+{
+	TUtf32String Str;
+
+	for (const Lime::TTuple<THashString, THashString, THashString>& Order : MyOrders)
+	{
+		Str += InPrefix + U"\t<Asm Order=\"" + std::get<0>(Order) + U"\">\n";
+
+		THashString Arg = std::get<1>(Order).GetString();
+		if (!Arg.GetString().IsEmpty())
+		{
+			Str += InPrefix + U"\t<Argument>";
+			Str += Arg.GetString();
+			Str += U"</Argument>\n";
+		}
+		Arg = std::get<2>(Order).GetString();
+		if (!Arg.GetString().IsEmpty())
+		{
+			Str += InPrefix + U"\t<Argument>";
+			Str += Arg.GetString();
+			Str += U"</Argument>\n";
+		}
+
+		Str += InPrefix + U"</Asm>\n";
+	}
+
+	return Str;
+}
