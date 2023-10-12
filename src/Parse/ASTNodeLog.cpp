@@ -415,7 +415,7 @@ TUtf32String TAstAsmNode::GetInfoString(TUtf32String InPrefix) const
 
 	for (const Lime::TTuple<THashString, THashString, THashString>& Order : MyOrders)
 	{
-		Str += InPrefix + U"\t<Asm Order=\"" + std::get<0>(Order) + U"\">\n";
+		Str += InPrefix + U"<Asm Order=\"" + std::get<0>(Order) + U"\">\n";
 
 		THashString Arg = std::get<1>(Order).GetString();
 		if (!Arg.GetString().IsEmpty())

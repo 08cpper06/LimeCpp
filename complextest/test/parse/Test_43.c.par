@@ -2,7 +2,7 @@
 	<FunctionDefinition Name="main" ReturnType="int">
 		<Arguments></Arguments>
 		<Block Name="Block_main">
-				<Asm Order="pushl">
+			<Asm Order="pushl">
 				<Argument>%ebp</Argument>
 			</Asm>
 			<Return>
