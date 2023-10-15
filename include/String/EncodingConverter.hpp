@@ -187,7 +187,7 @@ inline TUtf32String ToUtf32String(Lime::size_t InValue)
 	}
 	return U"0";
 }
-inline TUtf32String ToUtf32String(int InValue)
+inline TUtf32String ToUtf32String(int64_t InValue)
 {
 	TUtf32String Str = ToUtf32String(Lime::size_t(InValue > 0 ? InValue : -InValue));
 	if (InValue < 0)
@@ -196,4 +196,12 @@ inline TUtf32String ToUtf32String(int InValue)
 		InValue *= -1;
 	}
 	return Str;
+}
+
+#include <string>
+
+inline TUtf32String ToUtf32String(double InValue) noexcept
+{
+	std::string Str = std::to_string(InValue);
+	return TUtf32String(reinterpret_cast<const char32_t*>(Str.c_str()));
 }

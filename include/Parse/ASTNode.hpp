@@ -3,7 +3,7 @@
 
 #include "../Std.hpp"
 
-#include "Tokenize/Token.hpp"
+#include "../Tokenize/Token.hpp"
 #include "../String/Utf8String.hpp"
 #include "../String/Utf32String.hpp"
 #include "TypeTable.hpp"
@@ -16,19 +16,27 @@ namespace Lime {
 
 }
 
+class TAsmBasicBuilder;
+
 
 class TAstBaseNode {
 public:
 	virtual ~TAstBaseNode() = default;
 
 	virtual TAstBaseNode* StaticClass() const = 0;
+	/* Implement at ASTNodeLog.cpp */
 	virtual TUtf32String GetInfoString(TUtf32String InPrefix) const = 0;	
 	virtual TSharedPtr<TTypeInfo> EvaluateType() const noexcept = 0;
 	virtual bool IsStaticEvaluatable() const noexcept = 0;
+	/* Implement at ASTNodeEvaluate.cpp */
 	virtual TSharedPtr<TObject> Evaluate() const noexcept = 0;
+	
+	/* Implement at AsmGenerator.cpp */
+	virtual void BuildIR(TAsmBasicBuilder& InBuilder) const noexcept = 0;
 };
 
 #define AST_BODY_CLASS(ClassName) ~ClassName() = default; \
+void BuildIR(TAsmBasicBuilder& InBuilder) const noexcept override; \
 virtual TAstBaseNode* StaticClass() const override \
 { \
 	static ClassName StaticInstance; \
@@ -37,6 +45,7 @@ virtual TAstBaseNode* StaticClass() const override \
 TUtf32String GetInfoString(TUtf32String InPrefix) const override; \
 TSharedPtr<TObject> Evaluate() const noexcept override; \
 friend class Parser
+
 
 #define DEFINE_EVALUATE_TYPE(Value) TSharedPtr<TTypeInfo> EvaluateType() const noexcept override { return Value; }
 #define IMPLEMENT_EVALUATE_TYPE() TSharedPtr<TTypeInfo> EvaluateType() const noexcept override
@@ -128,14 +137,14 @@ class TAstValNode : public TAstBaseNode {
 public:
 	AST_BODY_CLASS(TAstValNode);
 
-	DEFINE_EVALUATE_TYPE(MyType);
+	DEFINE_EVALUATE_TYPE(MyValue ? MyValue->MyType : nullptr);
 
 	DEFINE_STATIC_EVALUATABLE(true);
 
 CLASS_PRIVATE:
 	Lime::TTokenIterator MyStartItr;
 	Lime::TTokenIterator MyEndItr;
-	TSharedPtr<TTypeInfo> MyType;
+	TSharedPtr<TObject> MyValue;
 
 	friend class TAstFunctionCallNode;
 };

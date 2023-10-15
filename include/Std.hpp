@@ -12,6 +12,7 @@
 #include <variant>
 #include <mutex>
 #include <functional>
+#include <stack>
 
 /* non-override */
 #include <initializer_list>
@@ -65,6 +66,9 @@ namespace Lime {
 
 	template <class... Types>
 	using TVariant = std::variant<Types...>;
+
+	template <class Type>
+	using TStack = std::stack<Type>;
 
 	template <class... TArgs>
 	void LimeLog(LimeLogType InLogType, const char8_t* InMessage, TArgs&&... InArgs)

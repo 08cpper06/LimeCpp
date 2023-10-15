@@ -35,8 +35,8 @@ TUtf32String TAstBlockNode::GetInfoString(TUtf32String InPrefix) const
 
 TUtf32String TAstValNode::GetInfoString(TUtf32String InPrefix) const
 {
-	TUtf32String Str = InPrefix + U"<Val Type=\"" + MyType->MyName + U"\">";
-	if (MyType->MyName == U"char")
+	TUtf32String Str = InPrefix + U"<Val Type=\"" + MyValue->MyType->MyName + U"\">";
+	if (MyValue->MyType->MyName == U"char")
 	{
 		Str += MyStartItr->MyLetter;
 	}
@@ -354,7 +354,7 @@ TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 			{
 				TSharedPtr<TAstValNode> TmpNode = StaticCast<TAstValNode>(Value.first);
 				Str += InPrefix + U"\t\t<Detail Type=\"";
-				Str += TmpNode->MyType->MyName;
+				Str += TmpNode->MyValue->MyType->MyName;
 				TUtf32String ValueStr;
 				for (Lime::TTokenIterator Itr = TmpNode->MyStartItr; Itr != TmpNode->MyEndItr; ++Itr)
 				{

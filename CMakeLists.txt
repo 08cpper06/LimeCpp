@@ -18,6 +18,9 @@ add_executable(${PROJECT_NAME}
 	src/Parse/TypeTable.cpp
 	src/Parse/ASTNodeEvaluate.cpp
 	src/Parse/Object.cpp
+	src/Asm/BasicAsmGenerator.cpp
+	src/Asm/BasicInstruct.cpp
+	src/Asm/BasicAsmBuild.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)

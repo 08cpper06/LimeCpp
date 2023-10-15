@@ -246,3 +246,13 @@ inline TSharedPtr<UType> StaticCast(TSharedPtr<Type> InPtr) noexcept
 	}
 	return TSharedPtr<UType>();
 }
+
+template <
+	class UType,
+	class Type
+>
+inline TSharedPtr<UType> ConstCast(TSharedPtr<Type> InPtr) noexcept
+{
+	const typename TSharedPtr<UType>::ElementType* Ptr = const_cast<typename TSharedPtr<UType>::ElementType*>(InPtr.Get());
+	return TSharedPtr<UType>(InPtr, Ptr);
+}

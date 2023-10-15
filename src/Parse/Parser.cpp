@@ -169,10 +169,12 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 	Lime::TTokenIterator TmpItr = InItr;
 	bool IsHasNumber = false;
 	Lime::TTokenIterator StartItr;
+	TUtf32String Str;
 
 	if (TmpItr->MyType == TokenType::Number)
 	{
 		StartItr = TmpItr;
+		Str += TmpItr->MyLetter;
 	}
 	else if (TmpItr->MyType == TokenType::Ident)
 	{
@@ -204,9 +206,11 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 		case U'+':
 		case U'-':
 			StartItr = TmpItr++;
+			Str += StartItr->MyLetter;
 			break;
 		case U'.':
-			StartItr = TmpItr;
+			StartItr = TmpItr++;
+			Str += TmpItr->MyLetter;
 			break;
 		default:
 			return nullptr;
@@ -227,10 +231,12 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 		{
 			StartItr = TmpItr;
 		}
+		Str += TmpItr->MyLetter;
 		++TmpItr;
 		if (TmpItr->MyType == TokenType::Number)
 		{
 			IsHasNumber = true;
+			Str += TmpItr->MyLetter;
 			++TmpItr;
 			ValueType = OutResult.MyTypeTable.GetInfo(U"float");
 		}
@@ -245,10 +251,14 @@ PARSE_FUNCTION_IMPLEMENT(ParseValue)
 		InItr = TmpItr;
 		return OutResult.MakeError(TmpItr, U"Unknown type");
 	}
+	TSharedPtr<TObject> Value = MakeShared<TObject>();
+	Value->MyValue = Lime::EvalNumeric(Str);
+	Value->MyType = ValueType;
+
 	TSharedPtr<TAstValNode> Node = MakeShared<TAstValNode>();
 	Node->MyStartItr = StartItr;
 	Node->MyEndItr = TmpItr;
-	Node->MyType = ValueType;
+	Node->MyValue = Value;
 
 	InItr = TmpItr;
 	return Node;
@@ -1065,7 +1075,9 @@ PARSE_FUNCTION_IMPLEMENT(ParseCharInitialization)
 		return Error;
 	}
 	TSharedPtr<TAstValNode> Node = MakeShared<TAstValNode>();
-	Node->MyType = TTypeTable::GetGlobalTable()->GetInfo(U"char");
+	Node->MyValue = MakeShared<TObject>();
+	Node->MyValue->MyType = TTypeTable::GetGlobalTable()->GetInfo(U"char");
+	*(Node->MyValue->GetInteger()) = InItr->MyLetter.MyHashValue;
 	Node->MyStartItr = InItr;
 	Node->MyEndItr = ++InItr;
 	return Node;

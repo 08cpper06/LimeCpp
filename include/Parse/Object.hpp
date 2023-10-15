@@ -38,6 +38,8 @@ public:
 	bool Div(const TObject& InRhs) noexcept;
 	bool Time(const TObject& InRhs) noexcept;
 
+	void Set(const Lime::TVariant<int64_t, double>& InValue);
+
 	bool operator==(const TObject& InRhs) const noexcept;
 	bool operator<=(const TObject& InRhs) const noexcept;
 	bool operator<(const TObject& InRhs) const noexcept;
@@ -46,5 +48,22 @@ public:
 
 public:
 	TSharedPtr<TTypeInfo> MyType;
-	Lime::TVariant<int64_t, double, bool> MyValue;
+	Lime::TVariant<int64_t, double> MyValue;
 };
+
+inline TUtf32String ToUtf32String(TObject& InObject) noexcept
+{
+	if (InObject.IsInteger())
+	{
+		return ToUtf32String(*InObject.GetInteger());
+	}
+	else if (InObject.IsBoolean())
+	{
+		return InObject.GetBool()  ? U"true" : U"false";
+	}
+	else if (InObject.IsDouble())
+	{
+		return ToUtf32String(*InObject.GetDouble());
+	}
+	return U"unknown";
+}

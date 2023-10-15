@@ -20,25 +20,7 @@ TSharedPtr<TObject> TAstBlockNode::Evaluate() const noexcept
 
 TSharedPtr<TObject> TAstValNode::Evaluate() const noexcept
 {
-	TSharedPtr<TObject> Object = MakeShared<TObject>();
-
-	TUtf32String Str;
-	for (Lime::TTokenIterator Itr = MyStartItr; Itr != MyEndItr; ++Itr)
-	{
-		Str += Itr->MyLetter;
-	}
-
-	Object->MyType = MyType;
-	Lime::TVariant<int64_t, double> Value = Lime::EvalNumeric(Str);
-	switch (Value.index()) {
-		case 0:
-			Object->MyValue = std::get<0>(Value);
-			break;
-		case 1:
-			Object->MyValue = std::get<1>(Value);
-			break;
-	}
-	return Object;
+	return MyValue;
 }
 
 TSharedPtr<TObject> TAstStringValNode::Evaluate() const noexcept

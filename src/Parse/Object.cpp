@@ -96,11 +96,11 @@ bool TObject::IsBoolean() const noexcept
 
 bool TObject::GetBool() const noexcept
 {
-	return std::get<bool>(MyValue);
+	return std::get<int64_t>(MyValue) == 1;
 }
 void TObject::SetBool(bool InFlag) noexcept
 {
-	std::get<bool>(MyValue) = InFlag;
+	std::get<int64_t>(MyValue) = InFlag ? 1 : 0;
 }
 
 double* TObject::GetDouble() noexcept
@@ -257,6 +257,14 @@ bool TObject::Time(const TObject& InRhs) noexcept
 		*GetDouble() *= InRhs.GetAsDouble();
 	}
 	return true;
+}
+
+void TObject::Set(const Lime::TVariant<int64_t, double>& InValue)
+{
+	if (MyValue.index() == InValue.index())
+	{
+		MyValue = InValue;
+	}
 }
 
 bool TObject::operator==(const TObject& InRhs) const noexcept

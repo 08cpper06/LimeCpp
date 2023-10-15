@@ -14,7 +14,7 @@
 
 class Parser {
 public:
-	static void Analyze(TSourceContext&);
+	static void Analyze(TSourceContext& InContext);
 
 CLASS_PRIVATE:
 	PARSE_FUNCTION(ParseBlock);

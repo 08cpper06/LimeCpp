@@ -3,6 +3,7 @@
 #include "String/Utf32String.hpp"
 #include "String/Utf32StringView.hpp"
 
+#include "Asm/BasicInstructBuilder.hpp"
 #include "Parse/ASTNode.hpp"
 
 
@@ -51,28 +52,33 @@ public:
 	TSourceContext(const TSourceContext&) = delete;
 	~TSourceContext() noexcept = default;
 	
-	TUtf32StringView Source() const
+	TUtf32StringView Source() const noexcept
 	{
 		return TUtf32StringView(MySource.Bytes(), MySource.CharCount());
 	}
 
-	Lime::TTokenIterator TokenBegin() const
+	Lime::TTokenIterator TokenBegin() const noexcept
 	{
 		return MyTokens.cbegin();
 	}
-	Lime::TTokenIterator TokenEnd() const
+	Lime::TTokenIterator TokenEnd() const noexcept
 	{
 		return MyTokens.cend();
 	}
 
-	const Lime::TList<TToken>& Tokens() const
+	const Lime::TList<TToken>& Tokens() const noexcept
 	{
 		return MyTokens;
 	}
 
-	TSharedPtr<TAstBaseNode> ASTRoot() const
+	TSharedPtr<TAstBaseNode> ASTRoot() const noexcept
 	{
 		return MyParseResult.MyASTRoot;
+	}
+
+	TAsmBasicBuilder& AsmBuilder() noexcept
+	{
+		return MyBuilder;
 	}
 
 private: /* Tokenizer */
@@ -81,6 +87,9 @@ private: /* Tokenizer */
 
 private: /* Parser */
 	TParseResult MyParseResult;
+
+private:
+	TAsmBasicBuilder MyBuilder;
 
 private:
 	friend class Parser;

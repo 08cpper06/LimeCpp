@@ -1,6 +1,7 @@
 #include "FileIO/FileIO.hpp"
 #include "Tokenize/Tokenizer.hpp"
 #include "Parse/Parser.hpp"
+#include "Asm/BasicAsmGenerator.hpp"
 
 
 #define CONSOLE_COLOR(R, G, B) "\x1b[38;2;" #R ";" #G ";" #B "m"
@@ -57,6 +58,13 @@ int main(int Argc, const char** Argv)
 	TUtf8String Log = *String::ConvertToUtf8(Root->GetInfoString(U"").Bytes());
 	std::cout << CONSOLE_COLOR(200, 217, 33)
 		<< Log
+		<< DEFAULT_COLOR << std::endl;
+
+	BasicAsmGenerator::Analyze(Context);
+	TUtf32String IRLog = Context.AsmBuilder().GetInfoString();
+
+	std::cout << CONSOLE_COLOR(185, 208, 139)
+		<< IRLog
 		<< DEFAULT_COLOR << std::endl;
 
 	return 0;
