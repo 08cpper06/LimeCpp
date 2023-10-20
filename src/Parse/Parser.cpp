@@ -1174,7 +1174,17 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 							Message += U" (expected less than " + ToUtf32String(ArrayCount) + U")";
 							StringNode->MyError = OutResult.MakeError(InItr, Message);
 						}
-
+						for (Lime::size_t Index = ParseArrayCount; Index <= ArrayCount; ++Index)
+						{
+							TSharedPtr<TAstValNode> RestValue = MakeShared<TAstValNode>();
+							RestValue->MyStartItr = InItr;
+							RestValue->MyEndItr = InItr;
+							RestValue->MyValue = MakeShared<TObject>();
+							RestValue->MyValue->MyType = TypeInfo;
+							RestValue->MyValue->MyValue = 0;
+							RestValue->IsDummyFill = true;
+							StringNode->MyLists.push_back(RestValue);
+						}
 					}
 					Node->MyInitializeExpr = StringNode;
 					InItr = TmpItr;
@@ -1219,6 +1229,17 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 				TUtf32String Message = U"InitializerList too much elements : " + ToUtf32String(InitialValues->MyLists.size());
 				Message += U" (expected less than " + ToUtf32String(ArrayCount) + U")";
 				InitialValues->MyError = OutResult.MakeError(InItr,  Message);
+			}
+			for (Lime::size_t Index = InitialValues->MyLists.size(); Index <= ArrayCount; ++Index)
+			{
+				TSharedPtr<TAstValNode> RestValue = MakeShared<TAstValNode>();
+				RestValue->MyStartItr = InItr;
+				RestValue->MyEndItr = InItr;
+				RestValue->MyValue = MakeShared<TObject>();
+				RestValue->MyValue->MyType = TypeInfo;
+				RestValue->MyValue->MyValue = 0;
+				RestValue->IsDummyFill = true;
+				InitialValues->MyLists.push_back(RestValue);
 			}
 		}
 		else /* if (IsArray) */
