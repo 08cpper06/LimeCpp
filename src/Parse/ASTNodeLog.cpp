@@ -38,13 +38,27 @@ TUtf32String TAstValNode::GetInfoString(TUtf32String InPrefix) const
 	TUtf32String Str = InPrefix + U"<Val Type=\"" + MyValue->MyType->MyName + U"\">";
 	if (MyValue->MyType->MyName == U"char")
 	{
-		Str += MyStartItr->MyLetter;
+		if (!MyIsDummyFill)
+		{
+			Str += MyStartItr->MyLetter;
+		}
+		else
+		{
+			Str += U"\\0";
+		}
 	}
 	else
 	{
-		for (Lime::TTokenIterator Itr = MyStartItr; Itr != MyEndItr; ++Itr)
+		if (!MyIsDummyFill)
 		{
-			Str += Itr->MyLetter;
+			for (Lime::TTokenIterator Itr = MyStartItr; Itr != MyEndItr; ++Itr)
+			{
+				Str += Itr->MyLetter;
+			}
+		}
+		else
+		{
+			Str += static_cast<char32_t>(*(MyValue->GetInteger()) + U'0');
 		}
 	}
 	// Str += *ConvertToUtf32(*EndItr->Letter.GetString());

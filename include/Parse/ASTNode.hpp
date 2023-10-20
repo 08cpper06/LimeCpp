@@ -145,6 +145,7 @@ CLASS_PRIVATE:
 	Lime::TTokenIterator MyStartItr;
 	Lime::TTokenIterator MyEndItr;
 	TSharedPtr<TObject> MyValue;
+	bool MyIsDummyFill { false };
 
 	friend class TAstFunctionCallNode;
 };
