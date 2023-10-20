@@ -192,7 +192,7 @@ inline TUtf32String ToUtf32String(int64_t InValue)
 	TUtf32String Str = ToUtf32String(Lime::size_t(InValue > 0 ? InValue : -InValue));
 	if (InValue < 0)
 	{
-		Str = U'-';
+		Str = U'-' + Str;
 		InValue *= -1;
 	}
 	return Str;
