@@ -75,8 +75,8 @@ namespace Lime {
 	{
 		switch (InLogType) {
 		case LimeLogType::Error:
-			exit(1);
 			std::fprintf(stderr, reinterpret_cast<const char*>(InMessage), InArgs...);
+			exit(1);
 			break;
 		case LimeLogType::Log:
 			std::printf(reinterpret_cast<const char*>(InMessage), InArgs...);
