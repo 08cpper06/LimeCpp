@@ -28,7 +28,7 @@ TSharedPtr<TObject> TAstStringValNode::Evaluate() const noexcept
 	TSharedPtr<TObject> Object = MakeShared<TObject>();
 	Object->MyType = TTypeTable::GetGlobalTable()->GetInfo(U"char");
 	const char32_t* ConstString = MyPosition->MyLetter.GetString().Bytes();
-	Object->MyValue = int64_t(ConstString[MyOffset]);
+	Object->MyValue = static_cast<int64_t>(ConstString[MyOffset]);
 	return Object;
 }
 
