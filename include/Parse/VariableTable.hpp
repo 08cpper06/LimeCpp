@@ -8,7 +8,7 @@
 #include "Object.hpp"
 
 
-class TBlocKEntry;
+class TBlockEntry;
 
 struct TVarInfo {
 public:
@@ -30,6 +30,7 @@ public:
 	bool MyIsArray;
 	Lime::size_t MyArrayCount;
 	Lime::TArray<TSharedPtr<TObject>> MyObject;
+	int64_t MyStackIndex { -1 };
 };
 
 

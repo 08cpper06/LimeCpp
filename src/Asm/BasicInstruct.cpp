@@ -6,57 +6,56 @@ TUtf32String TAsmBasicMovInstruct::GetInfoString(TUtf32String InPrefix) const no
 	TUtf32String Str = InPrefix + U"mov\t";
 	Str += ToUtf32String(MyLhs->MyOperandType) + U'\t';
 	Str += MyLhs->MyValue->MyType->MyName + U'\t';
-	Str += MyLhs->MyName;
+	Str += GetOperandName(MyLhs);
 
 	Str += ToUtf32String(MyRhs->MyOperandType) + U'\t';
-	Str += MyRhs->MyValue->MyType->MyName;
-	if (MyRhs->MyOperandType == AsmBasicOperandType::Stack)
-	{
-		Str += MyRhs->MyName + U'\t';
-	}
-	else if (MyRhs->MyOperandType == AsmBasicOperandType::Immidiate)
-	{
-		Str += ToUtf32String(*MyRhs->MyValue) + U'\t';
-	}
-	else
-	{
-		Str += U"unknown\t";
-	}
+	Str += MyRhs->MyValue->MyType->MyName + U'\t';
+	Str += GetOperandName(MyRhs);
 
 	return Str + U'\n';
 }
 
-TUtf32String TAsmBasicAddInstruct::GetInfoString(TUtf32String InPrefix) const noexcept
+TUtf32String TAsmBasicBinInstruct::GetInfoString(TUtf32String InPrefix) const noexcept
 {
-	TUtf32String Str = InPrefix + U"add\t";
-	Str += ToUtf32String(MyLhs->MyOperandType) + U'\t';
-	Str += MyLhs->MyValue->MyType->MyName + U'\t';
-	if (MyLhs->MyOperandType == AsmBasicOperandType::Stack)
-	{
-		Str += MyLhs->MyName + U'\t';
-	}
-	else if (MyLhs->MyOperandType == AsmBasicOperandType::Immidiate)
-	{
-		Str += ToUtf32String(*MyLhs->MyValue) + U'\t';
-	}
-	else
-	{
-		Str += U"unknown\t";
+	TUtf32String Str = InPrefix;
+	bool IsSwap = false;
+	switch (MyOperator.MyHashValue) {
+		case U'+': Str += U"add\t"; break;
+		case U'-': Str += U"sub\t"; break;
+		case U'*': Str += U"mul\t"; break;
+		case U'/': Str += U"div\t"; break;
+		case U'>': IsSwap = true;[[fallthrough]];
+		case U'<': Str += U"setl\t"; break;
+		default: {
+			if (MyOperator == U"<=" ||
+				MyOperator == U">=")
+			{
+				Str += U"setle\t";
+				IsSwap = MyOperator == U">=";
+			}
+			break;
+		}
 	}
 
-	Str += ToUtf32String(MyRhs->MyOperandType) + U'\t';
-	Str += MyRhs->MyValue->MyType->MyName;
-	if (MyRhs->MyOperandType == AsmBasicOperandType::Stack)
+	if (IsSwap)
 	{
-		Str += MyRhs->MyName + U'\t';
-	}
-	else if (MyRhs->MyOperandType == AsmBasicOperandType::Immidiate)
-	{
-		Str += ToUtf32String(*MyRhs->MyValue) + U'\t';
+		Str += ToUtf32String(MyRhs->MyOperandType) + U'\t';
+		Str += MyRhs->MyValue->MyType->MyName + U'\t';
+		Str += GetOperandName(MyRhs);
+
+		Str += ToUtf32String(MyLhs->MyOperandType) + U'\t';
+		Str += MyLhs->MyValue->MyType->MyName + U'\t';
+		Str += GetOperandName(MyLhs);
 	}
 	else
 	{
-		Str += U"unknown\t";
+		Str += ToUtf32String(MyLhs->MyOperandType) + U'\t';
+		Str += MyLhs->MyValue->MyType->MyName + U'\t';
+		Str += GetOperandName(MyLhs);
+
+		Str += ToUtf32String(MyRhs->MyOperandType) + U'\t';
+		Str += MyRhs->MyValue->MyType->MyName + U'\t';
+		Str += GetOperandName(MyRhs);
 	}
 
 	return Str + U'\n';
@@ -72,18 +71,7 @@ TUtf32String TAsmBasicReturnInstruct::GetInfoString(TUtf32String InPrefix) const
 	TUtf32String Str = InPrefix + U"ret\t";
 	Str += ToUtf32String(MyReturnValue->MyOperandType) + U'\t';
 	Str += MyReturnValue->MyValue->MyType->MyName + U'\t';
-	if (MyReturnValue->MyOperandType == AsmBasicOperandType::Stack)
-	{
-		Str += MyReturnValue->MyName + U'\t';
-	}
-	else if (MyReturnValue->MyOperandType == AsmBasicOperandType::Immidiate)
-	{
-		Str += ToUtf32String(*MyReturnValue->MyValue) + U'\t';
-	}
-	else
-	{
-		Str += U"unknown\t";
-	}
+	Str += GetOperandName(MyReturnValue);
 
 	return Str + U'\n';
 }

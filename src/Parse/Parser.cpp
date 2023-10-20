@@ -1182,7 +1182,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 							RestValue->MyValue = MakeShared<TObject>();
 							RestValue->MyValue->MyType = TypeInfo;
 							RestValue->MyValue->MyValue = 0;
-							RestValue->IsDummyFill = true;
+							RestValue->MyIsDummyFill = true;
 							StringNode->MyLists.push_back(RestValue);
 						}
 					}
@@ -1238,7 +1238,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 				RestValue->MyValue = MakeShared<TObject>();
 				RestValue->MyValue->MyType = TypeInfo;
 				RestValue->MyValue->MyValue = 0;
-				RestValue->IsDummyFill = true;
+				RestValue->MyIsDummyFill = true;
 				InitialValues->MyLists.push_back(RestValue);
 			}
 		}
