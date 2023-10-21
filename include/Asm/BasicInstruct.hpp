@@ -131,6 +131,59 @@ public:
 	THashString MyLabelName;
 };
 
+enum class ConditionCode {
+	Unknown,
+	Equal,
+	NotEqual,
+	Negative,
+	NonNegative,
+	Greater,
+	GreaterEuqal,
+	Less,
+	LessEqual,
+	Above,
+	AboveEqual,
+	Below,
+	BelowEqual,
+};
+
+inline TUtf32String ToUtf32String(ConditionCode InMode) noexcept
+{
+	TUtf32String Str;
+	switch (InMode) {
+	case ConditionCode::Unknown:		Str += U""; break;
+	case ConditionCode::Equal:			Str += U"e"; break;
+	case ConditionCode::NotEqual:		Str += U"ne"; break;
+	case ConditionCode::Negative:		Str += U"s"; break;
+	case ConditionCode::NonNegative:	Str += U"ns"; break;
+	case ConditionCode::Greater:		Str += U"g"; break;
+	case ConditionCode::GreaterEuqal:	Str += U"ge"; break;
+	case ConditionCode::Less:			Str += U"l"; break;
+	case ConditionCode::LessEqual:		Str += U"le"; break;
+	case ConditionCode::Above:			Str += U"a"; break;
+	case ConditionCode::AboveEqual:		Str += U"ae"; break;
+	case ConditionCode::Below:			Str += U"b"; break;
+	case ConditionCode::BelowEqual:		Str += U"be"; break;
+	}
+	return Str;
+}
+
+class TAsmBasicJumpLabelInstruct : public TAsmBasicInstruct {
+public:
+	BASIC_INSTRUCT_BODY_CLASS(TAsmBasicJumpLabelInstruct);
+
+	TAsmBasicJumpLabelInstruct(THashString InLabel, ConditionCode InMode, TSharedPtr<TAsmBasicOperand> InCmpValue) :
+		MyLabelName(InLabel),
+		MyMode(InMode),
+		MyValue(InCmpValue)
+	{}
+	
+public:
+	THashString MyLabelName;
+	ConditionCode MyMode;
+	TSharedPtr<TAsmBasicOperand> MyValue;
+};
+
 class TAsmBasicReturnInstruct : public TAsmBasicInstruct {
 public:
 	BASIC_INSTRUCT_BODY_CLASS(TAsmBasicReturnInstruct);

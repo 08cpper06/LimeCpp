@@ -21,6 +21,16 @@ public:
 		return MyStack.size();
 	}
 
+	TUtf32String MakeNewLabel() noexcept
+	{
+		return U'L' + ToUtf32String(++MyLabelNamePostfix);
+	}
+
+	TUtf32String GetLastLabelName() const noexcept
+	{
+		return U'L' + ToUtf32String(MyLabelNamePostfix);
+	}
+
 	void PushStack(TSharedPtr<TAsmBasicOperand> InElement) noexcept
 	{
 		int64_t Ret = MyStack.size();
@@ -79,6 +89,7 @@ public:
 	}
 
 CLASS_PRIVATE:
+	Lime::size_t MyLabelNamePostfix { 0 };
 	Lime::TArray<TSharedPtr<TAsmBasicOperand>> MyStack;
 	Lime::TList<TSharedPtr<TAsmBasicInstruct>> MyInstructs;
 };

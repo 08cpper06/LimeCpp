@@ -24,7 +24,7 @@ TUtf32String TAsmBasicBinInstruct::GetInfoString(TUtf32String InPrefix) const no
 		case U'-': Str += U"sub\t"; break;
 		case U'*': Str += U"mul\t"; break;
 		case U'/': Str += U"div\t"; break;
-		case U'>': IsSwap = true;[[fallthrough]];
+		case U'>': IsSwap = true; [[fallthrough]];
 		case U'<': Str += U"setl\t"; break;
 		default: {
 			if (MyOperator == U"<=" ||
@@ -64,6 +64,23 @@ TUtf32String TAsmBasicBinInstruct::GetInfoString(TUtf32String InPrefix) const no
 TUtf32String TAsmBasicLabelInstruct::GetInfoString(TUtf32String InPrefix) const noexcept
 {
 	return MyLabelName + U":\n";
+}
+
+TUtf32String TAsmBasicJumpLabelInstruct::GetInfoString(TUtf32String InPrefix) const noexcept
+{
+	TUtf32String Str = InPrefix;
+	TUtf32String Postfix = ToUtf32String(MyMode);
+	if (Postfix.CharCount() > 0)
+	{
+		Str += U'j' + Postfix;
+	}
+	else
+	{
+		Str = U"jump";
+	}
+	Str += U'\t' + GetOperandName(MyValue);
+	Str += U'\t' + MyLabelName;
+	return Str + U'\n';
 }
 
 TUtf32String TAsmBasicReturnInstruct::GetInfoString(TUtf32String InPrefix) const noexcept

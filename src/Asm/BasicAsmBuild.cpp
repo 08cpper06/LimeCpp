@@ -190,6 +190,28 @@ void TAstReturnNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 
 void TAstIfNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 {
+	if (MyEvalExpr)
+	{
+		MyEvalExpr->BuildIR(InBuilder);
+	}
+
+	TSharedPtr<TAsmBasicJumpLabelInstruct> InstructJump = InBuilder.CreateInstruct<TAsmBasicJumpLabelInstruct>();
+	InstructJump->MyMode = ConditionCode::Equal;
+	InstructJump->MyValue = InBuilder.PopStack();
+	InstructJump->MyPosition = MyIfPosition;
+
+	MyTrueExpr->BuildIR(InBuilder);
+	if (MyFalseExpr)
+	{
+		MyFalseExpr->BuildIR(InBuilder);
+	}
+	else
+	{
+		TSharedPtr<TAsmBasicLabelInstruct> Instruct = InBuilder.CreateInstruct<TAsmBasicLabelInstruct>();
+		Instruct->MyLabelName = InBuilder.MakeNewLabel();
+		Instruct->MyPosition = MyElsePosition;
+	}
+	InstructJump->MyLabelName = InBuilder.GetLastLabelName();
 }
 
 void TAstWhileNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
@@ -282,6 +304,11 @@ void TAstInitializerListNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcep
 
 void TAstFunctionCallNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 {
+	for (Lime::TPair<TSharedPtr<TAstBaseNode>, TSharedPtr<TAstBaseNode>> Node : MyArguments)
+	{
+		Node.first->BuildIR(InBuilder);
+	}
+	TSharedPtr<TAsmBasicJumpLabelInstruct> Instruct = InBuilder.CreateInstruct<TAsmBasicJumpLabelInstruct>(MyFunction->MyName, ConditionCode::Unknown, nullptr);
 }
 
 void TAstAsmNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
