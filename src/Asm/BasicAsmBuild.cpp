@@ -203,7 +203,9 @@ void TAstIfNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 	MyTrueExpr->BuildIR(InBuilder);
 	if (MyFalseExpr)
 	{
+		InBuilder.CreateInstruct<TAsmBasicLabelInstruct>(InBuilder.MakeNewLabel());
 		MyFalseExpr->BuildIR(InBuilder);
+		InBuilder.CreateInstruct<TAsmBasicLabelInstruct>(InBuilder.MakeNewLabel());
 	}
 	else
 	{
