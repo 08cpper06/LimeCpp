@@ -117,10 +117,29 @@ void TAstPostfixUnaryNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 
 void TAstArrayReference::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 {
+	MyIndex->BuildIR(InBuilder);
+	TSharedPtr<TAsmBasicOperand> Operand = InBuilder.PopStack();
+	Operand->MyOperandType = AsmBasicOperandType::Address;
+	Operand->MyValue->MyType = TTypeTable::GetGlobalTable()->GetInfo(U"int");
+	*(Operand->MyValue->GetInteger()) += MyArrayInfo->MyStackIndex;
+	InBuilder.PushStack(Operand);
 }
 
 void TAstEqualityNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 {
+	if (IsStaticEvaluatable())
+	{
+		TSharedPtr<TAsmBasicOperand> Operand = MakeShared<TAsmBasicOperand>(AsmBasicOperandType::Immidiate, Evaluate());
+		InBuilder.PushStack(Operand);
+		return;
+	}
+	MyLhs->BuildIR(InBuilder);
+	MyRhs->BuildIR(InBuilder);
+	TSharedPtr<TAsmBasicBinInstruct> Instruct = InBuilder.CreateInstruct<TAsmBasicBinInstruct>(MyOperator->MyLetter);
+	Instruct->MyRhs = InBuilder.PopStack();
+	Instruct->MyLhs = InBuilder.PopStack();
+	TSharedPtr<TAsmBasicOperand> Operand = MakeShared<TAsmBasicOperand>(AsmBasicOperandType::Stack, Instruct->MyLhs->MyValue->MyType);
+	InBuilder.PushStack(Operand);
 }
 
 void TAstAssignNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
@@ -298,10 +317,11 @@ void TAstVariableDefinitionNode::BuildIR(TAsmBasicBuilder& InBuilder) const noex
 
 void TAstInitializerListNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 {
-	for (Lime::TArray<TSharedPtr<TAstBaseNode>>::const_iterator Itr = MyLists.end() - 1; Itr >= MyLists.begin(); --Itr)
+	for (Lime::TArray<TSharedPtr<TAstBaseNode>>::const_iterator Itr = MyLists.end() - 1; Itr > MyLists.begin(); --Itr)
 	{
 		(*Itr)->BuildIR(InBuilder);
 	}
+	(*MyLists.begin())->BuildIR(InBuilder);
 }
 
 void TAstFunctionCallNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept

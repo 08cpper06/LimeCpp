@@ -33,6 +33,14 @@ TUtf32String TAsmBasicBinInstruct::GetInfoString(TUtf32String InPrefix) const no
 				Str += U"setle\t";
 				IsSwap = MyOperator == U">=";
 			}
+			else if (MyOperator == U"==")
+			{
+				Str += U"sete\t";
+			}
+			else if (MyOperator == U"!=")
+			{
+				Str += U"setne\t";
+			}
 			break;
 		}
 	}
