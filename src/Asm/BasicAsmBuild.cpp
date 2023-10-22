@@ -144,6 +144,12 @@ void TAstEqualityNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 
 void TAstAssignNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 {
+	TSharedPtr<TAsmBasicMovInstruct> Instruct = InBuilder.CreateInstruct<TAsmBasicMovInstruct>();
+	MyLhs->BuildIR(InBuilder);
+	MyRhs->BuildIR(InBuilder);
+	Instruct->MyRhs = InBuilder.PopStack();
+	Instruct->MyLhs = InBuilder.PopStack();
+	InBuilder.PushStack(Instruct->MyLhs);
 }
 
 void TAstRelationalNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
@@ -271,7 +277,7 @@ void TAstVariableDefinitionNode::BuildIR(TAsmBasicBuilder& InBuilder) const noex
 	for (Lime::size_t Index = 1; Index <= MyArrayCount; ++Index)
 	{
 		/* AsmBasicOperandType::Local means local variable. (never poped until the end of scope) */
-		LocalOperand = MakeShared<TAsmBasicOperand>(AsmBasicOperandType::Local, Var->MyType, MyName->MyLetter);
+		LocalOperand = MakeShared<TAsmBasicOperand>(AsmBasicOperandType::Local, Var->MyType, MyName->MyLetter + U'[' + ToUtf32String(Index) + U']');
 		InBuilder.PushStack(LocalOperand);
 	}
 	/* --- end push the element as local variable to stack --- */
