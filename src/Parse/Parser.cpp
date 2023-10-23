@@ -1359,10 +1359,24 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 		return nullptr;
 	}
 
+	if (!FunctionDefineInfo)
+	{
+		while (TmpItr->MyLetter.MyHashValue != U';')
+		{
+			++TmpItr;
+		}
+		InItr = ++TmpItr;
+		return OutResult.MakeError(TmpItr, U"not definition");
+	}
+
 	Lime::TArray<TSharedPtr<TAstBaseNode>> ArgumentNodeList;
 	do {
 		++TmpItr;
 		TSharedPtr<TAstBaseNode> ArgumentNode = Parser::ParseValue(OutResult, TmpItr);
+		if (TmpItr->MyLetter.MyHashValue == U')')
+		{
+			break;
+		}
 		if (!ArgumentNode)
 		{
 			InItr = TmpItr;
