@@ -64,3 +64,10 @@ TUtf32String ParserCommand::Execute(const Lime::TArray<THashString>& InArgs)
 
 	return Root->GetInfoString(U"");
 }
+
+IMPLEMENT_COMMAND_FUNCTION(Clear, "clear")
+TUtf32String ClearCommand::Execute(const Lime::TArray<THashString>& InArgs)
+{
+	printf("\x1b[2J\x1b[0;0H");
+	return U"";
+}
