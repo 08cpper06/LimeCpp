@@ -15,6 +15,16 @@
 					<Val Type="char">l</Val>
 					<Val Type="char">d</Val>
 					<Val Type="char">\0</Val>
+					<Val Type="char">\0</Val>
+					<Val Type="char">\0</Val>
+					<Val Type="char">\0</Val>
+					<Val Type="char">\0</Val>
+					<Val Type="char">\0</Val>
+					<Val Type="char">\0</Val>
+					<Val Type="char">\0</Val>
+					<Val Type="char">\0</Val>
+					<Val Type="char">\0</Val>
+					<Val Type="char">\0</Val>
 				</InitializerList>
 			</VariableDefinition>
 			<Return>

@@ -55,15 +55,22 @@ int main(int Argc, const char** Argv)
 		return 4;
 	}
 
-	if (Context.ParseResult().MyErrorList.size())
-	{	
-		return 5;
-	}
-
 	TUtf8String Log = *String::ConvertToUtf8(Root->GetInfoString(U"").Bytes());
 	std::cout << CONSOLE_COLOR(200, 217, 33)
 		<< Log
 		<< DEFAULT_COLOR << std::endl;
+
+	if (Context.ParseResult().MyErrorList.size())
+	{
+		for (TSharedPtr<TAstBaseNode> Node : Context.ParseResult().MyErrorList)
+		{
+			if (TSharedPtr<TAstErrorNode> Error = DynamicCast<TAstErrorNode>(Node))
+			{
+				std::cout << "[" << Error->MyPosition->MyLine << "]" << Error->MyMessage << std::endl;
+			}
+		}
+		return 5;
+	}
 
 	BasicAsmGenerator::Analyze(Context);
 	TUtf32String IRLog = Context.AsmBuilder().GetInfoString();

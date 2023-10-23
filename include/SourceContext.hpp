@@ -76,6 +76,11 @@ public:
 		return MyParseResult.MyASTRoot;
 	}
 
+	const TParseResult& ParseResult() const noexcept
+	{
+		return MyParseResult;
+	}
+
 	TAsmBasicBuilder& AsmBuilder() noexcept
 	{
 		return MyBuilder;

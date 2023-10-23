@@ -4,6 +4,16 @@
 		<Block Name="Block_main">
 			<VariableDefinition Type="int" Name="arr" ArrayCount="10">
 				<InitializerList>
+					<Val Type="int">0</Val>
+					<Val Type="int">0</Val>
+					<Val Type="int">0</Val>
+					<Val Type="int">0</Val>
+					<Val Type="int">0</Val>
+					<Val Type="int">0</Val>
+					<Val Type="int">0</Val>
+					<Val Type="int">0</Val>
+					<Val Type="int">0</Val>
+					<Val Type="int">0</Val>
 				</InitializerList>
 			</VariableDefinition>
 			<Return>

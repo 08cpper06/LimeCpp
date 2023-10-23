@@ -1106,6 +1106,12 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 		InItr = TmpItr;
 		return OutResult.MakeError(TmpItr, U"`" + TmpItr->MyLetter + U"` is already defined");
 	}
+
+	if (TmpItr->MyLetter.MyHashValue == U'(')
+	{
+		/* it is possible function */
+		return nullptr;
+	}
 	++TmpItr;
 
 	Lime::size_t ArrayCount = 0;
@@ -1230,7 +1236,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 				Message += U" (expected less than " + ToUtf32String(ArrayCount) + U")";
 				InitialValues->MyError = OutResult.MakeError(InItr,  Message);
 			}
-			for (Lime::size_t Index = InitialValues->MyLists.size(); Index <= ArrayCount; ++Index)
+			for (Lime::size_t Index = InitialValues->MyLists.size(); Index < ArrayCount; ++Index)
 			{
 				TSharedPtr<TAstValNode> RestValue = MakeShared<TAstValNode>();
 				RestValue->MyStartItr = InItr;
@@ -1365,8 +1371,8 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 		{
 			++TmpItr;
 		}
-		InItr = ++TmpItr;
-		return OutResult.MakeError(TmpItr, U"not definition");
+		InItr = TmpItr;
+		return OutResult.MakeError(TmpItr, U'`' + SaveFunctionName->MyLetter + U"` is not defined");
 	}
 
 	Lime::TArray<TSharedPtr<TAstBaseNode>> ArgumentNodeList;
@@ -1375,6 +1381,10 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 		TSharedPtr<TAstBaseNode> ArgumentNode = Parser::ParseValue(OutResult, TmpItr);
 		if (TmpItr->MyLetter.MyHashValue == U')')
 		{
+			if (ArgumentNode)
+			{
+				ArgumentNodeList.push_back(ArgumentNode);
+			}
 			break;
 		}
 		if (!ArgumentNode)
