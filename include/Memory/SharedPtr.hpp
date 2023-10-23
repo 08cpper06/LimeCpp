@@ -17,7 +17,7 @@ public:
 private:
 
 	template <class UType>
-	void MoveConstructFrom(TSharedPtr<UType>&& InRhs) noexcept
+	constexpr void MoveConstructFrom(TSharedPtr<UType>&& InRhs) noexcept
 	{
 		this->MyPtr = InRhs.MyPtr;
 		this->MyRefCounter = InRhs.MyRefCounter;
@@ -25,7 +25,7 @@ private:
 		InRhs.MyRefCounter = nullptr;
 	}
 	template <class UType>
-	void CopyConstructFrom(const TSharedPtr<UType>& InRhs) noexcept
+	constexpr void CopyConstructFrom(const TSharedPtr<UType>& InRhs) noexcept
 	{
 		if (InRhs.MyRefCounter)
 		{
@@ -36,7 +36,7 @@ private:
 	}
 
 	template <class UType>
-	void MoveConstructFrom(TSharedPtr<UType>&& InRhs, ElementType* InPtr) noexcept
+	constexpr void MoveConstructFrom(TSharedPtr<UType>&& InRhs, ElementType* InPtr) noexcept
 	{
 		if (InRhs.MyRefCounter)
 		{
@@ -48,7 +48,7 @@ private:
 		InRhs.MyRefCounter = nullptr;
 	}
 	template <class UType>
-	void CopyConstructFrom(const TSharedPtr<UType>& InRhs, ElementType* InPtr) noexcept
+	constexpr void CopyConstructFrom(const TSharedPtr<UType>& InRhs, ElementType* InPtr) noexcept
 	{
 		if (InRhs.MyRefCounter)
 		{
@@ -59,9 +59,9 @@ private:
 	}
 
 public:
-	TSharedPtr() noexcept {}
+	constexpr TSharedPtr() noexcept {}
 
-	TSharedPtr(std::nullptr_t) noexcept {}
+	constexpr TSharedPtr(std::nullptr_t) noexcept {}
 
 	template <class UType>
 	explicit TSharedPtr(UType* InPtr) noexcept
@@ -70,103 +70,103 @@ public:
 		this->MyRefCounter = new TRefCounter();
 	}
 
-	TSharedPtr(const TSharedPtr<Type>& InRhs) noexcept
+	constexpr TSharedPtr(const TSharedPtr<Type>& InRhs) noexcept
 	{
 		this->CopyConstructFrom(InRhs);
 	}
 
 	template <class UType>
-	TSharedPtr(const TSharedPtr<UType>& InRhs) noexcept
+	constexpr TSharedPtr(const TSharedPtr<UType>& InRhs) noexcept
 	{
 		this->CopyConstructFrom<UType>(InRhs);
 	}
 
-	TSharedPtr(TSharedPtr<Type>&& InRhs) noexcept
+	constexpr TSharedPtr(TSharedPtr<Type>&& InRhs) noexcept
 	{
 		this->MoveConstructFrom<Type>(std::move(InRhs));
 	}
 
 	template <class UType>
-	TSharedPtr(TSharedPtr<UType>&& InRhs) noexcept
+	constexpr TSharedPtr(TSharedPtr<UType>&& InRhs) noexcept
 	{
 		this->MoveConstructFrom<UType>(std::move(InRhs));
 	}
 
 	template <class UType>
-	TSharedPtr(const TSharedPtr<UType>& InRhs, ElementType* InPtr) noexcept
+	constexpr TSharedPtr(const TSharedPtr<UType>& InRhs, ElementType* InPtr) noexcept
 	{
 		this->CopyConstructFrom<UType>(InRhs, InPtr);
 	}
 	template <class UType>
-	TSharedPtr(TSharedPtr<UType>&& InRhs, ElementType* InPtr) noexcept
+	constexpr TSharedPtr(TSharedPtr<UType>&& InRhs, ElementType* InPtr) noexcept
 	{
 		this->MoveConstructFrom<UType>(std::move(InRhs), InPtr);
 	}
 
-	~TSharedPtr() noexcept
+	constexpr ~TSharedPtr() noexcept
 	{
 		this->DecreaseRef();
 	}
 
-	void Swap(TWeakPtr<Type>& InRhs) noexcept
+	constexpr void Swap(TWeakPtr<Type>& InRhs) noexcept
 	{
 		this->_Swap(InRhs);
 	}
 	template <class UType>
-	void Swap(TWeakPtr<UType>& InRhs) noexcept
+	constexpr void Swap(TWeakPtr<UType>& InRhs) noexcept
 	{
 		this->_Swap(InRhs);
 	}
 
-	void Swap(TSharedPtr<Type>& InRhs) noexcept
+	constexpr void Swap(TSharedPtr<Type>& InRhs) noexcept
 	{
 		this->_Swap(InRhs);
 	}
 	template <class UType>
-	void Swap(TSharedPtr<UType>& InRhs) noexcept
+	constexpr void Swap(TSharedPtr<UType>& InRhs) noexcept
 	{
 		this->_Swap(InRhs);
 	}
 
-	void Reset() noexcept
+	constexpr void Reset() noexcept
 	{
 		TSharedPtr<Type>().Swap(*this);
 	}
 
-	Type* Get() const noexcept
+	constexpr Type* Get() const noexcept
 	{
 		return this->_Get();
 	}
 
-	long UseCount() const noexcept
+	constexpr long UseCount() const noexcept
 	{
 		return this->_UseCount();
 	}
 
-	operator const bool() const noexcept
+	constexpr operator const bool() const noexcept
 	{
 		return Get() != nullptr;
 	}
 
-	TSharedPtr<Type>& operator=(const TSharedPtr<Type>& InRhs) noexcept
+	constexpr TSharedPtr<Type>& operator=(const TSharedPtr<Type>& InRhs) noexcept
 	{
 		this->CopyConstructFrom<Type>(InRhs);
 		return *this;
 	}
 	template <class UType>
-	TSharedPtr<Type>& operator=(const TSharedPtr<UType>& InRhs) noexcept
+	constexpr TSharedPtr<Type>& operator=(const TSharedPtr<UType>& InRhs) noexcept
 	{
 		this->CopyConstructFrom<UType>(InRhs);
 		return *this;
 	}
 
-	TSharedPtr<Type>& operator=(TSharedPtr<Type>&& InRhs) noexcept
+	constexpr TSharedPtr<Type>& operator=(TSharedPtr<Type>&& InRhs) noexcept
 	{
 		this->MoveConstructFrom<Type>(std::move(InRhs));
 		return *this;
 	}
 	template <class UType>
-	TSharedPtr<Type>& operator=(TSharedPtr<UType>&& InRhs) noexcept
+	constexpr TSharedPtr<Type>& operator=(TSharedPtr<UType>&& InRhs) noexcept
 	{
 		this->MoveConstructFrom(std::move(InRhs));
 		return *this;
@@ -177,7 +177,7 @@ public:
 	template <
 		std::enable_if_t<!std::is_array_v<Type>, std::nullptr_t> = nullptr
 	>
-	Type& operator*() const noexcept
+	constexpr Type& operator*() const noexcept
 	{
 		return *Get();
 	}
@@ -185,7 +185,7 @@ public:
 	template <
 		std::enable_if_t<!std::is_array_v<Type>, std::nullptr_t> = nullptr
 	>
-	Type* operator->() const noexcept
+	constexpr Type* operator->() const noexcept
 	{
 		return Get();
 	}
@@ -194,7 +194,7 @@ public:
 		class UType = Type,
 		std::enable_if_t<std::is_array_v<UType>, std::nullptr_t> = nullptr
 	>
-	Type& operator[](ptrdiff_t InIndex) const noexcept
+	constexpr Type& operator[](ptrdiff_t InIndex) const noexcept
 	{
 		return Get()[InIndex];
 	}
