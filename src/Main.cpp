@@ -55,6 +55,11 @@ int main(int Argc, const char** Argv)
 		return 4;
 	}
 
+	if (Context.ParseResult().MyErrorList.size())
+	{	
+		return 5;
+	}
+
 	TUtf8String Log = *String::ConvertToUtf8(Root->GetInfoString(U"").Bytes());
 	std::cout << CONSOLE_COLOR(200, 217, 33)
 		<< Log
