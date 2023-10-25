@@ -23,11 +23,7 @@
 #include "Memory/SharedPtr.hpp"
 #include "Memory/WeakPtr.hpp"
 
-
-enum class LimeLogType {
-	Error,
-	Log
-};
+#include "Core/Log.hpp"
 
 #if defined(_DEBUG)
 #define CLASS_PRIVATE public
@@ -69,20 +65,6 @@ namespace Lime {
 
 	template <class Type>
 	using TStack = std::stack<Type>;
-
-	template <class... TArgs>
-	void LimeLog(LimeLogType InLogType, const char8_t* InMessage, TArgs&&... InArgs)
-	{
-		switch (InLogType) {
-		case LimeLogType::Error:
-			std::fprintf(stderr, reinterpret_cast<const char*>(InMessage), InArgs...);
-			exit(1);
-			break;
-		case LimeLogType::Log:
-			std::printf(reinterpret_cast<const char*>(InMessage), InArgs...);
-			break;
-		}
-	}
 
 }
 

@@ -1,9 +1,6 @@
 #pragma once
 
 
-#include "../Std.hpp"
-
-
 enum class DefaultErrorType {
 	NoError,
 	Error,
@@ -89,7 +86,7 @@ public:
 		MyErrorCode = ErrorType(0);
 	}
 
-CLASS_PRIVATE:
+private:
 	Type MyValue;
 	ErrorType MyErrorCode;
 };
