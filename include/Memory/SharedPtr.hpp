@@ -2,6 +2,7 @@
 
 
 #include "RefCounter.hpp"
+#include "Core/Log.hpp"
 #include <type_traits>
 
 
@@ -13,6 +14,10 @@ public:
 public:
 	template <class UType>
 	friend class TWeakPtr;
+
+#if defined(_DEBUG)
+	std::source_location MyCreateLocation;
+#endif
 
 private:
 
@@ -59,6 +64,64 @@ private:
 	}
 
 public:
+
+#if defined(_DEBUG)
+	constexpr TSharedPtr(std::source_location InLoc = std::source_location::current()) noexcept :
+		MyCreateLocation(InLoc)
+	{}
+
+	constexpr TSharedPtr(std::nullptr_t null, std::source_location InLoc = std::source_location::current()) noexcept :
+		MyCreateLocation(InLoc)
+	{}
+
+	template <class UType>
+	explicit TSharedPtr(UType* InPtr, std::source_location InLoc = std::source_location::current()) noexcept :
+		MyCreateLocation(InLoc)
+	{
+		this->MyPtr = InPtr;
+		this->MyRefCounter = new TRefCounter();
+	}
+
+	constexpr TSharedPtr(const TSharedPtr<Type>& InRhs, std::source_location InLoc = std::source_location::current()) noexcept :
+		MyCreateLocation(InLoc)
+	{
+		this->CopyConstructFrom(InRhs);
+	}
+
+	template <class UType>
+	constexpr TSharedPtr(const TSharedPtr<UType>& InRhs, std::source_location InLoc = std::source_location::current()) noexcept :
+		MyCreateLocation(InLoc)
+	{
+		this->CopyConstructFrom<UType>(InRhs);
+	}
+
+	constexpr TSharedPtr(TSharedPtr<Type>&& InRhs, std::source_location InLoc = std::source_location::current()) noexcept :
+		MyCreateLocation(InLoc)
+	{
+		this->MoveConstructFrom<Type>(std::move(InRhs));
+	}
+
+	template <class UType>
+	constexpr TSharedPtr(TSharedPtr<UType>&& InRhs, std::source_location InLoc = std::source_location::current()) noexcept :
+		MyCreateLocation(InLoc)
+	{
+		this->MoveConstructFrom<UType>(std::move(InRhs));
+	}
+
+	template <class UType>
+	constexpr TSharedPtr(const TSharedPtr<UType>& InRhs, ElementType* InPtr, std::source_location InLoc = std::source_location::current()) noexcept :
+		MyCreateLocation(InLoc)
+	{
+		this->CopyConstructFrom<UType>(InRhs, InPtr);
+	}
+	template <class UType>
+	constexpr TSharedPtr(TSharedPtr<UType>&& InRhs, ElementType* InPtr, std::source_location InLoc = std::source_location::current()) noexcept :
+		MyCreateLocation(InLoc)
+	{
+		this->MoveConstructFrom<UType>(std::move(InRhs), InPtr);
+	}
+
+#else
 	constexpr TSharedPtr() noexcept {}
 
 	constexpr TSharedPtr(std::nullptr_t) noexcept {}
@@ -102,6 +165,8 @@ public:
 	{
 		this->MoveConstructFrom<UType>(std::move(InRhs), InPtr);
 	}
+
+#endif
 
 	constexpr ~TSharedPtr() noexcept
 	{
@@ -179,6 +244,12 @@ public:
 	>
 	constexpr Type& operator*() const noexcept
 	{
+#if defined(_DEBUG)
+		if (!Get())
+		{
+			Lime::LimeLog(LimeLogType::Error, u8"Line : %l[%s]", MyCreateLocation.line(), MyCreateLocation.file_name());
+		}
+#endif
 		return *Get();
 	}
 
@@ -187,6 +258,12 @@ public:
 	>
 	constexpr Type* operator->() const noexcept
 	{
+#if defined(_DEBUG)
+		if (!Get())
+		{
+			Lime::LimeLog(LimeLogType::Error, u8"Line : %l[%s]", MyCreateLocation.line(), MyCreateLocation.file_name());
+		}
+#endif
 		return Get();
 	}
 	
@@ -196,6 +273,12 @@ public:
 	>
 	constexpr Type& operator[](ptrdiff_t InIndex) const noexcept
 	{
+#if defined(_DEBUG)
+		if (!Get())
+		{
+			Lime::LimeLog(LimeLogType::Error, u8"Line : %l[%s]", MyCreateLocation.line(), MyCreateLocation.file_name());
+		}
+#endif
 		return Get()[InIndex];
 	}
 
@@ -207,14 +290,22 @@ inline std::enable_if_t<!std::is_array_v<Type>, TSharedPtr<Type>> MakeShared(Arg
 	return TSharedPtr<Type>(new Type(InArgs...));
 }
 template <class Type>
-inline std::enable_if_t<!std::is_array_v<Type>, TSharedPtr<Type>> MakeShared() noexcept
+inline std::enable_if_t<!std::is_array_v<Type>, TSharedPtr<Type>> MakeShared(std::source_location InLoc = std::source_location::current()) noexcept
 {
+#if defined(_DEBUG)
+	return TSharedPtr<Type>(new Type(), InLoc);
+#else
 	return TSharedPtr<Type>(new Type());
+#endif
 }
 template <class Type>
-inline std::enable_if_t<std::is_array_v<Type>, TSharedPtr<Type>> MakeShared(std::size_t InCount) noexcept
+inline std::enable_if_t<std::is_array_v<Type>, TSharedPtr<Type>> MakeShared(std::size_t InCount, std::source_location InLoc = std::source_location::current()) noexcept
 {
+#if defined(_DEBUG)
+	return TSharedPtr<Type[]>(new Type[InCount], InLoc);
+#else
 	return TSharedPtr<Type[]>(new Type[InCount]);
+#endif
 }
 
 template <
@@ -237,22 +328,34 @@ template <
 	class Type,
 	typename std::enable_if_t<std::is_base_of_v<Type, UType>, std::nullptr_t> = nullptr
 >
-inline TSharedPtr<UType> StaticCast(TSharedPtr<Type> InPtr) noexcept
+inline TSharedPtr<UType> StaticCast(TSharedPtr<Type> InPtr, std::source_location InLoc = std::source_location::current()) noexcept
 {
 	const auto Ptr = static_cast<typename TSharedPtr<UType>::ElementType*>(InPtr.Get());
+#if defined(_DEBUG)
+	if (Ptr)
+	{
+		return TSharedPtr<UType>(InPtr, Ptr, InLoc);
+	}
+	return TSharedPtr<UType>(InLoc);
+#else
 	if (Ptr)
 	{
 		return TSharedPtr<UType>(InPtr, Ptr);
 	}
 	return TSharedPtr<UType>();
+#endif
 }
 
 template <
 	class UType,
 	class Type
 >
-inline TSharedPtr<UType> ConstCast(TSharedPtr<Type> InPtr) noexcept
+inline TSharedPtr<UType> ConstCast(TSharedPtr<Type> InPtr, std::source_location InLoc = std::source_location::current()) noexcept
 {
 	const typename TSharedPtr<UType>::ElementType* Ptr = const_cast<typename TSharedPtr<UType>::ElementType*>(InPtr.Get());
+#if defined(_DEBUG)
+	return TSharedPtr<UType>(InPtr, Ptr, InLoc);
+#else
 	return TSharedPtr<UType>(InPtr, Ptr);
+#endif
 }
