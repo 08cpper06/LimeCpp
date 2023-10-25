@@ -15,7 +15,7 @@ public:
 	virtual constexpr bool IsEmpty() const noexcept = 0;
 
 	virtual constexpr void Reset() = 0;
-	virtual constexpr void ShrinkOfFit() = 0;
+	virtual constexpr void ShrinkToFit() = 0;
 
 	virtual constexpr void ReSize(Lime::size_t InNewSize) = 0;
 	virtual constexpr void Reserve(Lime::size_t InNewSize) = 0;

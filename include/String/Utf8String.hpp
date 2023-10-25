@@ -417,7 +417,7 @@ public:
 	{
 		MyData.clear();
 	}
-	constexpr void ShrinkOfFit() override
+	constexpr void ShrinkToFit() override
 	{
 		MyData.shrink_to_fit();
 	}
