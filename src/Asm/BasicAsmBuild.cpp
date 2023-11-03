@@ -324,14 +324,14 @@ void TAstWhileNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 	TSharedPtr<TAsmBasicLabelInstruct> StartLabelInstruct = InBuilder.CreateInstruct<TAsmBasicLabelInstruct>(InBuilder.MakeNewLabel());
 	StartLabelInstruct->MyPosition = MyPosition;
 
-	assert(MyBlockExpr);
+	Assert(MyBlockExpr);
 	MyBlockExpr->BuildIR(InBuilder);
 
 	TSharedPtr<TAsmBasicLabelInstruct> CondLabelInstruct = InBuilder.CreateInstruct<TAsmBasicLabelInstruct>(InBuilder.MakeNewLabel());
 	CondLabelInstruct->MyPosition = MyPosition;
 	JumpCondInstruct->MyLabelName = CondLabelInstruct->MyLabelName;
 
-	assert(MyEvalExpr);
+	Assert(MyEvalExpr);
 	MyEvalExpr->BuildIR(InBuilder);
 
 	TSharedPtr<TObject> Value = MakeShared<TObject>(TTypeTable::GetGlobalTable()->GetInfo(U"bool"));
@@ -362,10 +362,8 @@ void TAstFunctionDefinitionNode::BuildIR(TAsmBasicBuilder& InBuilder) const noex
 		InBuilder.CreateInstruct<TAsmBasicPushInstruct>(Operand);
 	}
 
-	if (MyBlockExpr)
-	{
-		MyBlockExpr->BuildIR(InBuilder);
-	}
+	Assert(MyBlockExpr);
+	MyBlockExpr->BuildIR(InBuilder);
 
 	InBuilder.ClearStack();
 	InBuilder.SetStackOffset(0);

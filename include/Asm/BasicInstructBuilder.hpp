@@ -53,8 +53,8 @@ public:
 
 	TSharedPtr<TAsmBasicOperand> ReferStack(int64_t InIndex) noexcept
 	{
-		assert(InIndex >= 0);
-		assert(MyStackOffset + InIndex < MyStack.size());
+		Assert(InIndex >= 0);
+		Assert(MyStackOffset + InIndex < MyStack.size());
 
 		Lime::size_t Address = MyStackOffset + InIndex;
 
