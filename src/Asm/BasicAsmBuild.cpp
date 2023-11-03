@@ -43,7 +43,9 @@ void TAstAddSubNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 		return;
 	}
 
+	Assert(MyRhs);
 	MyRhs->BuildIR(InBuilder);
+	Assert(MyLhs);
 	MyLhs->BuildIR(InBuilder);
 
 	TSharedPtr<TAsmBasicOperand> LhsOperand = InBuilder.PopStack();
@@ -76,7 +78,9 @@ void TAstMulDivNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 		return;
 	}
 
+	Assert(MyRhs);
 	MyRhs->BuildIR(InBuilder);
+	Assert(MyLhs);
 	MyLhs->BuildIR(InBuilder);
 
 	TSharedPtr<TAsmBasicOperand> LhsOperand = InBuilder.PopStack();
@@ -109,9 +113,9 @@ void TAstParenthessNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 
 void TAstPrefixUnaryNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 {
-	if (MyExpr) {
-		MyExpr->BuildIR(InBuilder);
-	}
+	Assert(MyExpr);
+	MyExpr->BuildIR(InBuilder);
+
 	if (MyOperator->MyLetter.MyHashValue == U'-')
 	{
 		TSharedPtr<TAsmBasicOperand> Operand = MakeShared<TAsmBasicOperand>();
@@ -158,14 +162,16 @@ void TAstPrefixUnaryNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 		Operand->MyValue->MyValue = Instruct->MyLhs->MyValue->MyValue;
 		InBuilder.PushStack(Operand);
 	}
+	else
+	{
+		Panic("Invalid operator");
+	}
 }
 
 void TAstPostfixUnaryNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 {
-	if (MyExpr)
-	{
-		MyExpr->BuildIR(InBuilder);
-	}
+	Assert(MyExpr);
+	MyExpr->BuildIR(InBuilder);
 	if (MyOperator->MyLetter == U"++" ||
 		MyOperator->MyLetter == U"--")
 	{
@@ -199,10 +205,15 @@ void TAstPostfixUnaryNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 
 		InBuilder.PushStack(Operand);
 	}
+	else
+	{
+		Panic("Invalid operator");
+	}
 }
 
 void TAstArrayReference::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 {
+	Assert(MyIndex);
 	MyIndex->BuildIR(InBuilder);
 	TSharedPtr<TAsmBasicOperand> Operand = InBuilder.PopStack();
 	Operand->MyOperandType = AsmBasicOperandType::Address;
@@ -222,7 +233,10 @@ void TAstEqualityNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 		InBuilder.CreateInstruct<TAsmBasicPushInstruct>(Operand);
 		return;
 	}
+
+	Assert(MyLhs);
 	MyLhs->BuildIR(InBuilder);
+	Assert(MyRhs);
 	MyRhs->BuildIR(InBuilder);
 	TSharedPtr<TAsmBasicBinInstruct> Instruct = InBuilder.CreateInstruct<TAsmBasicBinInstruct>(MyOperator->MyLetter);
 	Instruct->MyRhs = InBuilder.PopStack();
@@ -234,7 +248,9 @@ void TAstEqualityNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 void TAstAssignNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 {
 	TSharedPtr<TAsmBasicMovInstruct> Instruct = InBuilder.CreateInstruct<TAsmBasicMovInstruct>();
+	Assert(MyLhs);
 	MyLhs->BuildIR(InBuilder);
+	Assert(MyRhs);
 	MyRhs->BuildIR(InBuilder);
 	Instruct->MyRhs = InBuilder.PopStack();
 	Instruct->MyLhs = InBuilder.PopStack();
@@ -252,7 +268,9 @@ void TAstRelationalNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 	}
 
 	const char32_t* Operator = MyOperator->MyLetter.GetString().Bytes();
+	Assert(MyRhs);
 	MyRhs->BuildIR(InBuilder);
+	Assert(MyLhs);
 	MyLhs->BuildIR(InBuilder);
 
 	TSharedPtr<TAsmBasicOperand> LhsOperand = InBuilder.PopStack();
@@ -290,10 +308,8 @@ void TAstReturnNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 
 void TAstIfNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 {
-	if (MyEvalExpr)
-	{
-		MyEvalExpr->BuildIR(InBuilder);
-	}
+	Assert(MyEvalExpr);
+	MyEvalExpr->BuildIR(InBuilder);
 
 	TSharedPtr<TAsmBasicJumpLabelInstruct> InstructJump = InBuilder.CreateInstruct<TAsmBasicJumpLabelInstruct>();
 	InstructJump->MyMode = ConditionCode::Equal;
@@ -444,9 +460,13 @@ void TAstInitializerListNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcep
 {
 	for (Lime::TArray<TSharedPtr<TAstBaseNode>>::const_iterator Itr = MyLists.end() - 1; Itr > MyLists.begin(); --Itr)
 	{
+		Assert(*Itr);
 		(*Itr)->BuildIR(InBuilder);
 	}
-	(*MyLists.begin())->BuildIR(InBuilder);
+	if (MyLists.size() > 0)
+	{
+		(*MyLists.begin())->BuildIR(InBuilder);
+	}
 }
 
 void TAstFunctionCallNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept

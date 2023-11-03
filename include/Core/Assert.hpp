@@ -20,3 +20,12 @@ inline void Assert(bool InExpr, std::source_location InLoc = std::source_locatio
 #define Assert(...)
 
 #endif
+
+template <class Type>
+inline void Panic(const Type& InMessage, std::source_location InLoc = std::source_location::current())
+{
+	std::cout << "Assertion error: " << InMessage << " line: " << InLoc.line() << "[" << InLoc.file_name() << "]" << std::endl;
+	exit(1);
+}
+
+
