@@ -13,13 +13,14 @@
 #include <mutex>
 #include <functional>
 #include <stack>
-#include <cassert>
+
 
 /* non-override */
 #include <initializer_list>
 #include <type_traits>
-#include <source_location>
 
+
+#include "Core/Assert.hpp"
 
 #include "Memory/SharedPtr.hpp"
 #include "Memory/WeakPtr.hpp"
