@@ -318,7 +318,26 @@ void TAstIfNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 
 void TAstWhileNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
 {
-	;
+	TSharedPtr<TAsmBasicJumpLabelInstruct> JumpCondInstruct = InBuilder.CreateInstruct<TAsmBasicJumpLabelInstruct>(InBuilder.MakeNewLabel(), ConditionCode::Unknown, nullptr);
+	JumpCondInstruct->MyPosition = MyPosition;
+
+	TSharedPtr<TAsmBasicLabelInstruct> StartLabelInstruct = InBuilder.CreateInstruct<TAsmBasicLabelInstruct>(InBuilder.MakeNewLabel());
+	StartLabelInstruct->MyPosition = MyPosition;
+
+	assert(MyBlockExpr);
+	MyBlockExpr->BuildIR(InBuilder);
+
+	TSharedPtr<TAsmBasicLabelInstruct> CondLabelInstruct = InBuilder.CreateInstruct<TAsmBasicLabelInstruct>(InBuilder.MakeNewLabel());
+	CondLabelInstruct->MyPosition = MyPosition;
+	JumpCondInstruct->MyLabelName = CondLabelInstruct->MyLabelName;
+
+	assert(MyEvalExpr);
+	MyEvalExpr->BuildIR(InBuilder);
+
+	TSharedPtr<TObject> Value = MakeShared<TObject>(TTypeTable::GetGlobalTable()->GetInfo(U"bool"));
+	Value->MyValue = 1;
+	TSharedPtr<TAsmBasicOperand> Operand = MakeShared<TAsmBasicOperand>(AsmBasicOperandType::Immidiate, Value);
+	TSharedPtr<TAsmBasicJumpLabelInstruct> JumpInstruct = InBuilder.CreateInstruct<TAsmBasicJumpLabelInstruct>(StartLabelInstruct->MyLabelName, ConditionCode::Equal, Operand);
 }
 
 void TAstForNode::BuildIR(TAsmBasicBuilder& InBuilder) const noexcept
