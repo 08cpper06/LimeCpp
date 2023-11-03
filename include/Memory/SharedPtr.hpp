@@ -245,12 +245,7 @@ public:
 	>
 	constexpr Type& operator*() const noexcept
 	{
-#if defined(_DEBUG)
-		if (!Get())
-		{
-			std::cout << "Line : %l" << MyCreateLocation.line() << "[" << MyCreateLocation.file_name() << "]" << std::endl;
-		}
-#endif
+		Assert(Get(), MyCreateLocation);
 		return *Get();
 	}
 
@@ -259,12 +254,7 @@ public:
 	>
 	constexpr Type* operator->() const noexcept
 	{
-#if defined(_DEBUG)
-		if (!Get())
-		{
-			std::cout << "Line : " << MyCreateLocation.line() << "[" << MyCreateLocation.file_name() << "]" << std::endl;
-		}
-#endif
+		Assert(Get(), MyCreateLocation);
 		return Get();
 	}
 	
@@ -274,12 +264,7 @@ public:
 	>
 	constexpr Type& operator[](ptrdiff_t InIndex) const noexcept
 	{
-#if defined(_DEBUG)
-		if (!Get())
-		{
-			std::cout << "Line : " << MyCreateLocation.line() << "[" << MyCreateLocation.file_name() << "]" << std::endl;
-		}
-#endif
+		Assert(Get(), MyCreateLocation);
 		return Get()[InIndex];
 	}
 

@@ -407,7 +407,7 @@ TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 			{
 				TSharedPtr<TAstArrayReference> ArrayReference = StaticCast<TAstArrayReference>(Value.first);
 				Str += InPrefix + U"\t\t<Detail Type=\"";
-				Str += ArrayReference->MyArrayInfo->MyType->MyName;
+				Str += ArrayReference->EvaluateType()->MyName;
 				Str += U"\">\n";
 				Str += Value.first->GetInfoString(InPrefix + U"\t\t\t");
 				Str += InPrefix + U"\t\t</Detail>\n";

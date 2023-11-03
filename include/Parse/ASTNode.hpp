@@ -61,7 +61,7 @@ public:
 
 	DEFINE_STATIC_EVALUATABLE(true);
 
-CLASS_PRIVATE:
+public:
 	Lime::TTokenIterator MyPosition;
 	TUtf32String MyMessage;
 
