@@ -1087,7 +1087,7 @@ PARSE_FUNCTION_IMPLEMENT(ParseVariableDefinition)
 {
 	Lime::TTokenIterator TmpItr = InItr;
 	TSharedPtr<TTypeInfo> TypeInfo = OutResult.MyTypeTable.GetInfo(TmpItr->MyLetter);
-	if (!TypeInfo)
+	if (!TypeInfo || TypeInfo->IsFunction())
 	{
 		return nullptr;
 	}
@@ -1374,11 +1374,15 @@ PARSE_FUNCTION_IMPLEMENT(ParseFunctionCall)
 		InItr = TmpItr;
 		return OutResult.MakeError(TmpItr, U'`' + SaveFunctionName->MyLetter + U"` is not defined");
 	}
+	if (!FunctionDefineInfo->IsFunction())
+	{
+		return nullptr;
+	}
 
 	Lime::TArray<TSharedPtr<TAstBaseNode>> ArgumentNodeList;
 	do {
 		++TmpItr;
-		TSharedPtr<TAstBaseNode> ArgumentNode = Parser::ParseValue(OutResult, TmpItr);
+		TSharedPtr<TAstBaseNode> ArgumentNode = Parser::ParseExpr(OutResult, TmpItr);
 		if (TmpItr->MyLetter.MyHashValue == U')')
 		{
 			if (ArgumentNode)
