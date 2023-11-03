@@ -15,12 +15,6 @@ public:
 		return Ptr;
 	}
 
-	int64_t GetStackPos() noexcept
-	{
-		/* TODO : change stack offset [byte] */
-		return MyStack.size();
-	}
-
 	TUtf32String MakeNewLabel() noexcept
 	{
 		return U'L' + ToUtf32String(++MyLabelNamePostfix);
@@ -36,37 +30,53 @@ public:
 		int64_t Ret = MyStack.size();
 		if (!InElement->MyName.MyHashValue)
 		{
-			InElement->MyName = ToUtf32String(Ret);
+			InElement->MyName = ToUtf32String(Ret - MyStackOffset);
 		}
 		MyStack.push_back(InElement);
 	}
 
+	Lime::size_t GetStackPos() const noexcept
+	{
+		Lime::size_t Size = MyStack.size() - MyStackOffset;
+		return Size ? Size - 1 : 0;
+	}
+
+	void SetStackOffset(Lime::size_t InOffset) noexcept
+	{
+		MyStackOffset = InOffset;
+	}
+
+	Lime::size_t GetStackOffset() const noexcept
+	{
+		return MyStackOffset;
+	}
+
 	TSharedPtr<TAsmBasicOperand> ReferStack(int64_t InIndex) noexcept
 	{
-		if (InIndex >= static_cast<int64_t>(MyStack.size()))
-		{
-			return nullptr;
-		}
-		if (InIndex < 0)
-		{
-			if (MyStack.size() + InIndex < 0)
-			{
-				return nullptr;
-			}
-			return MyStack[MyStack.size() + InIndex];
-		}
-		return MyStack[InIndex];
+		assert(InIndex >= 0);
+		assert(MyStackOffset + InIndex < MyStack.size());
+
+		Lime::size_t Address = MyStackOffset + InIndex;
+
+		TSharedPtr<TObject> Value = MakeShared<TObject>(static_cast<int>(Address));
+		TSharedPtr<TAsmBasicOperand> Operand = MakeShared<TAsmBasicOperand>(AsmBasicOperandType::Address, Value, MyStack[Address]->MyName);
+		return Operand;
 	}
 
 	TSharedPtr<TAsmBasicOperand> PopStack() noexcept
 	{
-		TSharedPtr<TAsmBasicOperand> Ptr = MyStack.back();
+		TSharedPtr<TAsmBasicOperand> Operand = MyStack.back();
+		RemoveStack();
+		return Operand;
+	}
+
+	void RemoveStack() noexcept
+	{
 		MyStack.pop_back();
-		if (Ptr->MyOperandType == AsmBasicOperandType::Address)
-		{
-			return ReferStack(*(Ptr->MyValue->GetInteger()));
-		}
-		return Ptr;
+	}
+	void ClearStack() noexcept
+	{
+		MyStack.clear();
 	}
 
 	TUtf32String GetInfoString() const noexcept
@@ -91,5 +101,6 @@ public:
 CLASS_PRIVATE:
 	Lime::size_t MyLabelNamePostfix { 0 };
 	Lime::TArray<TSharedPtr<TAsmBasicOperand>> MyStack;
+	Lime::size_t MyStackOffset { 0 };
 	Lime::TList<TSharedPtr<TAsmBasicInstruct>> MyInstructs;
 };
