@@ -74,6 +74,10 @@ public:
 		{
 			Str += ToUtf32String(*InTarget->MyValue) + U'\t';
 		}
+		else if (InTarget->MyOperandType == AsmBasicOperandType::Address)
+		{
+			Str += U'#' + InTarget->MyName + U'\t';
+		}
 		else
 		{
 			Str += U"unknown\t";
@@ -135,16 +139,10 @@ enum class ConditionCode {
 	Unknown,
 	Equal,
 	NotEqual,
-	Negative,
-	NonNegative,
 	Greater,
 	GreaterEuqal,
 	Less,
 	LessEqual,
-	Above,
-	AboveEqual,
-	Below,
-	BelowEqual,
 };
 
 inline TUtf32String ToUtf32String(ConditionCode InMode) noexcept
@@ -154,16 +152,10 @@ inline TUtf32String ToUtf32String(ConditionCode InMode) noexcept
 	case ConditionCode::Unknown:		Str += U""; break;
 	case ConditionCode::Equal:			Str += U"e"; break;
 	case ConditionCode::NotEqual:		Str += U"ne"; break;
-	case ConditionCode::Negative:		Str += U"s"; break;
-	case ConditionCode::NonNegative:	Str += U"ns"; break;
 	case ConditionCode::Greater:		Str += U"g"; break;
 	case ConditionCode::GreaterEuqal:	Str += U"ge"; break;
 	case ConditionCode::Less:			Str += U"l"; break;
 	case ConditionCode::LessEqual:		Str += U"le"; break;
-	case ConditionCode::Above:			Str += U"a"; break;
-	case ConditionCode::AboveEqual:		Str += U"ae"; break;
-	case ConditionCode::Below:			Str += U"b"; break;
-	case ConditionCode::BelowEqual:		Str += U"be"; break;
 	}
 	return Str;
 }
@@ -180,7 +172,7 @@ public:
 	
 public:
 	THashString MyLabelName;
-	ConditionCode MyMode;
+	ConditionCode MyMode { ConditionCode::Unknown };
 	TSharedPtr<TAsmBasicOperand> MyValue;
 };
 
@@ -194,4 +186,40 @@ public:
 
 public:
 	TSharedPtr<TAsmBasicOperand> MyReturnValue;
+};
+
+class TAsmBasicCallInstruct : public TAsmBasicInstruct {
+public:
+	BASIC_INSTRUCT_BODY_CLASS(TAsmBasicCallInstruct);
+
+	TAsmBasicCallInstruct(THashString InFunctionName) :
+		MyFunction(InFunctionName)
+	{}
+
+public:
+	THashString MyFunction;
+};
+
+class TAsmBasicPushInstruct : public TAsmBasicInstruct {
+public:
+	BASIC_INSTRUCT_BODY_CLASS(TAsmBasicPushInstruct);
+
+	TAsmBasicPushInstruct(TSharedPtr<TAsmBasicOperand> InValue) :
+		MyValue(InValue)
+	{}
+
+public:
+	TSharedPtr<TAsmBasicOperand> MyValue;
+};
+
+class TAsmBasicPopInstruct : public TAsmBasicInstruct {
+public:
+	BASIC_INSTRUCT_BODY_CLASS(TAsmBasicPopInstruct);
+
+	TAsmBasicPopInstruct(TSharedPtr<TAsmBasicOperand> InValue) :
+		MyValue(InValue)
+	{}
+
+public:
+	TSharedPtr<TAsmBasicOperand> MyValue;
 };
