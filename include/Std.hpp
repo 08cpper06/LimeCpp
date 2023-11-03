@@ -13,6 +13,7 @@
 #include <mutex>
 #include <functional>
 #include <stack>
+#include <cassert>
 
 /* non-override */
 #include <initializer_list>
@@ -22,8 +23,6 @@
 
 #include "Memory/SharedPtr.hpp"
 #include "Memory/WeakPtr.hpp"
-
-#include "Core/Log.hpp"
 
 #if defined(_DEBUG)
 #define CLASS_PRIVATE public
@@ -68,7 +67,6 @@ namespace Lime {
 
 }
 
-#define LIME_ERROR(Message, ...) do { Lime::LimeLog(LimeLogType::Error, u8"[Line:%d]", __LINE__); \
-	Lime::LimeLog(LimeLogType::Error, u8"%s", Message, __VA_ARGS__); \
-	Lime::LimeLog(LimeLogType::Error, u8"(%s)\n", __LINE__, Message, __FILE__); \
-} while(false)
+#define LIME_ERROR(STR) do { \
+	std::cout << CONSOLE_COLOR(255, 0, 0) << #STR << DEFAULT_COLOR << std::endl; \
+} while (0)
