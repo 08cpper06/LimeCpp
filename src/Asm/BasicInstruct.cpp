@@ -81,12 +81,12 @@ TUtf32String TAsmBasicJumpLabelInstruct::GetInfoString(TUtf32String InPrefix) co
 	if (Postfix.CharCount() > 0)
 	{
 		Str += U'j' + Postfix;
+		Str += U'\t' + GetOperandName(MyValue);
 	}
 	else
 	{
-		Str = U"jump";
+		Str += U"jump";
 	}
-	Str += U'\t' + GetOperandName(MyValue);
 	Str += U'\t' + MyLabelName;
 	return Str + U'\n';
 }
@@ -99,4 +99,30 @@ TUtf32String TAsmBasicReturnInstruct::GetInfoString(TUtf32String InPrefix) const
 	Str += GetOperandName(MyReturnValue);
 
 	return Str + U'\n';
+}
+
+TUtf32String TAsmBasicPushInstruct::GetInfoString(TUtf32String InPrefix) const noexcept
+{
+	TUtf32String Str = InPrefix + U"push\t";
+	Str += ToUtf32String(MyValue->MyOperandType) + U'\t';
+	Str += MyValue->MyValue->MyType->MyName + U'\t';
+	Str += GetOperandName(MyValue);
+
+	return Str + U'\n';
+}
+
+TUtf32String TAsmBasicPopInstruct::GetInfoString(TUtf32String InPrefix) const noexcept
+{
+	TUtf32String Str = InPrefix + U"pop\t";
+	Str += ToUtf32String(MyValue->MyOperandType) + U'\t';
+	Str += MyValue->MyValue->MyType->MyName + U'\t';
+	Str += GetOperandName(MyValue);
+
+	return Str + U'\n';
+}
+
+TUtf32String TAsmBasicCallInstruct::GetInfoString(TUtf32String InPrefix) const noexcept
+{
+	TUtf32String Str = InPrefix + U"call\t";
+	return Str + MyFunction + U'\n';
 }

@@ -158,7 +158,7 @@ TSharedPtr<TObject> TAstArrayReference::Evaluate() const noexcept
 		return nullptr;
 	}
 
-	return MyArrayInfo->MyObject[MyIndex];
+	return MyArrayInfo->MyObject[*MyIndex->Evaluate()->GetInteger()];
 }
 
 TSharedPtr<TObject> TAstEqualityNode::Evaluate() const noexcept
