@@ -15,8 +15,8 @@ int main(int Argc, const char** Argv)
 			Args.push_back(*String::ConvertToUtf32(Argv[Index]));
 			std::cout << Argv[Index] << " ";
 		}
-		std::cout << DEFAULT_COLOR << std::endl;
-		std::cout << CONSOLE_COLOR(200, 217, 33) << TCommandParser::Get()->Parse(Args) << DEFAULT_COLOR << std::endl;
+		std::cout << std::endl;
+		std::cout << CONSOLE_COLOR(142, 197, 74) << TCommandParser::Get()->Parse(Args) << DEFAULT_COLOR << std::endl;
 	}
 
 	TDebugger::Get()->MainLoop();

@@ -3,6 +3,11 @@
 #include "Tokenize/Tokenizer.hpp"
 #include "Parse/Parser.hpp"
 #include "FileIO/FileIO.hpp"
+#include "Asm/BasicAsmGenerator.hpp"
+
+
+#define UCONSOLE_COLOR(R, G, B) U"\x1b[38;2;" #R U";" #G U";" #B U"m"
+#define UDEFAULT_COLOR() UCONSOLE_COLOR(200, 200, 200)
 
 
 static TSourceContext Context;
@@ -63,6 +68,55 @@ TUtf32String ParserCommand::Execute(const Lime::TArray<THashString>& InArgs)
 	}
 
 	return Root->GetInfoString(U"");
+}
+
+IMPLEMENT_COMMAND_FUNCTION(BuildIR, "ir")
+TUtf32String BuildIRCommand::Execute(const Lime::TArray<THashString>& InArgs)
+{
+	if (Context.Tokens().empty())
+	{
+		TokenizeCommand::Execute(Lime::TArray<THashString>());
+	}
+
+	if (!Context.ASTRoot())
+	{
+		ParserCommand::Execute(Lime::TArray<THashString>());
+	}
+	TSharedPtr<TAstBaseNode> Root = Context.ASTRoot();
+	if (!Root)
+	{
+		return U"fail to build AST";
+	}
+	BasicAsmGenerator::Analyze(Context);
+	return Context.AsmBuilder().GetInfoString();
+}
+
+IMPLEMENT_COMMAND_FUNCTION(PrintInfo, "print")
+TUtf32String PrintInfoCommand::Execute(const Lime::TArray<THashString>& InArgs)
+{
+	if (InArgs.size() == 1)
+	{
+		TUtf32String Str = UCONSOLE_COLOR(0, 164, 150) + TUtf32String(U"----- tokens -----\n");
+		Str += UCONSOLE_COLOR(142, 197, 74) + TokenizeCommand::Execute(Lime::TArray<THashString>());
+		Str += UCONSOLE_COLOR(0, 164, 150) + TUtf32String(U"----- ast -----\n");
+		Str += UCONSOLE_COLOR(142, 197, 74) + ParserCommand::Execute(Lime::TArray<THashString>());
+		Str += UCONSOLE_COLOR(0, 164, 150) + TUtf32String(U"----- ir -----\n");
+		Str += UCONSOLE_COLOR(142, 197, 74) + BuildIRCommand::Execute(Lime::TArray<THashString>());
+		return Str + UDEFAULT_COLOR();
+	}
+	else if (InArgs[1] == U"token")
+	{
+		return TokenizeCommand::Execute(Lime::TArray<THashString>());
+	}
+	else if (InArgs[1] == U"ast")
+	{
+		return ParserCommand::Execute(Lime::TArray<THashString>());
+	}
+	else if (InArgs[1] == U"ir")
+	{
+		return BuildIRCommand::Execute(Lime::TArray<THashString>());
+	}
+	return U"";
 }
 
 IMPLEMENT_COMMAND_FUNCTION(Clear, "clear")
