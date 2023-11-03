@@ -262,7 +262,7 @@ public:
 #if defined(_DEBUG)
 		if (!Get())
 		{
-			std::cout << "Line : %l" << MyCreateLocation.line() << "[" << MyCreateLocation.file_name() << "]" << std::endl;
+			std::cout << "Line : " << MyCreateLocation.line() << "[" << MyCreateLocation.file_name() << "]" << std::endl;
 		}
 #endif
 		return Get();
@@ -277,7 +277,7 @@ public:
 #if defined(_DEBUG)
 		if (!Get())
 		{
-			std::cout << "Line : %l" << MyCreateLocation.line() << "[" << MyCreateLocation.file_name() << "]" << std::endl;
+			std::cout << "Line : " << MyCreateLocation.line() << "[" << MyCreateLocation.file_name() << "]" << std::endl;
 		}
 #endif
 		return Get()[InIndex];
