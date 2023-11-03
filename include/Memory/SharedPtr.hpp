@@ -2,8 +2,9 @@
 
 
 #include "RefCounter.hpp"
-#include "Core/Log.hpp"
+#include <source_location>
 #include <type_traits>
+#include <iostream>
 
 
 template <class Type>
@@ -247,7 +248,7 @@ public:
 #if defined(_DEBUG)
 		if (!Get())
 		{
-			Lime::LimeLog(LimeLogType::Error, u8"Line : %l[%s]", MyCreateLocation.line(), MyCreateLocation.file_name());
+			std::cout << "Line : %l" << MyCreateLocation.line() << "[" << MyCreateLocation.file_name() << "]" << std::endl;
 		}
 #endif
 		return *Get();
@@ -261,7 +262,7 @@ public:
 #if defined(_DEBUG)
 		if (!Get())
 		{
-			Lime::LimeLog(LimeLogType::Error, u8"Line : %l[%s]", MyCreateLocation.line(), MyCreateLocation.file_name());
+			std::cout << "Line : %l" << MyCreateLocation.line() << "[" << MyCreateLocation.file_name() << "]" << std::endl;
 		}
 #endif
 		return Get();
@@ -276,7 +277,7 @@ public:
 #if defined(_DEBUG)
 		if (!Get())
 		{
-			Lime::LimeLog(LimeLogType::Error, u8"Line : %l[%s]", MyCreateLocation.line(), MyCreateLocation.file_name());
+			std::cout << "Line : %l" << MyCreateLocation.line() << "[" << MyCreateLocation.file_name() << "]" << std::endl;
 		}
 #endif
 		return Get()[InIndex];

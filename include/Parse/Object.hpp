@@ -59,7 +59,7 @@ inline TUtf32String ToUtf32String(TObject& InObject) noexcept
 	}
 	else if (InObject.IsBoolean())
 	{
-		return InObject.GetBool()  ? U"true" : U"false";
+		return InObject.GetBool() ? U"true" : U"false";
 	}
 	else if (InObject.IsDouble())
 	{
