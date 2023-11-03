@@ -131,7 +131,7 @@ TUtf32String TAstPostfixUnaryNode::GetInfoString(TUtf32String InPrefix) const
 
 TUtf32String TAstArrayReference::GetInfoString(TUtf32String InPrefix) const
 {
-	TUtf32String Str = InPrefix + U"<ArrayReference>\n";
+	TUtf32String Str = InPrefix + U"<ArrayReference Type=\"" + MyArrayInfo->MyType->MyName + U"\" Name=\"" + MyArrayInfo->MyName + U"\">\n";
 	Str += InPrefix + U"\t<Index>\n";
 	Str += MyIndex->GetInfoString(InPrefix + U"\t\t");
 	Str += InPrefix + U"\t</Index>\n";
@@ -374,7 +374,7 @@ TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 				{
 					ValueStr += Itr->MyLetter.GetString();
 				}
-				Str += U"\" Value=\"" + ValueStr + U"\"";
+				Str += U"\" Value=\"" + ValueStr + U"\"/>\n";
 			}
 			else if (Value.first->StaticClass() == TAstVarNode().StaticClass())
 			{
@@ -401,19 +401,30 @@ TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 					Str += Info.MyName;
 					Str += U"\" Name=\"" + Info.MyName + U"\"";
 				}
+				Str += U"/>\n";
+			}
+			else if (Value.first->StaticClass() == TAstArrayReference().StaticClass())
+			{
+				TSharedPtr<TAstArrayReference> ArrayReference = StaticCast<TAstArrayReference>(Value.first);
+				Str += InPrefix + U"\t\t<Detail Type=\"";
+				Str += ArrayReference->MyArrayInfo->MyType->MyName;
+				Str += U"\">\n";
+				Str += Value.first->GetInfoString(InPrefix + U"\t\t\t");
+				Str += InPrefix + U"\t\t</Detail>\n";
 			}
 			else if (Value.first->StaticClass() == TAstErrorNode().StaticClass() ||
 					Value.first->StaticClass() == TAstWarningNode().StaticClass())
 			{
 				Str += Value.first->GetInfoString(InPrefix + U"\t\t");
+				Str += U"/>\n";
 			}
 
 			if (Value.second)
 			{
 				TSharedPtr<TAstWarningNode> WarningNode = StaticCast<TAstWarningNode>(Value.second);
 				Str += U" Warning=\"" + WarningNode->MyMessage + U'\"';
+				Str += U"/>\n";
 			}
-			Str += U"/>\n";
 
 		}
 		Str += InPrefix + U"\t</Arguments>\n";
