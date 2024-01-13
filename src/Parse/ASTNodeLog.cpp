@@ -374,7 +374,7 @@ TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 				{
 					ValueStr += Itr->MyLetter.GetString();
 				}
-				Str += U"\" Value=\"" + ValueStr + U"\"/>\n";
+				Str += U"\" Value=\"" + ValueStr + U"\"";
 			}
 			else if (Value.first->StaticClass() == TAstVarNode().StaticClass())
 			{
@@ -401,7 +401,6 @@ TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 					Str += Info.MyName;
 					Str += U"\" Name=\"" + Info.MyName + U"\"";
 				}
-				Str += U"/>\n";
 			}
 			else if (Value.first->StaticClass() == TAstArrayReference().StaticClass())
 			{
@@ -416,15 +415,14 @@ TUtf32String TAstFunctionCallNode::GetInfoString(TUtf32String InPrefix) const
 					Value.first->StaticClass() == TAstWarningNode().StaticClass())
 			{
 				Str += Value.first->GetInfoString(InPrefix + U"\t\t");
-				Str += U"/>\n";
 			}
 
 			if (Value.second)
 			{
 				TSharedPtr<TAstWarningNode> WarningNode = StaticCast<TAstWarningNode>(Value.second);
 				Str += U" Warning=\"" + WarningNode->MyMessage + U'\"';
-				Str += U"/>\n";
 			}
+			Str += U"/>\n";
 
 		}
 		Str += InPrefix + U"\t</Arguments>\n";
