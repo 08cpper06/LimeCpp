@@ -60,13 +60,13 @@ int main(int Argc, const char** Argv)
 		<< Log
 		<< DEFAULT_COLOR << std::endl;
 
-	if (Context.ParseResult().MyErrorList.size())
+	if (Context.ParseResult().MyErrorWarningList.size())
 	{
-		for (TSharedPtr<TAstBaseNode> Node : Context.ParseResult().MyErrorList)
+		for (TSharedPtr<TAstBaseNode> Node : Context.ParseResult().MyErrorWarningList)
 		{
 			if (TSharedPtr<TAstErrorNode> Error = DynamicCast<TAstErrorNode>(Node))
 			{
-				std::cout << "[" << Error->MyPosition->MyLine << "]" << Error->MyMessage << std::endl;
+				std::cout << "[line: " << Error->MyPosition->MyLine << "] " << Error->MyMessage << std::endl;
 			}
 		}
 		return 5;

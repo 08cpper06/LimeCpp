@@ -34,6 +34,7 @@ void Tokenizer::Analyze(TSourceContext& InContext)
 		/* new line */
 		if (*Itr == U'\n')
 		{
+			InContext.MyNewLines.push_back(Itr);
 			++Itr;
 			++Line;
 			continue;
@@ -152,6 +153,7 @@ void Tokenizer::Analyze(TSourceContext& InContext)
 		LIME_ERROR(u8"Could not invalid Token");
 	}
 
+	InContext.MyNewLines.push_back(Itr);
 	BaseItr = Itr++;
 	InContext.MyTokens.emplace_back(THashString(U'\0'), BaseItr, Itr, Line, TokenType::Sign);
 }
